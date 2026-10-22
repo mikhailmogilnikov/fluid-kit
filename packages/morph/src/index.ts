@@ -23,6 +23,10 @@ import { AWAY, PART, SURFACE, SpringAnimator, type SpringParams } from "@liquid-
  * settling sharp), so its text never reflows, and it's live the whole way: pressed, typed into,
  * playing. Its own surface steps aside for the shape's meanwhile (background, border, shadow,
  * backdrop: its pseudo-elements stay), and it has to be above the shape (`z-index: 2` or more).
+ * Magnified, it takes more room than it shows: `clip-path` cuts what's drawn, not what it adds to
+ * the page's scrollable overflow. So while it flies, the nearest element it's laid out in that spans
+ * the page clips what goes past it sideways (`overflow-x: clip`): past the page's edges, nothing
+ * that shows. Not the body: iOS Safari pans the page to what overflows it, whatever its `overflow`.
  * Its inline transform, opacity, filter and clip-path are the morph's while it flies; a
  * translation of its own in the stylesheet (`translate: -50% -50%`, or the same as `transform`) is
  * kept. The smaller one rides in the shape as a copy of it, frozen as it was when the shape set off,
@@ -1034,8 +1038,66 @@ export function createMorph({
     for (const end of [flight!.a, flight!.b]) if (end.el) resized.observe(end.el, { box: "border-box" });
   };
 
+  /**
+   * Hems: elements that clip sideways while a flight is on, with their own inline `overflow-x` to
+   * give back. The bigger state comes in magnified and centered on the shape, wherever its own box
+   * is, and its box counts toward the page's scrollable overflow however it's clipped. Wider than
+   * the page, it would widen it for the flight; on iOS the page pans sideways to it, whatever the
+   * body's `overflow` says (WebKit bug 222777). Clipped by an element spanning the page, what goes
+   * past its sides goes past the page's, where nothing shows anyway. `clip` makes no scroll
+   * container and no formatting context: nothing in it is laid out or stuck anywhere else.
+   */
+  const hems = new Map<HTMLElement, string>();
+  /** Whether the page scrolls sideways of its own: then what's past its edges may be seen, and stays */
+  let wide = false;
+  /** Whether an element is a containing block for descendants of that position (besides the viewport) */
+  const holds = (style: CSSStyleDeclaration, position: string) =>
+    (position === "absolute" && style.position !== "static") ||
+    style.transform !== "none" ||
+    style.perspective !== "none" ||
+    style.filter !== "none" ||
+    /paint|layout|strict|content/.test(style.contain ?? "") ||
+    /transform|perspective|filter/.test(style.willChange ?? "");
+  /**
+   * Hems what `el` takes room in: up the elements it's laid out in (from its containing block),
+   * below the body, the nearest that spans the page. None if one on the way clips it already, or
+   * it's fixed to the viewport, which widens nothing.
+   */
+  const hem = (el: HTMLElement) => {
+    if (wide) return;
+    const position = win.getComputedStyle(el).position;
+    const page = doc.documentElement.clientWidth;
+    let laidIn = position !== "absolute" && position !== "fixed";
+    for (let at = el.parentElement; at && at !== doc.body && at !== doc.documentElement; at = at.parentElement) {
+      const style = win.getComputedStyle(at);
+      if (!laidIn && !holds(style, position)) continue;
+      laidIn = true;
+      if (hems.has(at) || style.overflowX !== "visible" || /paint|strict|content/.test(style.contain ?? "")) return;
+      const r = at.getBoundingClientRect();
+      // A rounded clip would cut its corners, where things do show
+      const rounded = [
+        style.borderTopLeftRadius,
+        style.borderTopRightRadius,
+        style.borderBottomRightRadius,
+        style.borderBottomLeftRadius,
+      ].some((v) => parseFloat(v) > 0);
+      if (r.left <= 0.5 && r.right >= page - 0.5 && !rounded) {
+        hems.set(at, at.style.overflowX);
+        at.style.overflowX = "clip";
+        return;
+      }
+    }
+  };
+  const unhem = () => {
+    for (const [at, own] of hems) at.style.overflowX = own;
+    hems.clear();
+  };
+
   /** A flight off from rest, from `from` to `to`: the shape dressed and put in its place */
   const launch = (from: HTMLElement, to: HTMLElement) => {
+    // Before anything of the flight is in the page
+    const scroller = doc.scrollingElement ?? doc.documentElement;
+    wide = scroller.scrollWidth > scroller.clientWidth;
     const aBox = atRest(from);
     const bBox = atRest(to);
     const [small, big] = area(aBox) <= area(bBox) ? [from, to] : [to, from];
@@ -1072,6 +1134,8 @@ export function createMorph({
         `width: ${stubBox.width}px; height: ${stubBox.height}px; opacity: ${saved.get(anchor)!.opacity || 1}`;
     }
     place();
+    hem(big);
+    hem(shape);
     // Surfaces compared as the copies draw them, in place
     if (!grouped(from) && !grouped(to)) skins = fill(small, big);
     inherit([layer, ...matches.flatMap((m) => [m.a, m.b])]);
@@ -1172,7 +1236,10 @@ export function createMorph({
     if (!grouped(to) && !grouped(anchor)) skins = fill(null, to);
     inherit([layer, grounded]);
     away(to);
-    if (bigger) flight.live = { ...goLive(to, bBox, new Set()), end: "b" };
+    if (bigger) {
+      hem(to);
+      flight.live = { ...goLive(to, bBox, new Set()), end: "b" };
+    }
     watch();
     motion!.jump({ p: 0 }, { p: 0 });
   };
@@ -1203,6 +1270,7 @@ export function createMorph({
     stubBox = null;
     flight = null;
     follows(false);
+    unhem();
     onRest?.(el);
     const arrived = pending;
     pending = null;
@@ -1345,6 +1413,7 @@ export function createMorph({
       motion?.stop();
       motion = null;
       follows(false);
+      unhem();
       shape.removeEventListener("click", forward);
       shape.remove();
       stub?.remove();

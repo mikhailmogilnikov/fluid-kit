@@ -885,6 +885,7 @@ Any browser with ES2022 and `clip-path: inset()`. Corner shapes animate where `c
 <Section id="limitations" title="Limitations">
 
 - Rotated or scaled ancestors aren't supported, and the bigger state can't have a transform of its own other than a translation.
+- The bigger state comes in magnified, up to 1.45 times its size, and takes that room in the page however it's clipped. So that it doesn't widen the page on its way, the nearest element it's laid out in that spans the page (such as `main`) clips sideways (`overflow-x: clip`) while it flies. Without one below `<body>`, as with states right in the body or a body with side padding, put `overflow-x: clip` on an element around them yourself: on `<body>` it isn't enough, iOS Safari pans to what overflows the body.
 - The smaller state's copy is a snapshot: a video or a field in it doesn't play or update on the way.
 - The bigger state's pseudo-elements stay drawn while its surface steps aside.
 - Corners animate as circular arcs; the corner shape follows the top-left corner.
