@@ -8,23 +8,23 @@ import { createMorph } from "../src/index";
  */
 function dock() {
   const root = document.createElement("div");
-  root.className = "lb-group";
+  root.className = "lb lb-group";
   root.getBoundingClientRect = () => new DOMRect(0, 0, 400, 200);
   const bar = document.createElement("div");
   bar.className = "lb";
   bar.style.borderRadius = "22px";
   bar.getBoundingClientRect = () => new DOMRect(70, 120, 160, 44);
-  const source = document.createElement("button");
-  source.className = "lb";
-  source.style.borderRadius = "22px";
-  source.getBoundingClientRect = () => new DOMRect(20, 120, 44, 44);
-  root.append(bar, source);
+  const button = document.createElement("button");
+  button.className = "lb";
+  button.style.borderRadius = "22px";
+  button.getBoundingClientRect = () => new DOMRect(20, 120, 44, 44);
+  root.append(bar, button);
   // The panel opens up over the bar
-  const content = document.createElement("div");
-  content.style.borderRadius = "28px";
-  content.getBoundingClientRect = () => new DOMRect(20, 20, 240, 160);
-  document.body.append(root, content);
-  return { root, source, content };
+  const panel = document.createElement("div");
+  panel.style.borderRadius = "28px";
+  panel.getBoundingClientRect = () => new DOMRect(20, 20, 240, 160);
+  document.body.append(root, panel);
+  return { root, bar, button, panel };
 }
 
 afterEach(() => {
@@ -33,31 +33,33 @@ afterEach(() => {
 
 describe("morph in a glass group", () => {
   it("lifts out over a running group, and stays in a group that no longer runs", () => {
-    const { root, source, content } = dock();
+    const { root, button, panel } = dock();
     const group = createGlassGroup(root);
-    const morph = createMorph({ source, content });
-    morph.open({ instant: true });
-    // Over the group, as its own glass; the control marked away, which the group leaves out
-    expect(root.nextElementSibling?.getAttribute("data-lw-part")).toBe("");
-    expect(source.hasAttribute("data-lw-away")).toBe(true);
-    morph.close({ instant: true });
+    const morph = createMorph({ states: [button, panel] });
+    void morph.to(panel);
+    // Over the group, as glass of its own; the control marked away, which the group leaves out
+    expect(root.nextElementSibling?.hasAttribute("data-lw-part")).toBe(true);
+    expect(button.hasAttribute("data-lw-away")).toBe(true);
+    morph.destroy();
 
     group.destroy();
-    morph.open({ instant: true });
-    // No group runs: nothing to lift out of, the copy stays beside the control
-    expect(source.nextElementSibling?.getAttribute("data-lw-part")).toBe("");
-    expect(root.nextElementSibling).toBe(content);
-    morph.destroy();
+    const again = createMorph({ states: [button, panel] });
+    void again.to(panel);
+    // No group runs: nothing to lift out of, the shape stays beside the control
+    expect(button.nextElementSibling?.hasAttribute("data-lw-part")).toBe(true);
+    expect(root.nextElementSibling).toBe(panel);
+    again.destroy();
   });
 
   it("isn't counted as a neighbor by the group's own elements", () => {
-    const { root, source, content } = dock();
+    const { root, bar, button, panel } = dock();
     // The bar moved away: only the group's glass and paint are left to overlap the panel
-    (root.children[0] as HTMLElement).getBoundingClientRect = () => new DOMRect(300, 0, 80, 44);
+    bar.getBoundingClientRect = () => new DOMRect(300, 0, 80, 44);
     const group = createGlassGroup(root);
-    const morph = createMorph({ source, content });
-    morph.open({ instant: true });
-    expect(source.nextElementSibling?.getAttribute("data-lw-part")).toBe("");
+    const morph = createMorph({ states: [button, panel] });
+    void morph.to(panel);
+    expect(button.nextElementSibling?.hasAttribute("data-lw-part")).toBe(true);
+    expect(root.nextElementSibling).toBe(panel);
     morph.destroy();
     group.destroy();
   });

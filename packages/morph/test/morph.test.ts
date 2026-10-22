@@ -1,21 +1,21 @@
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { createMorph } from "../src/index";
 
-/** A parent with the control, and the panel's content */
+/** A parent with the control, and the panel it flows into, each where it is at rest */
 function scene() {
   const parent = document.createElement("div");
   parent.getBoundingClientRect = () => new DOMRect(0, 0, 400, 400);
-  const source = document.createElement("button");
-  source.className = "lb lb-interactive lb-clear";
-  source.id = "plus";
-  source.innerHTML = "<svg></svg>";
-  source.getBoundingClientRect = () => new DOMRect(20, 20, 44, 44);
-  parent.append(source);
-  const content = document.createElement("div");
-  content.style.borderRadius = "28px";
-  content.getBoundingClientRect = () => new DOMRect(20, 20, 240, 200);
-  document.body.append(parent, content);
-  return { parent, source, content };
+  const button = document.createElement("button");
+  button.className = "lb lb-interactive lb-clear";
+  button.id = "plus";
+  button.innerHTML = "<svg></svg>";
+  button.getBoundingClientRect = () => new DOMRect(20, 20, 44, 44);
+  parent.append(button);
+  const panel = document.createElement("div");
+  panel.style.borderRadius = "28px";
+  panel.getBoundingClientRect = () => new DOMRect(20, 20, 240, 200);
+  document.body.append(parent, panel);
+  return { parent, button, panel };
 }
 
 const quick = {
@@ -25,70 +25,144 @@ const quick = {
   height: { duration: 0.06, bounce: 0 },
   progress: { duration: 0.05, bounce: 0 },
 };
-const fast = { open: quick, close: quick };
+const fast = { grow: quick, shrink: quick };
+const slow = {
+  x: { duration: 0.2, bounce: 0 },
+  y: { duration: 0.2, bounce: 0 },
+  width: { duration: 0.2, bounce: 0 },
+  height: { duration: 0.2, bounce: 0 },
+  progress: { duration: 0.2, bounce: 0 },
+};
+
+const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 afterEach(() => {
   document.body.innerHTML = "";
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe("createMorph", () => {
-  it("needs a source with a parent", () => {
-    const { content } = scene();
-    expect(() => createMorph({ source: document.createElement("div"), content })).toThrow();
+  it("needs states, each with a parent, the initial one among them", () => {
+    const { button, panel } = scene();
+    expect(() => createMorph({ states: [] })).toThrow();
+    expect(() => createMorph({ states: [button, document.createElement("div")] })).toThrow();
+    expect(() => createMorph({ states: [button], initial: panel })).toThrow();
   });
 
-  it("puts a copy of the control next to it only while it's away", async () => {
-    const { parent, source, content } = scene();
-    let rest: (open: boolean) => void = () => {};
-    const morph = createMorph({ source, content, spring: fast, onRest: (open) => rest(open) });
-    // Closed and at rest the parent has its own children only: `:last-child` still holds
-    expect(parent.children).toHaveLength(1);
-    expect(content.style.visibility).toBe("hidden");
-    expect(source.getAttribute("aria-expanded")).toBe("false");
-    await new Promise<boolean>((resolve) => {
-      rest = resolve;
-      morph.open();
+  it("starts at the first state, the others away", () => {
+    const { button, panel } = scene();
+    const morph = createMorph({ states: [button, panel] });
+    expect(morph.current).toBe(button);
+    expect(morph.moving).toBe(false);
+    expect(button.hasAttribute("data-lw-away")).toBe(false);
+    expect(button.style.visibility).toBe("visible");
+    expect(panel.hasAttribute("data-lw-away")).toBe(true);
+    expect(panel.style.opacity).toBe("0");
+    expect(panel.style.visibility).toBe("hidden");
+    expect(panel.style.pointerEvents).toBe("none");
+    morph.destroy();
+  });
+
+  it("starts at the initial state when given one, quietly", () => {
+    const { parent, button, panel } = scene();
+    const told: string[] = [];
+    const morph = createMorph({
+      states: [button, panel],
+      initial: panel,
+      onStart: () => told.push("start"),
+      onRest: () => told.push("rest"),
+      onProgress: () => told.push("progress"),
     });
+    expect(morph.current).toBe(panel);
+    expect(button.hasAttribute("data-lw-away")).toBe(true);
+    expect(panel.style.visibility).toBe("visible");
+    expect(parent.children).toHaveLength(1);
+    expect(told).toEqual([]);
+    morph.destroy();
+  });
+
+  it("puts the shape next to the smaller state only while it flies", async () => {
+    const { parent, button, panel } = scene();
+    const morph = createMorph({ states: [button, panel], spring: fast });
+    // At rest the parent has its own children only: `:last-child` still holds
+    expect(parent.children).toHaveLength(1);
+    const going = morph.to(panel);
     expect(parent.children).toHaveLength(2);
-    const shape = parent.children[1] as HTMLElement;
-    // The control's look and icon, without its behaviors, id or focus
-    expect(shape.className).toBe("lb lb-clear");
-    expect(shape.id).toBe("");
-    expect(shape.querySelector("svg")).not.toBeNull();
-    expect(shape.tabIndex).toBe(-1);
-    await new Promise<boolean>((resolve) => {
-      rest = resolve;
-      morph.close();
-    });
+    const shape = button.nextElementSibling as HTMLElement;
+    expect(shape.hasAttribute("data-lw-part")).toBe(true);
+    expect(shape.getAttribute("aria-hidden")).toBe("true");
+    // Outside a group it wears no classes: copies in it would be its descendants to the stylesheet
+    expect(shape.className).toBe("");
+    // The control rides in it as a copy: its look and icon, without its behaviors, id or focus
+    const copy = shape.querySelector("button") as HTMLButtonElement;
+    expect(copy.className).toBe("lb lb-clear");
+    expect(copy.id).toBe("");
+    expect(copy.inert).toBe(true);
+    expect(copy.querySelector("svg")).not.toBeNull();
+    expect(await going).toBe(true);
+    // Landed as the panel, the shape stays under it a frame, then leaves
+    await frame();
+    await frame();
     expect(parent.children).toHaveLength(1);
+    expect(await morph.to(button)).toBe(true);
+    expect(parent.children).toHaveLength(1);
+    morph.destroy();
   });
 
-  it("swells into the panel", async () => {
-    const { parent, source, content } = scene();
-    await new Promise<void>((resolve) => {
-      const morph = createMorph({ source, content, spring: fast, onRest: () => resolve() });
-      morph.open();
-      // The control is away the whole time: unseen, yet still there to focus and read
-      expect(source.hasAttribute("data-lw-away")).toBe(true);
-      expect(source.style.opacity).toBe("0");
-      expect(source.style.visibility).toBe("");
-      expect(source.getAttribute("aria-expanded")).toBe("true");
-    });
-    const shape = parent.children[1] as HTMLElement;
-    expect(source.hasAttribute("data-lw-away")).toBe(true);
+  it("flies the bigger state itself, magnified and out of focus, settling sharp", async () => {
+    const { button, panel } = scene();
+    const morph = createMorph({ states: [button, panel], spring: fast });
+    const going = morph.to(panel);
+    // First frame: the panel at the control, magnified, blurred, unseen, clipped to the shape
+    expect(panel.style.transform).toContain("scale(1.45)");
+    expect(panel.style.filter).toBe("blur(14px)");
+    expect(panel.style.opacity).toBe("0");
+    expect(panel.style.clipPath.startsWith("inset(")).toBe(true);
+    // The control is away the whole time
+    expect(button.hasAttribute("data-lw-away")).toBe(true);
+    expect(button.style.opacity).toBe("0");
+    await going;
+    // At rest it's itself again: nothing of the morph stays on it
+    expect(panel.hasAttribute("data-lw-away")).toBe(false);
+    expect(panel.style.transform).toBe("");
+    expect(panel.style.clipPath).toBe("");
+    expect(panel.style.filter).toBe("");
+    expect(panel.style.opacity).toBe("");
+    expect(panel.style.visibility).toBe("visible");
+    expect(button.style.visibility).toBe("hidden");
+    morph.destroy();
+  });
+
+  it("keeps a state that holds focus focusable while it's away", async () => {
+    const { button, panel } = scene();
+    const morph = createMorph({ states: [button, panel], spring: fast });
+    button.focus();
+    await morph.to(panel, { instant: true });
+    expect(button.style.opacity).toBe("0");
+    expect(button.style.visibility).toBe("visible");
+    morph.destroy();
+  });
+
+  it("starts the shape as the state at rest and lands it on the other", async () => {
+    const { button, panel } = scene();
+    const morph = createMorph({ states: [button, panel], spring: fast });
+    const going = morph.to(panel);
+    const shape = button.nextElementSibling as HTMLElement;
+    expect(shape.style.transform).toBe("translate(20px, 20px)");
+    expect(shape.style.width).toBe("44px");
+    expect(shape.style.height).toBe("44px");
+    await going;
     expect(shape.style.transform).toBe("translate(20px, 20px)");
     expect(shape.style.width).toBe("240px");
     expect(shape.style.height).toBe("200px");
     expect(shape.style.borderRadius).toBe("28px");
-    // The icon is gone
-    expect((shape.firstElementChild as SVGElement).style.opacity).toBe("0");
-    expect(content.style.transform).toBe("");
-    expect(content.style.clipPath).toBe("");
-    expect(content.style.filter).toBe("");
+    morph.destroy();
   });
 
   it("keeps the corners still while the size still wobbles", async () => {
-    const { parent, source, content } = scene();
+    const { button, panel } = scene();
     const wobbly = {
       x: { duration: 0.05, bounce: 0 },
       y: { duration: 0.05, bounce: 0 },
@@ -96,11 +170,11 @@ describe("createMorph", () => {
       height: { duration: 0.45, bounce: 0.7 },
       progress: { duration: 0.05, bounce: 0 },
     };
-    createMorph({ source, content, spring: { open: wobbly, close: wobbly } }).open();
-    const shape = parent.children[1] as HTMLElement;
-    const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+    const morph = createMorph({ states: [button, panel], spring: { grow: wobbly } });
+    void morph.to(panel);
+    const shape = button.nextElementSibling as HTMLElement;
     // Long after the progress is done, well before the size is
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await wait(200);
     const seen = new Set<string>();
     const widths = new Set<string>();
     for (let i = 0; i < 10; i++) {
@@ -110,96 +184,59 @@ describe("createMorph", () => {
     }
     expect(widths.size).toBeGreaterThan(1);
     expect([...seen]).toEqual(["28px"]);
+    morph.destroy();
   });
 
   it("goes from the control's real corners to the panel's, never an oval", async () => {
-    const { parent, source, content } = scene();
+    const { button, panel } = scene();
     // A capsule written the usual way: drawn as half its height
-    source.style.borderRadius = "9999px";
-    source.getBoundingClientRect = () => new DOMRect(20, 20, 120, 44);
-    const slow = {
-      x: { duration: 0.2, bounce: 0 },
-      y: { duration: 0.2, bounce: 0 },
-      width: { duration: 0.2, bounce: 0.3 },
-      height: { duration: 0.2, bounce: 0.3 },
-      progress: { duration: 0.2, bounce: 0 },
-    };
+    button.style.borderRadius = "9999px";
+    button.getBoundingClientRect = () => new DOMRect(20, 20, 120, 44);
     const radii: number[] = [];
-    let done = false;
-    await new Promise<void>((resolve) => {
-      const morph = createMorph({
-        source,
-        content,
-        spring: { open: slow, close: slow },
-        onRest: () => {
-          done = true;
-          resolve();
-        },
-      });
-      morph.open();
-      const shape = parent.children[1] as HTMLElement;
-      const watch = () => {
-        radii.push(parseFloat(shape.style.borderRadius));
-        if (!done) requestAnimationFrame(watch);
-      };
-      watch();
+    const morph = createMorph({
+      states: [button, panel],
+      spring: { grow: { ...slow, width: { duration: 0.2, bounce: 0.3 }, height: { duration: 0.2, bounce: 0.3 } } },
+      onProgress: () => radii.push(parseFloat((button.nextElementSibling as HTMLElement).style.borderRadius)),
     });
+    await morph.to(panel);
     // A capsule at the start, not 9999px; one radius on both axes all the way (an `rx / ry`
     // pair wouldn't parse here); the panel's corners exactly at rest
     expect(radii[0]).toBe(22);
     expect(radii.every((r) => r >= 22 && r <= 28)).toBe(true);
-    expect((parent.children[1] as HTMLElement).style.borderRadius).toBe("28px");
-  });
-
-  it("closing from rest, holds the shape a beat while the content goes", async () => {
-    const { parent, source, content } = scene();
-    const lazy = { ...quick, width: { duration: 1, bounce: 0 } };
-    let rest: (open: boolean) => void = () => {};
-    const morph = createMorph({ source, content, spring: { open: quick, close: lazy }, onRest: (open) => rest(open) });
-    await new Promise<boolean>((resolve) => {
-      rest = resolve;
-      morph.open();
-    });
-    morph.close();
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    const shape = parent.children[1] as HTMLElement;
-    // Well inside the 120ms hold: the panel's size still, the content already on its way out
-    expect(shape.style.width).toBe("240px");
-    expect(Number(content.style.opacity)).toBeLessThan(1);
+    expect(radii.at(-1)).toBe(28);
     morph.destroy();
   });
 
-  it("closes onto the control where it is now, after the page scrolled", async () => {
-    const { parent, source, content } = scene();
-    let rest: (open: boolean) => void = () => {};
-    const morph = createMorph({ source, content, spring: fast, onRest: (open) => rest(open) });
-    await new Promise<boolean>((resolve) => {
-      rest = resolve;
-      morph.open();
-    });
-    // Scrolled 100px down while open: everything is 100px higher on screen
-    source.getBoundingClientRect = () => new DOMRect(20, -80, 44, 44);
-    content.getBoundingClientRect = () => new DOMRect(20, -80, 240, 200);
-    const ys: number[] = [];
-    const shape = parent.children[1] as HTMLElement;
-    await new Promise<boolean>((resolve) => {
-      rest = resolve;
-      morph.close();
-      const watch = () => {
-        ys.push(parseFloat(shape.style.transform.split(",")[1] ?? "0"));
-        if (morph.isOpen === false && shape.isConnected) requestAnimationFrame(watch);
-      };
-      watch();
-    });
-    // It lands where the control is now, not where it was before the scroll
-    expect(ys.at(-1)).toBeCloseTo(-80, 0);
+  it("gives each corner its own radius, a percent as the box makes it", async () => {
+    const { button, panel } = scene();
+    // A sheet rounded on top only, its radius a percent: 24px across, 20px down
+    panel.style.borderRadius = "10% 10% 0 0";
+    const morph = createMorph({ states: [button, panel], spring: fast });
+    const going = morph.to(panel);
+    const shape = button.nextElementSibling as HTMLElement;
+    await going;
+    // Circular, never an oval: the smaller of the two
+    expect(shape.style.borderRadius).toBe("20px 20px 0px 0px");
+    morph.destroy();
+  });
+
+  it("shrinking from rest, holds the shape a beat while the contents go", async () => {
+    const { button, panel } = scene();
+    const lazy = { ...quick, width: { duration: 1, bounce: 0 } };
+    const morph = createMorph({ states: [button, panel], initial: panel, spring: { shrink: lazy } });
+    void morph.to(button);
+    await wait(50);
+    const shape = button.nextElementSibling as HTMLElement;
+    // Well inside the 120ms hold: the panel's size still, its contents already on their way out
+    expect(shape.style.width).toBe("240px");
+    expect(Number(panel.style.opacity)).toBeLessThan(1);
     morph.destroy();
   });
 
   it("runs past the target once, then eases back without swinging", async () => {
-    const { parent, source, content } = scene();
-    // The panel's center is right of the control's: x has 158px to go
-    content.getBoundingClientRect = () => new DOMRect(100, 20, 160, 44);
+    const { button, panel } = scene();
+    // The panel's center is right of the control's: x has 138px to go
+    panel.getBoundingClientRect = () => new DOMRect(100, 20, 160, 44);
     const set = {
       ...quick,
       x: { duration: 0.3, bounce: 0.5, settle: 0 },
@@ -207,394 +244,546 @@ describe("createMorph", () => {
       progress: { duration: 0.3, bounce: 0 },
     };
     const xs: number[] = [];
-    let done = false;
-    await new Promise<void>((resolve) => {
-      const morph = createMorph({
-        source,
-        content,
-        spring: { open: set, close: set },
-        onRest: () => {
-          done = true;
-          resolve();
-        },
-      });
-      morph.open();
-      const shape = parent.children[1] as HTMLElement;
-      const watch = () => {
+    const morph = createMorph({
+      states: [button, panel],
+      spring: { grow: set },
+      onProgress: () => {
+        const shape = button.nextElementSibling as HTMLElement;
         const tx = parseFloat(shape.style.transform.slice("translate(".length));
         xs.push(tx + parseFloat(shape.style.width) / 2);
-        if (!done) requestAnimationFrame(watch);
-      };
-      watch();
+      },
     });
+    await morph.to(panel);
     const target = 180;
     const peak = Math.max(...xs);
     // Past it by about a sixth of the way (a 0.5 bounce), once
-    expect(peak - target).toBeGreaterThan(158 * 0.12);
-    expect(peak - target).toBeLessThan(158 * 0.2);
+    expect(peak - target).toBeGreaterThan(138 * 0.12);
+    expect(peak - target).toBeLessThan(138 * 0.2);
     const after = xs.slice(xs.indexOf(peak));
-    expect(after.every((x, i) => i === 0 || x <= after[i - 1] + 1e-6)).toBe(true);
+    // Never back up: the shape's place and width are each drawn to a hundredth of a pixel
+    expect(after.every((x, i) => i === 0 || x <= after[i - 1] + 0.02)).toBe(true);
     expect(Math.min(...after)).toBeGreaterThanOrEqual(target - 0.25);
+    morph.destroy();
   });
 
   it("turns around midway and gives the control back at rest", async () => {
-    const { parent, source, content } = scene();
-    let rest: (open: boolean) => void = () => {};
-    const morph = createMorph({ source, content, spring: fast, onRest: (open) => rest(open) });
-    morph.open();
-    const rested = new Promise<boolean>((resolve) => (rest = resolve));
-    morph.close();
-    expect(await rested).toBe(false);
-    expect(source.hasAttribute("data-lw-away")).toBe(false);
-    expect(source.style.opacity).toBe("");
+    const { parent, button, panel } = scene();
+    const morph = createMorph({ states: [button, panel], spring: fast });
+    const going = morph.to(panel);
+    const back = morph.to(button);
+    expect(await going).toBe(false);
+    expect(await back).toBe(true);
+    expect(button.hasAttribute("data-lw-away")).toBe(false);
+    expect(button.style.opacity).toBe("");
     expect(parent.children).toHaveLength(1);
-    expect(content.style.visibility).toBe("hidden");
+    expect(panel.hasAttribute("data-lw-away")).toBe(true);
+    expect(panel.style.visibility).toBe("hidden");
+    morph.destroy();
+  });
+
+  it("takes the copy again as the state is when it turns around", () => {
+    const { button, panel } = scene();
+    button.textContent = "Oldest";
+    const morph = createMorph({ states: [button, panel], spring: { grow: slow, shrink: slow } });
+    void morph.to(panel);
+    const shape = button.nextElementSibling as HTMLElement;
+    expect(shape.querySelector("button")?.textContent).toBe("Oldest");
+    // Pressed on the way, its label changed: back home it's the new one that rides
+    button.textContent = "Newest";
+    void morph.to(button);
+    expect(shape.querySelectorAll("button")).toHaveLength(1);
+    expect(shape.querySelector("button")?.textContent).toBe("Newest");
+    morph.destroy();
+  });
+
+  it("starts over from where the shape is when sent to a third state", async () => {
+    const { parent, button, panel } = scene();
+    const sheet = document.createElement("div");
+    sheet.getBoundingClientRect = () => new DOMRect(0, 200, 400, 200);
+    document.body.append(sheet);
+    const morph = createMorph({ states: [button, panel, sheet], spring: { grow: slow, shrink: slow } });
+    const going = morph.to(panel);
+    await wait(60);
+    const elsewhere = morph.to(sheet);
+    expect(await going).toBe(false);
+    expect(await elsewhere).toBe(true);
+    expect(morph.current).toBe(sheet);
+    expect(sheet.style.visibility).toBe("visible");
+    for (const el of [button, panel]) expect(el.hasAttribute("data-lw-away")).toBe(true);
+    await frame();
+    await frame();
+    expect(parent.children).toHaveLength(1);
+    morph.destroy();
+  });
+
+  it("lands on the control where it is now, after the page scrolled on the way", async () => {
+    const { button, panel } = scene();
+    const ys: number[] = [];
+    const morph = createMorph({
+      states: [button, panel],
+      initial: panel,
+      spring: { shrink: slow },
+      onProgress: () =>
+        ys.push(parseFloat((button.nextElementSibling as HTMLElement).style.transform.split(",")[1] ?? "0")),
+    });
+    const going = morph.to(button);
+    // Scrolled 100px down on the way: everything is 100px higher on screen
+    button.getBoundingClientRect = () => new DOMRect(20, -80, 44, 44);
+    panel.getBoundingClientRect = () => new DOMRect(20, -80, 240, 200);
+    document.dispatchEvent(new Event("scroll"));
+    await going;
+    expect(ys.at(-1)).toBeCloseTo(-80, 0);
+    morph.destroy();
+  });
+
+  it("follows a state that changes size on the way, when told", async () => {
+    const { button, panel } = scene();
+    const morph = createMorph({ states: [button, panel], spring: fast });
+    const going = morph.to(panel);
+    const shape = button.nextElementSibling as HTMLElement;
+    // More came in: the panel is taller now
+    panel.getBoundingClientRect = () => new DOMRect(20, 20, 240, 320);
+    morph.update();
+    await going;
+    expect(shape.style.height).toBe("320px");
+    morph.destroy();
+  });
+
+  it("follows a state that changes size on the way by itself", async () => {
+    let notify: ResizeObserverCallback = () => {};
+    const watched = new Set<Element>();
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(callback: ResizeObserverCallback) {
+          notify = callback;
+        }
+        observe(el: Element) {
+          watched.add(el);
+        }
+        unobserve(el: Element) {
+          watched.delete(el);
+        }
+        disconnect() {
+          watched.clear();
+        }
+      },
+    );
+    const sized = (target: Element, width: number, height: number) =>
+      ({
+        target,
+        borderBoxSize: [{ inlineSize: width, blockSize: height }],
+        contentRect: new DOMRect(0, 0, width, height),
+      }) as unknown as ResizeObserverEntry;
+    const { button, panel } = scene();
+    const morph = createMorph({ states: [button, panel], spring: { grow: slow } });
+    const going = morph.to(panel);
+    const shape = button.nextElementSibling as HTMLElement;
+    // Both ends are watched while it flies
+    expect([...watched]).toEqual([button, panel]);
+    const measured = vi.spyOn(panel, "getBoundingClientRect");
+    // The first sighting, as they're watched, is only taken note of
+    notify([sized(button, 44, 44), sized(panel, 240, 200)], {} as ResizeObserver);
+    expect(measured).not.toHaveBeenCalled();
+    // More came in: the panel is taller now
+    panel.getBoundingClientRect = () => new DOMRect(20, 20, 240, 320);
+    notify([sized(panel, 240, 320)], {} as ResizeObserver);
+    await going;
+    expect(shape.style.height).toBe("320px");
+    // At rest nothing is watched
+    expect(watched.size).toBe(0);
+    morph.destroy();
   });
 
   it("measures a just-pressed control at its resting size", () => {
-    const { parent, source, content } = scene();
+    const { button, panel } = scene();
     // Swollen by a press: on screen it's bigger only while the scale is on
-    source.style.scale = "1.2";
-    source.getBoundingClientRect = () =>
-      source.style.scale === "none" ? new DOMRect(20, 20, 44, 44) : new DOMRect(15.6, 15.6, 52.8, 52.8);
-    const morph = createMorph({ source, content, spring: fast });
-    morph.open();
-    const shape = parent.children[1] as HTMLElement;
+    button.style.scale = "1.2";
+    button.getBoundingClientRect = () =>
+      button.style.scale === "" ? new DOMRect(20, 20, 44, 44) : new DOMRect(15.6, 15.6, 52.8, 52.8);
+    const morph = createMorph({ states: [button, panel], spring: fast });
+    void morph.to(panel);
+    const shape = button.nextElementSibling as HTMLElement;
     // The shape starts as the control at rest, and the press is left as it was
     expect(shape.style.width).toBe("44px");
     expect(shape.style.transform).toBe("translate(20px, 20px)");
-    expect(source.style.scale).toBe("1.2");
+    expect(button.style.scale).toBe("1.2");
     morph.destroy();
   });
 
-  it("dresses the copy as the control is when it goes", () => {
-    const { parent, source, content } = scene();
-    const morph = createMorph({ source, content, spring: fast });
-    source.textContent = "Oldest";
-    morph.open();
-    const shape = parent.children[1] as HTMLElement;
-    // Loose text is boxed, so it can fade and stay on its spot
-    const label = shape.firstElementChild as HTMLElement;
-    expect(label.tagName).toBe("SPAN");
-    expect(label.textContent).toBe("Oldest");
-    expect(label.style.position).toBe("absolute");
+  it("passes a press on the shape to the smallest state under it at rest", () => {
+    const { button, panel } = scene();
+    const morph = createMorph({ states: [button, panel], spring: { grow: slow, shrink: slow } });
+    const clicks: string[] = [];
+    button.addEventListener("click", () => clicks.push("button"));
+    panel.addEventListener("click", () => clicks.push("panel"));
+    void morph.to(panel);
+    const shape = button.nextElementSibling as HTMLElement;
+    // Over both: the control, the smaller one
+    shape.dispatchEvent(new MouseEvent("click", { clientX: 30, clientY: 30, bubbles: true }));
+    // Over the panel alone
+    shape.dispatchEvent(new MouseEvent("click", { clientX: 200, clientY: 150, bubbles: true }));
+    expect(clicks).toEqual(["button", "panel"]);
     morph.destroy();
   });
 
-  it("passes a click on the shrinking shape to the control", () => {
-    const { parent, source, content } = scene();
-    const morph = createMorph({ source, content });
-    let clicks = 0;
-    source.addEventListener("click", () => clicks++);
-    morph.open();
-    const shape = parent.children[1] as HTMLElement;
-    // Opening, the shape lets clicks through to the panel
-    expect(shape.style.pointerEvents).toBe("none");
-    morph.close();
-    expect(shape.style.pointerEvents).toBe("");
-    shape.click();
-    expect(clicks).toBe(1);
+  it("takes presses on the state flying in, not on the one flying out", () => {
+    const { button, panel } = scene();
+    const morph = createMorph({ states: [button, panel], spring: { grow: slow, shrink: slow } });
+    void morph.to(panel);
+    expect(panel.style.pointerEvents).toBe("");
+    void morph.to(button);
+    expect(panel.style.pointerEvents).toBe("none");
+    morph.destroy();
   });
 
   it("stays in a group when the panel opens beside the neighbors", () => {
-    const { parent, source, content } = scene();
+    const { parent, button, panel } = scene();
     // A group running on the parent, as the contract says: no group code needed here
     parent.setAttribute("data-lw-surface", "");
     const bar = document.createElement("div");
     bar.getBoundingClientRect = () => new DOMRect(300, 20, 80, 44);
     parent.prepend(bar);
-    const morph = createMorph({ source, content, spring: fast });
-    morph.open();
-    const shape = parent.lastElementChild as HTMLElement;
-    expect(shape.parentElement).toBe(parent);
+    const morph = createMorph({ states: [button, panel], spring: fast });
+    void morph.to(panel);
+    const shape = button.nextElementSibling as HTMLElement;
+    expect(shape.hasAttribute("data-lw-part")).toBe(true);
     expect(shape.style.zIndex).toBe("");
     morph.destroy();
   });
 
   it("lifts out over a group when the panel covers a neighbor, leaving a stub in it", async () => {
-    const { parent, source, content } = scene();
-    // A group running on the parent, as the contract says: no group code needed here
+    const { parent, button, panel } = scene();
     parent.setAttribute("data-lw-surface", "");
     const bar = document.createElement("div");
     bar.getBoundingClientRect = () => new DOMRect(70, 120, 160, 44);
     parent.prepend(bar);
-    const rested = new Promise<boolean>((resolve) => {
-      const morph = createMorph({ source, content, spring: fast, onRest: resolve });
-      morph.open();
-    });
-    const stub = source.nextElementSibling as HTMLElement;
+    const morph = createMorph({ states: [button, panel], spring: fast });
+    const going = morph.to(panel);
+    const stub = button.nextElementSibling as HTMLElement;
     const shape = parent.nextElementSibling as HTMLElement;
     // Out of the group, right after it and above it; the stub in the group where the control was
-    expect(shape.getAttribute("aria-hidden")).toBe("true");
+    expect(shape.hasAttribute("data-lw-part")).toBe(true);
     expect(shape.style.zIndex).toBe("1");
-    expect(stub.isConnected).toBe(true);
+    expect(stub.hasAttribute("data-lw-part")).toBe(true);
     expect(stub.style.width).toBe("44px");
-    // First frame: the stub whole under the lifted copy, which never fades
+    // First frame: the stub whole under the lifted shape
     expect(stub.style.transform).toBe("translate(20px, 20px) scale(1)");
-    expect(shape.style.opacity).toBe("");
-    expect(await rested).toBe(true);
-    expect(shape.style.opacity).toBe("");
+    expect(await going).toBe(true);
     expect(stub.isConnected).toBe(false);
+    morph.destroy();
+  });
+
+  it("puts the shape in a container, out of a parent that clips", async () => {
+    const { parent, button, panel } = scene();
+    const container = document.createElement("div");
+    document.body.append(container);
+    const morph = createMorph({ states: [button, panel], container, spring: fast });
+    const going = morph.to(panel);
+    expect(container.lastElementChild?.hasAttribute("data-lw-part")).toBe(true);
+    expect(parent.children).toHaveLength(1);
+    await going;
+    expect(await morph.to(button)).toBe(true);
+    expect(container.children).toHaveLength(0);
+    morph.destroy();
   });
 
   it("turns a round control's corners into a squircle panel's, where corner-shape is drawn", async () => {
     vi.spyOn(window, "CSS", "get").mockReturnValue({
       supports: (property: string) => property === "corner-shape",
     } as unknown as typeof CSS);
-    const { parent, source, content } = scene();
-    content.style.setProperty("corner-shape", "squircle");
-    const shapes: string[] = [];
-    await new Promise<void>((resolve) => {
-      const morph = createMorph({ source, content, spring: fast, onRest: () => resolve() });
-      morph.open();
-      shapes.push((parent.children[1] as HTMLElement).style.getPropertyValue("corner-shape"));
-    });
-    const shape = parent.children[1] as HTMLElement;
+    const { button, panel } = scene();
+    panel.style.setProperty("corner-shape", "squircle");
+    const morph = createMorph({ states: [button, panel], spring: fast });
+    const going = morph.to(panel);
+    const shape = button.nextElementSibling as HTMLElement;
     // Round to start with, the panel's squircle at rest
-    expect(shapes[0]).toBe("superellipse(1)");
+    expect(shape.style.getPropertyValue("corner-shape")).toBe("superellipse(1)");
+    await going;
     expect(shape.style.getPropertyValue("corner-shape")).toBe("superellipse(2)");
-    vi.restoreAllMocks();
+    morph.destroy();
   });
 
   it("leaves corner-shape alone where the browser doesn't draw it", async () => {
     vi.spyOn(window, "CSS", "get").mockReturnValue({ supports: () => false } as unknown as typeof CSS);
-    const { parent, source, content } = scene();
-    content.style.setProperty("corner-shape", "squircle");
-    await new Promise<void>((resolve) =>
-      createMorph({ source, content, spring: fast, onRest: () => resolve() }).open(),
-    );
-    expect((parent.children[1] as HTMLElement).style.getPropertyValue("corner-shape")).toBe("");
-    vi.restoreAllMocks();
-  });
-
-  it("puts everything back on destroy, and does nothing after", async () => {
-    const { parent, source, content } = scene();
-    const morph = createMorph({ source, content });
-    morph.open();
-    morph.destroy();
-    expect(parent.children).toHaveLength(1);
-    expect(parent.nextElementSibling).toBe(content);
-    expect(content.getAttribute("style")).toBe("border-radius: 28px;");
-    expect(source.hasAttribute("aria-expanded")).toBe(false);
-    expect(await morph.open()).toBe(false);
-    expect(source.hasAttribute("data-lw-away")).toBe(false);
-    expect(parent.children).toHaveLength(1);
-  });
-
-  it("takes springs in part, the rest the defaults'", async () => {
-    const { source, content } = scene();
-    // Only the opening's given: the closing's left as the defaults', and nothing breaks for it
-    const start = performance.now();
-    let rest: (open: boolean) => void = () => {};
-    const morph = createMorph({ source, content, spring: { open: quick }, onRest: (open) => rest(open) });
-    await new Promise<boolean>((resolve) => {
-      rest = resolve;
-      morph.open();
-    });
-    // The given springs: well under the defaults' third of a second
-    expect(performance.now() - start).toBeLessThan(250);
-    await new Promise<boolean>((resolve) => {
-      rest = resolve;
-      morph.close();
-    });
+    const { button, panel } = scene();
+    panel.style.setProperty("corner-shape", "squircle");
+    const morph = createMorph({ states: [button, panel], spring: fast });
+    const going = morph.to(panel);
+    const shape = button.nextElementSibling as HTMLElement;
+    await going;
+    expect(shape.style.getPropertyValue("corner-shape")).toBe("");
     morph.destroy();
   });
 
-  it("calls onStart each way, turning around included", () => {
-    const { source, content } = scene();
-    const started: boolean[] = [];
-    const morph = createMorph({ source, content, spring: fast, onStart: (open) => started.push(open) });
-    morph.open();
-    morph.close();
-    morph.close();
-    morph.open();
-    expect(started).toEqual([true, false, true]);
-    morph.destroy();
-  });
-
-  it("follows the panel when it changes size while open", async () => {
-    const { parent, source, content } = scene();
-    let rest: (open: boolean) => void = () => {};
-    const morph = createMorph({ source, content, spring: fast, onRest: (open) => rest(open) });
-    await new Promise<boolean>((resolve) => {
-      rest = resolve;
-      morph.open();
-    });
-    // More came in: the panel is taller now
-    content.getBoundingClientRect = () => new DOMRect(20, 20, 240, 320);
-    morph.update();
-    const shape = parent.children[1] as HTMLElement;
-    expect(shape.style.height).toBe("320px");
-    // The content stays itself at rest
-    expect(content.style.transform).toBe("");
-    expect(content.style.clipPath).toBe("");
-    morph.destroy();
-  });
-
-  it("keeps the content's own translation under the morph's", () => {
-    const { source, content } = scene();
+  it("keeps the bigger state's own translation under the morph's", () => {
+    const { button, panel } = scene();
     vi.spyOn(window, "getComputedStyle").mockImplementation(
       (el) =>
         ({
-          borderTopLeftRadius: el === content ? "28px" : "0px",
-          borderTopRightRadius: el === content ? "28px" : "0px",
-          borderBottomRightRadius: el === content ? "28px" : "0px",
-          borderBottomLeftRadius: el === content ? "28px" : "0px",
-          transform: el === content ? "matrix(1, 0, 0, 1, -120, -100)" : "none",
+          borderTopLeftRadius: el === panel ? "28px" : "0px",
+          borderTopRightRadius: el === panel ? "28px" : "0px",
+          borderBottomRightRadius: el === panel ? "28px" : "0px",
+          borderBottomLeftRadius: el === panel ? "28px" : "0px",
+          transform: el === panel ? "matrix(1, 0, 0, 1, -120, -100)" : "none",
           visibility: "visible",
           getPropertyValue: () => "",
         }) as unknown as CSSStyleDeclaration,
     );
-    const morph = createMorph({ source, content, spring: fast });
-    morph.open();
+    const morph = createMorph({ states: [button, panel], spring: fast });
+    void morph.to(panel);
     // First frame: scaled 1.45 about its corner, and the translation it has of its own kept, last
-    const t = content.style.transform;
+    const t = panel.style.transform;
     expect(t.endsWith(" matrix(1, 0, 0, 1, -120, -100)")).toBe(true);
     const [x, y] = /translate\(([-\d.]+)px, ([-\d.]+)px\)/.exec(t)!.slice(1).map(Number);
     // Centered on the control (42, 42): the panel's box (20, 20, 240x200) scaled 1.45, then its own
     // -120/-100 scaled with it, which the morph's translate takes back
-    expect(x).toBeCloseTo(42 - 20 - (1.45 * 240) / 2 + 0.45 * 120, 3);
-    expect(y).toBeCloseTo(42 - 20 - (1.45 * 200) / 2 + 0.45 * 100, 3);
-    morph.destroy();
-    vi.restoreAllMocks();
-  });
-
-  it("gives each corner its own radius, a percent as the box makes it", async () => {
-    const { parent, source, content } = scene();
-    // A sheet rounded on top only, its radius a percent: 24px across, 20px down
-    content.style.borderRadius = "10% 10% 0 0";
-    const rested = new Promise<boolean>((resolve) => {
-      const morph = createMorph({ source, content, spring: fast, onRest: resolve });
-      morph.open();
-    });
-    await rested;
-    // Circular, never an oval: the smaller of the two
-    expect((parent.children[1] as HTMLElement).style.borderRadius).toBe("20px 20px 0px 0px");
-  });
-
-  it("puts the glass in a container, out of a parent that clips", async () => {
-    const { parent, source, content } = scene();
-    const container = document.createElement("div");
-    document.body.append(container);
-    let rest: (open: boolean) => void = () => {};
-    const morph = createMorph({ source, content, container, spring: fast, onRest: (open) => rest(open) });
-    await new Promise<boolean>((resolve) => {
-      rest = resolve;
-      morph.open();
-    });
-    const shape = container.lastElementChild as HTMLElement;
-    expect(shape.getAttribute("aria-hidden")).toBe("true");
-    expect(parent.children).toHaveLength(1);
-    await new Promise<boolean>((resolve) => {
-      rest = resolve;
-      morph.close();
-    });
-    expect(container.children).toHaveLength(0);
+    expect(x).toBeCloseTo(42 - 20 - (1.45 * 240) / 2 + 0.45 * 120, 1);
+    expect(y).toBeCloseTo(42 - 20 - (1.45 * 200) / 2 + 0.45 * 100, 1);
     morph.destroy();
   });
 
-  it("tells where it is, and promises where it's going", async () => {
-    const { source, content } = scene();
-    const morph = createMorph({ source, content, spring: fast });
-    expect(morph.phase).toBe("closed");
-    const opening = morph.open();
-    expect(morph.phase).toBe("opening");
+  it("takes springs in part, the rest the defaults'", async () => {
+    const { button, panel } = scene();
+    // Only growing's given: shrinking's left as the defaults', and nothing breaks for it
+    const morph = createMorph({ states: [button, panel], spring: { grow: quick } });
+    const start = performance.now();
+    await morph.to(panel);
+    // The given springs: well under the defaults' third of a second
+    expect(performance.now() - start).toBeLessThan(250);
+    expect(await morph.to(button)).toBe(true);
+    morph.destroy();
+  });
+
+  it("tells where it's headed, and promises it", async () => {
+    const { button, panel } = scene();
+    const morph = createMorph({ states: [button, panel], spring: fast });
+    const going = morph.to(panel);
+    expect(morph.current).toBe(panel);
+    expect(morph.moving).toBe(true);
     // Asked again on the way: the same promise
-    expect(morph.open()).toBe(opening);
-    expect(await opening).toBe(true);
-    expect(morph.phase).toBe("open");
+    expect(morph.to(panel)).toBe(going);
+    expect(await going).toBe(true);
+    expect(morph.moving).toBe(false);
+    // Asked where it is: done already
+    expect(await morph.to(panel)).toBe(true);
     // Turned around before it gets there: that one's off
-    const closing = morph.close();
-    const back = morph.open();
-    expect(await closing).toBe(false);
-    expect(await back).toBe(true);
+    const back = morph.to(button);
+    const again = morph.to(panel);
+    expect(await back).toBe(false);
+    expect(await again).toBe(true);
+    expect(() => morph.to(document.createElement("div"))).toThrow();
     morph.destroy();
   });
 
-  it("opens and closes at once when asked to", async () => {
-    const { parent, source, content } = scene();
-    const rests: boolean[] = [];
-    const morph = createMorph({ source, content, onRest: (open) => rests.push(open) });
-    const done = morph.open({ instant: true });
-    expect(morph.phase).toBe("open");
-    expect((parent.children[1] as HTMLElement).style.width).toBe("240px");
-    expect(await done).toBe(true);
-    morph.close({ instant: true });
-    expect(morph.phase).toBe("closed");
-    expect(parent.children).toHaveLength(1);
-    expect(rests).toEqual([true, false]);
-    morph.destroy();
-  });
-
-  it("starts open when asked, quietly", () => {
-    const { parent, source, content } = scene();
-    const told: string[] = [];
+  it("swaps at once when asked to, or lands at once mid-way", async () => {
+    const { parent, button, panel } = scene();
+    const rests: HTMLElement[] = [];
     const morph = createMorph({
-      source,
-      content,
-      initialOpen: true,
-      onStart: () => told.push("start"),
-      onRest: () => told.push("rest"),
+      states: [button, panel],
+      spring: { grow: slow, shrink: slow },
+      onRest: (at) => rests.push(at),
     });
-    expect(morph.isOpen).toBe(true);
-    expect(morph.phase).toBe("open");
-    expect(source.getAttribute("aria-expanded")).toBe("true");
-    expect(source.hasAttribute("data-lw-away")).toBe(true);
-    expect((parent.children[1] as HTMLElement).style.height).toBe("200px");
-    expect(content.style.visibility).toBe("visible");
-    expect(content.style.transform).toBe("");
-    expect(told).toEqual([]);
+    const done = morph.to(panel, { instant: true });
+    // No shape: the states swap
+    expect(parent.children).toHaveLength(1);
+    expect(morph.moving).toBe(false);
+    expect(panel.style.visibility).toBe("visible");
+    expect(button.hasAttribute("data-lw-away")).toBe(true);
+    expect(await done).toBe(true);
+    const going = morph.to(button);
+    expect(morph.moving).toBe(true);
+    void morph.to(button, { instant: true });
+    expect(morph.moving).toBe(false);
+    expect(await going).toBe(true);
+    expect(rests).toEqual([panel, button]);
     morph.destroy();
   });
 
-  it("closes on Escape and on a press outside, when asked to", () => {
-    const { source, content } = scene();
-    const outside = document.createElement("div");
-    document.body.append(outside);
-    const morph = createMorph({ source, content, spring: fast, dismiss: true });
-    morph.open({ instant: true });
-    // Inside the panel or on the control: stays
-    content.dispatchEvent(new Event("pointerdown", { bubbles: true }));
-    source.dispatchEvent(new Event("pointerdown", { bubbles: true }));
-    expect(morph.isOpen).toBe(true);
-    outside.dispatchEvent(new Event("pointerdown", { bubbles: true }));
-    expect(morph.isOpen).toBe(false);
-    morph.open({ instant: true });
-    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
-    expect(morph.isOpen).toBe(false);
+  it("swaps at once with reduced motion", () => {
+    vi.spyOn(window, "matchMedia").mockReturnValue({ matches: true } as MediaQueryList);
+    const { parent, button, panel } = scene();
+    const morph = createMorph({ states: [button, panel] });
+    void morph.to(panel);
+    expect(parent.children).toHaveLength(1);
+    expect(morph.moving).toBe(false);
     morph.destroy();
-    // Not asked: neither
-    const quiet = createMorph({ source, content });
-    quiet.open({ instant: true });
-    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
-    outside.dispatchEvent(new Event("pointerdown", { bubbles: true }));
-    expect(quiet.isOpen).toBe(true);
-    quiet.destroy();
+  });
+
+  it("calls onStart each way, turning around included", () => {
+    const { button, panel } = scene();
+    const started: [HTMLElement, HTMLElement][] = [];
+    const morph = createMorph({
+      states: [button, panel],
+      spring: fast,
+      onStart: (to, from) => started.push([to, from]),
+    });
+    void morph.to(panel);
+    void morph.to(button);
+    void morph.to(button);
+    void morph.to(panel);
+    expect(started).toEqual([
+      [panel, button],
+      [button, panel],
+      [panel, button],
+    ]);
+    morph.destroy();
+  });
+
+  it("tells the progress toward where it's headed every frame, from 0 to 1", async () => {
+    const { button, panel } = scene();
+    const seen: [number, HTMLElement, HTMLElement | null][] = [];
+    const morph = createMorph({
+      states: [button, panel],
+      spring: fast,
+      onProgress: (progress, to, from) => seen.push([progress, to, from]),
+    });
+    await morph.to(panel);
+    expect(seen.length).toBeGreaterThan(2);
+    expect(seen.every(([, to, from]) => to === panel && from === button)).toBe(true);
+    const progress = seen.map(([p]) => p);
+    expect(progress[0]).toBe(0);
+    expect(progress.at(-1)).toBe(1);
+    expect(progress.every((p, i) => p >= 0 && p <= 1 && (i === 0 || p >= progress[i - 1] - 1e-9))).toBe(true);
+    morph.destroy();
+  });
+
+  it("counts the progress toward the other end once turned around, without a jump", async () => {
+    const { button, panel } = scene();
+    const seen: [number, HTMLElement][] = [];
+    const morph = createMorph({
+      states: [button, panel],
+      spring: { grow: slow, shrink: slow },
+      onProgress: (progress, to) => seen.push([progress, to]),
+    });
+    void morph.to(panel);
+    await wait(80);
+    const before = seen.length;
+    const [last] = seen[before - 1];
+    expect(last).toBeGreaterThan(0);
+    await morph.to(button);
+    const [first, to] = seen[before];
+    expect(to).toBe(button);
+    expect(first).toBeCloseTo(1 - last, 6);
+    expect(seen.at(-1)).toEqual([1, button]);
+    morph.destroy();
+  });
+
+  it("tells the progress from nowhere once started over mid-way", async () => {
+    const { button, panel } = scene();
+    const sheet = document.createElement("div");
+    sheet.getBoundingClientRect = () => new DOMRect(0, 200, 400, 200);
+    document.body.append(sheet);
+    const froms = new Set<HTMLElement | null>();
+    const morph = createMorph({
+      states: [button, panel, sheet],
+      spring: { grow: slow, shrink: slow },
+      onProgress: (_, to, from) => to === sheet && froms.add(from),
+    });
+    void morph.to(panel);
+    await wait(60);
+    await morph.to(sheet);
+    expect([...froms]).toEqual([null]);
+    morph.destroy();
+  });
+
+  it("tells the progress once, done, when it swaps at once", async () => {
+    const { button, panel } = scene();
+    const seen: [number, HTMLElement, HTMLElement | null][] = [];
+    const morph = createMorph({
+      states: [button, panel],
+      onProgress: (progress, to, from) => seen.push([progress, to, from]),
+    });
+    await morph.to(panel, { instant: true });
+    expect(seen).toEqual([[1, panel, button]]);
+    morph.destroy();
+  });
+
+  it("takes a state added later, away until it's asked for", async () => {
+    const { button, panel } = scene();
+    const morph = createMorph({ states: [button, panel], spring: fast });
+    const card = document.createElement("div");
+    card.getBoundingClientRect = () => new DOMRect(20, 300, 120, 80);
+    expect(() => morph.to(card)).toThrow();
+    // Not in the page yet: nothing to lay it out by
+    expect(() => morph.add(card)).toThrow();
+    document.body.append(card);
+    morph.add(card);
+    // Added twice: once
+    morph.add(card);
+    expect(card.hasAttribute("data-lw-away")).toBe(true);
+    expect(card.style.visibility).toBe("hidden");
+    expect(await morph.to(card)).toBe(true);
+    expect(morph.current).toBe(card);
+    expect(card.style.visibility).toBe("visible");
+    morph.destroy();
+    // Destroyed, it gives the added one its own styles back too
+    expect(card.hasAttribute("data-lw-away")).toBe(false);
+    expect(card.style.visibility).toBe("");
+  });
+
+  it("lets go of a state, its own styles given back", () => {
+    const { button, panel } = scene();
+    panel.style.opacity = "0.9";
+    const morph = createMorph({ states: [button, panel], spring: fast });
+    expect(() => morph.remove(button)).toThrow();
+    morph.remove(panel);
+    expect(panel.hasAttribute("data-lw-away")).toBe(false);
+    expect(panel.style.opacity).toBe("0.9");
+    expect(panel.style.visibility).toBe("");
+    expect(panel.style.pointerEvents).toBe("");
+    expect(() => morph.to(panel)).toThrow();
+    // Let go twice: nothing more
+    morph.remove(panel);
+    morph.destroy();
+  });
+
+  it("lands at once when one end of the flight under way is let go", async () => {
+    const { button, panel } = scene();
+    const morph = createMorph({ states: [button, panel], spring: { grow: slow, shrink: slow } });
+    const going = morph.to(panel);
+    morph.remove(button);
+    expect(morph.moving).toBe(false);
+    expect(await going).toBe(true);
+    expect(button.hasAttribute("data-lw-away")).toBe(false);
+    expect(button.style.opacity).toBe("");
+    expect(panel.style.transform).toBe("");
+    morph.destroy();
+  });
+
+  it("puts everything back on destroy, and does nothing after", async () => {
+    const { parent, button, panel } = scene();
+    const morph = createMorph({ states: [button, panel] });
+    const going = morph.to(panel);
+    morph.destroy();
+    expect(await going).toBe(false);
+    expect(parent.children).toHaveLength(1);
+    expect(parent.nextElementSibling).toBe(panel);
+    expect(panel.getAttribute("style")).toBe("border-radius: 28px;");
+    expect(button.hasAttribute("data-lw-away")).toBe(false);
+    expect(await morph.to(panel)).toBe(false);
+    morph.add(document.body);
+    expect(document.body.hasAttribute("data-lw-away")).toBe(false);
+    expect(parent.children).toHaveLength(1);
   });
 
   it("morphs any element: no material, no other module", async () => {
-    const { parent, content } = scene();
+    const { parent, panel } = scene();
     // A plain button styled by a class of the page's own
-    const source = document.createElement("button");
-    source.className = "fab";
-    source.textContent = "+";
-    source.getBoundingClientRect = () => new DOMRect(300, 300, 56, 56);
-    parent.append(source);
-    let rest: (open: boolean) => void = () => {};
-    const morph = createMorph({ source, content, spring: fast, onRest: (open) => rest(open) });
-    await new Promise<boolean>((resolve) => {
-      rest = resolve;
-      morph.open();
-    });
-    const shape = source.nextElementSibling as HTMLElement;
-    expect(shape.className).toBe("fab");
-    expect(shape.style.width).toBe("240px");
+    const fab = document.createElement("button");
+    fab.className = "fab";
+    fab.textContent = "+";
+    fab.getBoundingClientRect = () => new DOMRect(300, 300, 56, 56);
+    parent.append(fab);
+    const morph = createMorph({ states: [fab, panel], spring: fast });
+    const going = morph.to(panel);
+    const shape = fab.nextElementSibling as HTMLElement;
     expect(shape.hasAttribute("data-lw-part")).toBe(true);
-    await new Promise<boolean>((resolve) => {
-      rest = resolve;
-      morph.close();
-    });
-    expect(source.nextElementSibling).toBeNull();
+    expect(shape.querySelector(".fab")?.textContent).toBe("+");
+    await going;
+    expect(shape.style.width).toBe("240px");
+    expect(await morph.to(fab)).toBe(true);
+    expect(fab.nextElementSibling).toBeNull();
     morph.destroy();
   });
 });
