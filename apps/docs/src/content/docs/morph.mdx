@@ -718,6 +718,7 @@ Each flight is between two states, the smaller riding as a copy and the bigger f
 | `spring?: { grow?, shrink? }` | Springs for flowing into a bigger box and into a smaller one; anything left out uses `defaultMorphSprings` |
 | `onStart?: (to, from) => void` | Called when a flight sets off, including when it turns around or heads elsewhere mid-way |
 | `onRest?: (at) => void` | Called when it comes to rest as a state |
+| `onProgress?: (progress, to, from) => void` | Called every frame of a flight with how far along it is toward `to`, from `0` to `1`. `from` is `null` when it started over mid-way. Turned around, `to` is the other end. Swapped at once, it's called once with `1` |
 
 Each direction has five channels: `x` and `y` move the center, `width` and `height` change the size, and `progress` drives the corners, the contents and shared elements. Pass only the channels you change; `defaultMorphSprings` is exported as a starting point. A spring is `{ duration, bounce, settle? }`: `duration` in seconds, `bounce` from `0` (no overshoot) to `1`, and `settle` the bounce after the first overshoot, `bounce` by default. Shrinking from rest, the shape holds a beat while the contents go first.
 
@@ -726,6 +727,18 @@ const morph = createMorph({
   states: [button, panel],
   spring: {
     grow: { y: { duration: 0.4, bounce: 0.3, settle: 0.1 } },
+  },
+});
+```
+
+`onProgress` moves something of the page with the flight, on the same spring: a scrim behind the panel, a chevron.
+
+```ts
+const morph = createMorph({
+  states: [button, panel],
+  onProgress(progress, to) {
+    const open = to === panel ? progress : 1 - progress;
+    scrim.style.opacity = String(open);
   },
 });
 ```
@@ -740,9 +753,11 @@ const morph = createMorph({
 | `moving` | Whether a flight is under way |
 | `to(state, move?)` | A `Promise<boolean>`: `true` once it rests there, `false` if it was sent elsewhere or destroyed first. `{ instant: true }` swaps at once, as with reduced motion |
 | `update()` | Measures the states again and follows them mid-flight |
+| `add(state)` | Takes one more element as a state, hidden until it's asked for: an item added to a list later |
+| `remove(state)` | Lets go of a state and gives its inline styles back, before it leaves the page. Not the current one; one end of a flight under way lands it at once |
 | `destroy()` | Stops the flight, removes the shape and gives every state its own inline styles back. Later calls do nothing |
 
-Sent back mid-way, it turns around keeping its speed. Sent to a third state mid-way, it starts over from where the shape is. During a flight it follows scrolling and window resizes by itself; call `update()` after anything else moves a state. `destroy()` doesn't remove your own event listeners.
+Sent back mid-way, it turns around keeping its speed. Sent to a third state mid-way, it starts over from where the shape is. During a flight it follows scrolling, window resizes and a state's own size changes (contents loaded on the way) by itself; call `update()` after anything else moves a state. `destroy()` doesn't remove your own event listeners.
 
 </Section>
 

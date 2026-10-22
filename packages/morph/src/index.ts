@@ -59,8 +59,8 @@ import { AWAY, PART, SURFACE, SpringAnimator, type SpringParams } from "@liquid-
  * glass group the melted outline is drawn from round arcs, so while the shape melts with its
  * neighbors its corners are round.
  *
- * Boxes are read when a flight sets off, and again on a scroll, a window resize or `update()`, on
- * screen; each piece is placed from where it sits untransformed. A rotated or scaled ancestor isn't
+ * Boxes are read when a flight sets off, and again on a scroll, a window resize, a resize of either
+ * end or `update()`, on screen; each piece is placed from where it sits untransformed. A rotated or scaled ancestor isn't
  * supported. With reduced motion, or asked to be instant, the states swap at once.
  */
 
@@ -93,6 +93,13 @@ export type MorphOptions = {
   onStart?: (to: HTMLElement, from: HTMLElement) => void;
   /** Called when it comes to rest as a state */
   onRest?: (at: HTMLElement) => void;
+  /**
+   * Called every frame of a flight with how far along it is toward `to`, 0 to 1, as corners and
+   * contents are: to move something of the page with it (a scrim, a chevron). `from` is null when
+   * it started over mid-way. Turned around, `to` is the other end and the progress counts toward
+   * it. Swapped at once, it's called once, with 1.
+   */
+  onProgress?: (progress: number, to: HTMLElement, from: HTMLElement | null) => void;
 };
 
 /** `instant`: the states swap at once, as with reduced motion */
@@ -109,6 +116,13 @@ export type Morph = {
   to(state: HTMLElement, move?: MorphMove): Promise<boolean>;
   /** Reads the boxes again and follows them: for a state moved by something unseen */
   update(): void;
+  /** Takes one more element as a state, away until it's asked for: a list item added later */
+  add(state: HTMLElement): void;
+  /**
+   * Lets go of a state, its own inline styles given back: before it leaves the page. Not the one
+   * it's at; one end of a flight under way, and the flight lands at once.
+   */
+  remove(state: HTMLElement): void;
   destroy(): void;
 };
 
@@ -364,6 +378,7 @@ export function createMorph({
   spring: given,
   onStart,
   onRest,
+  onProgress,
 }: MorphOptions): Morph {
   if (!states.length) throw new Error("morph: it needs states");
   if (!states.includes(initial)) throw new Error("morph: the initial state isn't one of its states");
@@ -612,13 +627,13 @@ export function createMorph({
   shape.style.cssText = `${PINNED}; contain: strict; overflow: hidden; pointer-events: auto`;
   shape.addEventListener("click", forward);
 
-  /** Each state's own inline styles the morph writes, to give back */
-  const saved = new Map(
-    states.map((el) => [
-      el,
-      { opacity: el.style.opacity, visibility: el.style.visibility, pointerEvents: el.style.pointerEvents },
-    ]),
-  );
+  /** Each state's own inline styles the morph writes, to give back: its states are the keys */
+  const ownOf = (el: HTMLElement) => ({
+    opacity: el.style.opacity,
+    visibility: el.style.visibility,
+    pointerEvents: el.style.pointerEvents,
+  });
+  const saved = new Map(states.map((el) => [el, ownOf(el)]));
   const show = (el: HTMLElement) => {
     const own = saved.get(el)!;
     el.removeAttribute(AWAY);
@@ -940,6 +955,11 @@ export function createMorph({
       const s = smooth(clamp01((there - (1 - STUB_SPAN)) / STUB_SPAN));
       stub.style.transform = `translate(${px(stubBox.x - stubOrigin.x)}, ${px(stubBox.y - stubOrigin.y)}) scale(${Math.round(s * 10000) / 10000})`;
     }
+
+    if (onProgress) {
+      const [there, here] = flight.toward === "b" ? [b, a] : [a, b];
+      if (there.el) onProgress(flight.toward === "b" ? p : 1 - p, there.el, here.el);
+    }
   };
 
   let current = initial;
@@ -988,7 +1008,30 @@ export function createMorph({
     } else {
       win.removeEventListener("resize", update);
       doc.removeEventListener("scroll", update, { capture: true });
+      resized.disconnect();
+      sizes.clear();
     }
+  };
+  /**
+   * Each end's size as last seen. A state that grows or shrinks on its way (contents loaded, a
+   * section opened) is followed; its first sighting, as it's watched, is only taken note of.
+   */
+  const sizes = new Map<Element, string>();
+  const resized = new ResizeObserver((entries) => {
+    let changed = false;
+    for (const { target, borderBoxSize, contentRect } of entries) {
+      const box = borderBoxSize?.[0];
+      const size = box ? `${box.inlineSize} ${box.blockSize}` : `${contentRect.width} ${contentRect.height}`;
+      if (sizes.has(target) && sizes.get(target) !== size) changed = true;
+      sizes.set(target, size);
+    }
+    if (changed) update();
+  });
+  /** The flight's ends watched for their size; transforms don't count, so flying itself doesn't either */
+  const watch = () => {
+    resized.disconnect();
+    sizes.clear();
+    for (const end of [flight!.a, flight!.b]) if (end.el) resized.observe(end.el, { box: "border-box" });
   };
 
   /** A flight off from rest, from `from` to `to`: the shape dressed and put in its place */
@@ -1037,6 +1080,7 @@ export function createMorph({
     away(to);
     flight.live = { ...goLive(big, big === from ? aBox : bBox, keys), end: big === from ? "a" : "b" };
     follows(true);
+    watch();
   };
 
   /**
@@ -1129,6 +1173,7 @@ export function createMorph({
     inherit([layer, grounded]);
     away(to);
     if (bigger) flight.live = { ...goLive(to, bBox, new Set()), end: "b" };
+    watch();
     motion!.jump({ p: 0 }, { p: 0 });
   };
 
@@ -1191,8 +1236,9 @@ export function createMorph({
       // At once: no shape, the states swap
       motion?.stop();
       motion = null;
-      for (const state of states) if (state !== el) away(state);
+      for (const state of saved.keys()) if (state !== el) away(state);
       onStart?.(el, from);
+      onProgress?.(1, el, from);
       settle(el);
       return done;
     }
@@ -1276,6 +1322,21 @@ export function createMorph({
     },
     to,
     update,
+    add(el) {
+      if (destroyed || saved.has(el)) return;
+      if (!el.parentElement) throw new Error("morph: each state needs a parent");
+      saved.set(el, ownOf(el));
+      away(el);
+    },
+    remove(el) {
+      if (destroyed || !saved.has(el)) return;
+      if (el === current) throw new Error("morph: it can't let go of the state it's at");
+      // One end of the flight under way: it lands at once first
+      if (flight && (flight.a.el === el || flight.b.el === el)) void to(current, { instant: true });
+      el.removeAttribute(AWAY);
+      Object.assign(el.style, saved.get(el));
+      saved.delete(el);
+    },
     destroy() {
       if (destroyed) return;
       destroyed = true;
