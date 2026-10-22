@@ -29,6 +29,7 @@
  * restores it after.
  * For single controls, not containers: highlight lights a bar on any press inside it, and stretch
  * blocks scrolling and text selection in the whole subtree.
+ * A disabled control (`:disabled`, `aria-disabled="true"`) isn't pressed: no light, swell or stretch.
  * Shape is plain border-radius; the default is a capsule.
  *
  * Public, inherited (set on any element, like SwiftUI environment values):
@@ -330,7 +331,7 @@
       scale var(--_lb-spring-duration) var(--_lb-spring),
       --_lb-pressed 420ms ease-out;
   }
-  :root:not([data-lb-interaction]) .lb:is(.lb-highlight, .lb-swell, .lb-interactive):active {
+  :root:not([data-lb-interaction]) .lb:is(.lb-highlight, .lb-swell, .lb-interactive):active:not(:disabled, [aria-disabled="true"]) {
     --_lb-pressed: 1;
     transition:
       scale var(--_lb-spring-duration) var(--_lb-spring),
@@ -366,7 +367,7 @@
   }
 
   /* Swell, without the script */
-  :root:not([data-lb-interaction]) .lb:is(.lb-swell, .lb-interactive):active { scale: var(--lb-swell); }
+  :root:not([data-lb-interaction]) .lb:is(.lb-swell, .lb-interactive):active:not(:disabled, [aria-disabled="true"]) { scale: var(--lb-swell); }
 
   /*
    * Stretch: the transform is written by the script. The drag belongs to the glass, so the

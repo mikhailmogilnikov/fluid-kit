@@ -97,7 +97,7 @@ Exports `installGlassGroups`, `createGlassGroup` and the type `GlassGroup`. Merg
 </Cell>
 <Cell title="Auto <code>@liquid-web/blur/auto</code>">
 
-Installs press on import. No named exports. For pages without a build step.
+Installs press on import. No named exports. For pages without a build step. Glass groups aren't installed: load `melt` too and call `installGlassGroups()`.
 
 </Cell>
 </Row>
@@ -281,6 +281,8 @@ Releasing more than 32px outside the element cancels the click.
 </Rows>
 
 Don't put a CSS `transition` on `scale` for swell elements or on `transform` for stretch elements: the script updates them every frame and a transition would lag behind. Use press classes on single controls, not containers: highlight lights the whole element on a press anywhere inside it, and stretch blocks scrolling and text selection in its whole subtree.
+
+A disabled control (`:disabled`, or `aria-disabled="true"`) isn't pressed: no highlight, swell or stretch, with the script or without. How it looks disabled is up to you.
 
 </Section>
 

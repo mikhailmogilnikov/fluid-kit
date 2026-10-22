@@ -29,7 +29,8 @@ import { PART, SpringAnimator, type SpringParams } from "@liquid-web/core";
  * small chip gives more and springs back livelier.
  * Swell scale comes from `--lb-swell` the same way, and size counts the same way too: `--lb-swell`
  * is the scale at the reference size; a small button grows more and bouncier, a big card barely.
- * Reduced motion turns off swell and stretch.
+ * Reduced motion turns off swell and stretch. A disabled control (`:disabled`, or
+ * `aria-disabled="true"`) isn't pressed at all.
  *
  * The box is measured once per press, without our own offset and scale, and again if anything
  * scrolls. The element's own scale and transform count, so the light lands under the finger on a
@@ -41,8 +42,11 @@ import { PART, SpringAnimator, type SpringParams } from "@liquid-web/core";
  * it does nothing. Returns a cleanup function.
  */
 
-/** What a module made (a morph's copy, say) only looks pressable: the element it stands in for is */
-const SELECTOR = `:is(.lb-highlight, .lb-swell, .lb-stretch, .lb-interactive):not([${PART}])`;
+/**
+ * What a module made (a morph's copy, say) only looks pressable: the element it stands in for is.
+ * A disabled control isn't pressable either: browsers still send it pointer events, not the click.
+ */
+const SELECTOR = `:is(.lb-highlight, .lb-swell, .lb-stretch, .lb-interactive):not([${PART}], :disabled, [aria-disabled="true"])`;
 /** Whether a behavior is on: its own class, or `lb-interactive`, which is all of them */
 const has = (el: Element, behavior: "highlight" | "swell" | "stretch") =>
   el.classList.contains(`lb-${behavior}`) || el.classList.contains("lb-interactive");
