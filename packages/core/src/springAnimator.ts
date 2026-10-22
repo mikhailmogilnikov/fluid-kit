@@ -69,6 +69,17 @@ export class SpringAnimator<K extends string> {
   }
 
   /**
+   * Each channel's velocity, units per second: to hand a flight's speed on to whatever takes over
+   * (a gesture let go, another spring)
+   */
+  velocities(): Record<K, number> {
+    return Object.fromEntries(Object.entries(this.state).map(([k, s]) => [k, (s as { v: number }).v])) as Record<
+      K,
+      number
+    >;
+  }
+
+  /**
    * Heads for `target`, keeping the current velocity. `velocity` (units per second, per channel)
    * replaces it where given: a push toward the target makes even an overdamped spring overshoot
    * once, then come back without swinging.

@@ -33,6 +33,7 @@ spring.to({ width: 100, radius: 12 }, { duration: 0.6, bounce: 0 }); // new spri
 spring.retarget({ width: 110, radius: 12 }); // adjust the current movement, no new bounce
 spring.jump({ width: 120 }); // move a channel at once, keeping its velocity and target
 spring.values(); // where it is now
+spring.velocities(); // how fast each channel moves, units per second: hand it on with to()'s third argument
 spring.stop();
 ```
 
