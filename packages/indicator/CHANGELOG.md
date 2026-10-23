@@ -7,6 +7,7 @@ First release.
 - One element that flies onto an item of a container: `createIndicator({ container, indicator })`, its center, size and corners on interruptible springs that keep their velocity, without overshoot by default, a few frames from item to item.
 - Item to item, never in between: over a gap or a separator it stays on the last item, and crosses to the next blurred and a little fainter by its own speed. It shows up on its item at once; going away, it fades as it lands on the item it was headed for, so a pointer swept past leaves it on the last item it was over. Over a disabled item it goes away.
 - `trigger`: hover for a mouse or a pen and press for a finger, per event (`auto`), or `hover`, `press`, `manual`. A press shows after a short delay on touch, so a finger that lands to scroll shows nothing; released over another item, that item is clicked (`click`). Keyboard focus that shows moves it too (`focus`).
+- `data-pressed` on the indicator while a pointer is down on its item (a press, or a click on the hovered one), for the page to style.
 - `rest`, where it stays when nothing points, such as the chosen tab; `to()`, `current`, `update()`, `destroy()`; `pull` to lean toward the pointer inside an item; partial springs; `onChange`.
 - Each item lends it its corners, circular and fitted as the browser draws them; corner shapes where `corner-shape` is supported. An item with square corners lends it the indicator's own.
 - Items are measured at rest, in the indicator's own pixels (a scaled container works), and again when anything in the container is resized or changed; pointers are hit-tested against those boxes, without layout. Reduced motion moves it at once.
@@ -15,4 +16,4 @@ First release.
 ### Compatibility
 
 - The container needs a position of its own, and the indicator has to be under the items (an isolated container and `z-index: -1`, or positioned items). Rotated ancestors aren't supported.
-- For a finger to drag across items without scrolling the page, give the container `touch-action: none`.
+- For a press to drag across items, give the container `touch-action: none` and `user-select: none`. A press the browser takes over (a drag of selected text) ends without a choice.

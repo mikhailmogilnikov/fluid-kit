@@ -1,7 +1,7 @@
 # @liquid-web/indicator
 
 One element that flies onto whichever item is hovered, pressed, focused or chosen: the highlight
-of a menu, the pill of a segmented control, the lens of a tab bar. The items stay where they are;
+of a menu, the thumb of tabs, the pill of a segmented control. The items stay where they are;
 only the indicator moves, its center, size and corners on springs that keep their speed when sent
 elsewhere, blurred by its own speed on the way, as iOS does. Works on any element; with
 [`@liquid-web/blur`](https://liquid-web.mogilnikov.dev/blur) it can be glass.

@@ -15,7 +15,7 @@ import {
 
 /**
  * Indicator: one element that flies onto whichever item is hovered, pressed, focused or chosen, as
- * the highlight of a menu, the pill of a segmented control, the lens of a tab bar. The items stay
+ * the highlight of a menu, the thumb of tabs, the pill of a segmented control. The items stay
  * as they are; only the indicator moves: its center, size and corners on springs that keep their
  * speed when turned elsewhere, so a pointer sweeping across a menu is followed without a stutter.
  *
@@ -28,14 +28,17 @@ import {
  *
  * What moves it (`trigger`):
  *   - hover: the item under a hovering pointer (mouse, pen), until the pointer leaves the container
- *   - press: the item under a pressing pointer, followed across items while it's down. On touch it
- *     shows after a short delay, so a finger that lands to scroll shows nothing; released over
- *     another item than it went down on, that item is clicked, as in an iOS menu (`click`)
+ *   - press: the item under a pressing pointer, followed across items while it's down, out of the
+ *     container and back too (out of the items, it stays on the last one). On touch it shows
+ *     after a short delay, so a finger that lands to scroll shows nothing; released over another
+ *     item than it went down on, that item is clicked, as in an iOS menu (`click`)
  *   - auto (the default): hover for a mouse or a pen, press for a finger, per event, so a tablet
  *     with a trackpad gets both
  *   - manual: nothing but `to()`
  * Unless manual, keyboard focus that shows (`:focus-visible`) moves it too. When nothing points, it
- * goes back to `rest` (the chosen tab), or away if there's none.
+ * goes back to `rest` (the chosen tab), or away if there's none. While a pointer is down on its item
+ * (a press, or a click on the hovered one) the indicator is marked `data-pressed`, for the page to
+ * show: a deeper shade, say.
  *
  * The indicator is the page's own element, styled by the page, absolutely positioned in the
  * container (which needs a position of its own) and under its items: the container isolated, the
@@ -141,6 +144,8 @@ const SOFTNESS = 40;
 /** The pull at 1, as a share of the item's smaller side */
 const MAX_PULL = 0.25;
 const SEPARATOR = "hr, [role='separator']";
+/** On the indicator while a pointer is down on its item: the page's to style */
+const PRESSED = "data-pressed";
 const DISABLED = ":disabled, [aria-disabled='true']";
 /**
  * Out of the flow, placed by transform alone; transitions of its own would lag behind the springs.
@@ -320,6 +325,7 @@ export function createIndicator({
     if (!spot) item = null;
     const changed = item !== target;
     const was = target ? spotOf(target) : undefined;
+    leaning = false;
     target = item;
     const now = motion!.values();
     let goal: Frame;
@@ -383,24 +389,37 @@ export function createIndicator({
           ? "press"
           : "hover";
 
-  /** Onto the item under a point, or leaning in the one it's on; over none it stays */
+  /** Whether it leans toward a pointer in its item now */
+  let leaning = false;
+  /** Onto the item under a point, or leaning in the one it's on; over none it stays, upright */
   const follow = (clientX: number, clientY: number) => {
     const item = hit(clientX, clientY);
-    if (item === undefined) return;
+    const spot = target ? spotOf(target) : undefined;
+    if (item === undefined) {
+      // Out of its item, it doesn't lean after the pointer: it isn't in it any more
+      if (leaning && spot) motion!.retarget(goalOf(spot));
+      leaning = false;
+      return;
+    }
     if (item !== target) return go(item);
-    if (!item || !pull) return;
+    if (!item || !pull || !spot) return;
     const f = frame();
-    const spot = spotOf(item);
-    if (spot) motion!.retarget(goalOf(spot, { x: (clientX - f.left) / f.scale, y: (clientY - f.top) / f.scale }));
+    leaning = true;
+    motion!.retarget(goalOf(spot, { x: (clientX - f.left) / f.scale, y: (clientY - f.top) / f.scale }));
+  };
+
+  /** A pressing pointer, anywhere on the page: out of the container and back, it's still followed */
+  const onPressMove = (e: PointerEvent) => {
+    if (!press || e.pointerId !== press.id) return;
+    // A mouse or pen let go where its release never reached us (a drag the browser took over,
+    // such as text it started selecting): the press is over, nothing chosen
+    if (e.pointerType !== "touch" && e.buttons === 0) return cancel();
+    press.x = e.clientX;
+    press.y = e.clientY;
+    if (press.shown) follow(e.clientX, e.clientY);
   };
 
   const onMove = (e: PointerEvent) => {
-    if (press && e.pointerId === press.id) {
-      press.x = e.clientX;
-      press.y = e.clientY;
-      if (press.shown) follow(e.clientX, e.clientY);
-      return;
-    }
     if (press || kindOf(e) !== "hover") return;
     win.clearTimeout(backTimer);
     session = "hover";
@@ -411,8 +430,37 @@ export function createIndicator({
     if (session === "hover" && !press && kindOf(e) === "hover") back();
   };
 
+  /** Pressed: the indicator marked `data-pressed`, for the page to show it */
+  const pressed = (on: boolean) => {
+    if (on) indicator.setAttribute(PRESSED, "");
+    else indicator.removeAttribute(PRESSED);
+  };
+  /** A hovering pointer held down on an item: marked pressed until it lets go */
+  let held: number | null = null;
+  const release = (e?: Event) => {
+    if (e instanceof PointerEvent && e.pointerId !== held) return;
+    held = null;
+    pressed(false);
+    doc.removeEventListener("pointerup", release, true);
+    doc.removeEventListener("pointercancel", release, true);
+    doc.removeEventListener("dragstart", release, true);
+  };
+
   const onDown = (e: PointerEvent) => {
-    if (e.button !== 0 || kindOf(e) !== "press") return;
+    if (e.button !== 0) return;
+    const kind = kindOf(e);
+    if (kind === "hover") {
+      // Pressed on the item it's on: the click is the page's, the look of it the indicator's
+      if (!hit(e.clientX, e.clientY)) return;
+      release();
+      held = e.pointerId;
+      pressed(true);
+      doc.addEventListener("pointerup", release, true);
+      doc.addEventListener("pointercancel", release, true);
+      doc.addEventListener("dragstart", release, true);
+      return;
+    }
+    if (kind !== "press") return;
     win.clearTimeout(showTimer);
     win.clearTimeout(backTimer);
     press = { id: e.pointerId, down: hit(e.clientX, e.clientY), x: e.clientX, y: e.clientY, shown: false };
@@ -420,12 +468,31 @@ export function createIndicator({
     const show = () => {
       if (!press) return;
       press.shown = true;
+      pressed(true);
       follow(press.x, press.y);
     };
     if (e.pointerType === "touch") showTimer = win.setTimeout(show, TOUCH_DELAY);
     else show();
+    doc.addEventListener("pointermove", onPressMove, true);
     doc.addEventListener("pointerup", onUp, true);
     doc.addEventListener("pointercancel", onUp, true);
+    doc.addEventListener("dragstart", cancel, true);
+  };
+  /** The press is over: listeners off, its pending show too */
+  const stop = () => {
+    doc.removeEventListener("pointermove", onPressMove, true);
+    doc.removeEventListener("pointerup", onUp, true);
+    doc.removeEventListener("pointercancel", onUp, true);
+    doc.removeEventListener("dragstart", cancel, true);
+    win.clearTimeout(showTimer);
+    press = null;
+    pressed(false);
+  };
+  /** Over without a choice: cancelled, or taken over by the browser */
+  const cancel = () => {
+    if (!press) return;
+    stop();
+    back();
   };
 
   /** The click a release made on its own, after ours: gone */
@@ -446,12 +513,9 @@ export function createIndicator({
 
   const onUp = (e: PointerEvent) => {
     if (!press || e.pointerId !== press.id) return;
-    doc.removeEventListener("pointerup", onUp, true);
-    doc.removeEventListener("pointercancel", onUp, true);
-    win.clearTimeout(showTimer);
+    if (e.type === "pointercancel") return cancel();
     const { down } = press;
-    press = null;
-    if (e.type === "pointercancel") return back();
+    stop();
     const item = hit(e.clientX, e.clientY);
     // Released over another item: it's that one's click. The browser's own, if any, goes to an
     // ancestor of both and is dropped
@@ -551,8 +615,8 @@ export function createIndicator({
       container.removeEventListener("pointerdown", onDown);
       container.removeEventListener("focusin", onFocusIn);
       container.removeEventListener("focusout", onFocusOut);
-      doc.removeEventListener("pointerup", onUp, true);
-      doc.removeEventListener("pointercancel", onUp, true);
+      stop();
+      release();
       if (own.style === null) indicator.removeAttribute("style");
       else indicator.setAttribute("style", own.style);
       if (!own.part) indicator.removeAttribute(PART);
