@@ -4,7 +4,7 @@ import Icon from "./Icon.astro";
 /**
  * One of Indicator's examples, live:
  *   - menu: a glass menu whose highlight follows the pointer, across a separator, past a disabled item
- *   - tabs: a tab bar whose pill rests on the chosen tab, dragged across by a press, leaning toward it
+ *   - tabs: iOS-style tabs, a thumb resting on the chosen one, dragged across by a press
  */
 interface Props {
   kind: "menu" | "tabs";
@@ -14,10 +14,9 @@ interface Props {
 
 const { kind, card = false } = Astro.props;
 const tabs = [
-  ["play", "Listen"],
-  ["search", "Search"],
-  ["heart", "Loved"],
-  ["layers", "Library"],
+  ["Overview", "Plays, saves and listeners this week."],
+  ["Releases", "Three albums and a single, newest first."],
+  ["Audience", "Where your listeners are, and when."],
 ] as const;
 ---
 
@@ -59,14 +58,18 @@ const tabs = [
 
   {
     kind === "tabs" && (
-      <div class="ix__tabs lb" role="group" aria-label="Library" data-ix-container>
-        <span class="ix__pill" aria-hidden="true" data-ix-indicator />
-        {tabs.map(([icon, label], i) => (
-          <button type="button" aria-pressed={i === 0 ? "true" : "false"}>
-            <Icon name={icon} size={22} />
-            {label}
-          </button>
-        ))}
+      <div class="ix__card lb">
+        <div class="ix__tabs" role="tablist" aria-label="Artist" data-ix-container>
+          <span class="ix__thumb" aria-hidden="true" data-ix-indicator />
+          {tabs.map(([label, text], i) => (
+            <button type="button" role="tab" aria-selected={i === 0 ? "true" : "false"} data-text={text}>
+              {label}
+            </button>
+          ))}
+        </div>
+        <p class="ix__text" role="tabpanel" data-ix-panel>
+          {tabs[0][1]}
+        </p>
       </div>
     )
   }
@@ -83,7 +86,7 @@ const tabs = [
     background: var(--wash);
     isolation: isolate;
   }
-  .ix--tabs { height: 220px; }
+  .ix--tabs { height: 240px; }
   .ix--card {
     height: var(--mdemo-height);
     border-radius: var(--radius);
@@ -98,8 +101,10 @@ const tabs = [
     padding: 8px;
     border-radius: 32px;
     color: var(--ink);
-    /* A finger drags across the items without scrolling the page */
+    /* A press drags across the items: no page scrolling under a finger, no text selection under a mouse */
     touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
   }
   .ix__menu button {
     display: flex;
@@ -121,40 +126,59 @@ const tabs = [
     border: 0;
     border-top: 1px solid rgb(127 127 127 / 0.25);
   }
+  /* Faint in the light, where dark ink shows a lot; deeper while pressed (`data-pressed`) */
   .ix__highlight {
     position: absolute;
     z-index: -1;
-    background: color-mix(in srgb, currentColor 13%, transparent);
+    background: color-mix(in srgb, currentColor calc(6% + var(--lb-dark) * 6%), transparent);
+  }
+  .ix__highlight[data-pressed] {
+    background: color-mix(in srgb, currentColor calc(11% + var(--lb-dark) * 7%), transparent);
   }
 
+  .ix__card {
+    width: min(360px, calc(100% - 32px));
+    padding: 12px 12px 20px;
+    border-radius: 24px;
+    color: var(--ink);
+  }
+  /* A track the thumb slides in, as iOS draws its segmented tabs; a stacking context for the thumb */
   .ix__tabs {
     position: relative;
+    isolation: isolate;
     display: flex;
-    padding: 4px;
+    padding: 3px;
     border-radius: 999px;
-    color: var(--ink);
+    background: color-mix(in srgb, currentColor 9%, transparent);
+    /* A press drags the thumb across: no page scrolling, no text selection */
     touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
   }
   .ix__tabs button {
-    display: grid;
-    justify-items: center;
-    align-content: center;
-    gap: 2px;
-    width: 72px;
-    height: 56px;
+    flex: 1;
+    height: 32px;
+    padding: 0 10px;
     border-radius: 999px;
     background: none;
     color: var(--ink-2);
-    font-size: 11px;
+    font-size: 14px;
     font-weight: 500;
     transition: color 0.2s;
   }
-  .ix__tabs button[aria-pressed="true"] { color: var(--ink); }
+  .ix__tabs button[aria-selected="true"] { color: var(--ink); }
   .ix__tabs button:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
-  .ix__pill {
+  /* On glass, as iOS has it: white in the light, a light veil in the dark (the material's own theme) */
+  .ix__thumb {
     position: absolute;
     z-index: -1;
-    background: color-mix(in srgb, currentColor 12%, transparent);
+    background: color-mix(in srgb, #fff calc(100% - var(--lb-dark) * 78%), transparent);
+    box-shadow: 0 1px 3px rgb(0 0 0 / calc(0.12 - var(--lb-dark) * 0.12)), 0 0 0 0.5px rgb(0 0 0 / 0.04);
+  }
+  .ix__text {
+    margin: 16px 12px 0;
+    color: var(--ink-2);
+    font-size: 14px;
   }
 </style>
 
@@ -164,28 +188,30 @@ const tabs = [
   for (const scene of document.querySelectorAll<HTMLElement>("[data-ix]:not([data-ix-ready])")) {
     scene.dataset.ixReady = "";
     const container = scene.querySelector<HTMLElement>("[data-ix-container]")!;
-    const indicator = scene.querySelector<HTMLElement>("[data-ix-indicator]")!;
 
     if (scene.dataset.ix === "menu") {
       // Hover for a mouse, a press dragged across for a finger: the defaults
-      createIndicator({ container, indicator });
+      createIndicator({ container, indicator: scene.querySelector<HTMLElement>("[data-ix-indicator]")! });
       continue;
     }
 
-    // Tabs: it rests on the chosen one; pressed and dragged, it follows and leans toward the finger
-    const tabs = [...container.querySelectorAll<HTMLButtonElement>("button")];
-    const pill = createIndicator({
+    // Tabs: the thumb rests on the chosen one; pressed and dragged across, it follows, and the
+    // tab it's released on is chosen
+    const tabs = [...container.querySelectorAll<HTMLButtonElement>("[role='tab']")];
+    const panel = scene.querySelector<HTMLElement>("[data-ix-panel]")!;
+    const thumb = createIndicator({
       container,
-      indicator,
+      indicator: scene.querySelector<HTMLElement>("[data-ix-indicator]")!,
       trigger: "press",
-      rest: tabs.find((t) => t.getAttribute("aria-pressed") === "true") ?? null,
-      pull: 1,
+      rest: tabs.find((tab) => tab.getAttribute("aria-selected") === "true") ?? null,
+      // It shows the choice; keyboard focus keeps its own ring
       focus: false,
     });
     for (const tab of tabs) {
       tab.addEventListener("click", () => {
-        for (const t of tabs) t.setAttribute("aria-pressed", String(t === tab));
-        pill.rest = tab;
+        for (const t of tabs) t.setAttribute("aria-selected", String(t === tab));
+        panel.textContent = tab.dataset.text ?? "";
+        thumb.rest = tab;
       });
     }
   }

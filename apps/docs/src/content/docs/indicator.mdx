@@ -2,8 +2,8 @@
 package: "@liquid-web/indicator"
 name: Indicator
 order: 3
-description: "One element that flies onto whatever is hovered, pressed or chosen: the highlight of a menu, the pill of a tab bar. On interruptible springs, blurred by its own speed."
-intro: "The highlight of a menu, the pill of a tab bar: one element that flies onto whatever is hovered, pressed or chosen. Any element; with <a href=\"/blur\">Liquid Blur</a>, over glass."
+description: "One element that flies onto whatever is hovered, pressed or chosen: the highlight of a menu, the thumb of tabs. On interruptible springs, blurred by its own speed."
+intro: "The highlight of a menu, the thumb of tabs: one element that flies onto whatever is hovered, pressed or chosen. Any element; with <a href=\"/blur\">Liquid Blur</a>, over glass."
 ---
 
 import Section from "../../components/docs/Section.astro";
@@ -47,7 +47,11 @@ An indicator is one element of your own, in a container of items. It flies onto 
   .menu__highlight {
     position: absolute;
     z-index: -1;
-    background: color-mix(in srgb, currentColor 13%, transparent);
+    background: color-mix(in srgb, currentColor 8%, transparent);
+  }
+  /* While a pointer is down on its item */
+  .menu__highlight[data-pressed] {
+    background: color-mix(in srgb, currentColor 14%, transparent);
   }
 </style>
 ```
@@ -78,7 +82,7 @@ const highlight = createIndicator({
 
 ### A menu
 
-The highlight follows a mouse, and a finger dragged across the items: released over another item than it went down on, that item is clicked. Over the separator it stays on the last item, then crosses in a few frames, blurred by its own speed, as iOS menus do. It doesn't stop on the disabled item.
+The highlight follows a mouse, and deepens while it's pressed (`data-pressed`); it follows a finger dragged across the items too: released over another item than it went down on, that item is clicked. Over the separator it stays on the last item, then crosses in a few frames, blurred by its own speed, as iOS menus do. It doesn't stop on the disabled item.
 
 <Example>
 <IndicatorExample kind="menu" />
@@ -121,8 +125,9 @@ createIndicator({
   display: grid;
   padding: 8px;
   border-radius: 32px;
-  /* A finger drags across the items without scrolling the page */
+  /* A press drags across the items: no page scrolling, no text selection */
   touch-action: none;
+  user-select: none;
 }
 .menu button {
   display: flex;
@@ -138,16 +143,20 @@ createIndicator({
 .highlight {
   position: absolute;
   z-index: -1;
-  background: color-mix(in srgb, currentColor 13%, transparent);
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+/* While a pointer is down on its item */
+.highlight[data-pressed] {
+  background: color-mix(in srgb, currentColor 14%, transparent);
 }
 ```
 
 </Fragment>
 </Example>
 
-### A tab bar
+### Tabs
 
-The pill rests on the chosen tab. Pressed and dragged across the tabs, it follows the pointer and leans toward it (`pull`); the tab it's released on is chosen, and it rests there. Hovering doesn't move it: it shows the choice, not the pointer.
+Tabs as iOS draws them: a thumb resting on the chosen tab (`rest`). Pressed and dragged across the tabs it follows the pointer, and the tab it's released on is chosen (`trigger: "press"`). The switches above every example's code work the same way.
 
 <Example>
 <IndicatorExample kind="tabs" />
@@ -155,12 +164,11 @@ The pill rests on the chosen tab. Pressed and dragged across the tabs, it follow
 <Fragment slot="html">
 
 ```html
-<div class="tabs lb" role="group" aria-label="Library">
-  <span class="pill" aria-hidden="true"></span>
-  <button type="button" aria-pressed="true"><svg>…</svg>Listen</button>
-  <button type="button" aria-pressed="false"><svg>…</svg>Search</button>
-  <button type="button" aria-pressed="false"><svg>…</svg>Loved</button>
-  <button type="button" aria-pressed="false"><svg>…</svg>Library</button>
+<div class="tabs" role="tablist" aria-label="Artist">
+  <span class="tabs__thumb" aria-hidden="true"></span>
+  <button type="button" role="tab" aria-selected="true">Overview</button>
+  <button type="button" role="tab" aria-selected="false">Releases</button>
+  <button type="button" role="tab" aria-selected="false">Audience</button>
 </div>
 ```
 
@@ -168,26 +176,24 @@ The pill rests on the chosen tab. Pressed and dragged across the tabs, it follow
 <Fragment slot="js">
 
 ```ts
-import "@liquid-web/blur/style.css";
 import { createIndicator } from "@liquid-web/indicator";
 
-const bar = document.querySelector<HTMLElement>(".tabs")!;
-const tabs = [...bar.querySelectorAll<HTMLButtonElement>("button")];
+const list = document.querySelector<HTMLElement>(".tabs")!;
+const tabs = [...list.querySelectorAll<HTMLElement>("[role='tab']")];
 
-const pill = createIndicator({
-  container: bar,
-  indicator: bar.querySelector(".pill")!,
+const thumb = createIndicator({
+  container: list,
+  indicator: list.querySelector(".tabs__thumb")!,
   trigger: "press",
-  rest: tabs.find((tab) => tab.getAttribute("aria-pressed") === "true")!,
-  pull: 1,
-  // Focus keeps its own ring: the pill shows the choice
+  rest: tabs.find((tab) => tab.getAttribute("aria-selected") === "true")!,
+  // It shows the choice; keyboard focus keeps its own ring
   focus: false,
 });
 
 for (const tab of tabs) {
   tab.addEventListener("click", () => {
-    for (const t of tabs) t.setAttribute("aria-pressed", String(t === tab));
-    pill.rest = tab;
+    for (const t of tabs) t.setAttribute("aria-selected", String(t === tab));
+    thumb.rest = tab;
   });
 }
 ```
@@ -198,25 +204,26 @@ for (const tab of tabs) {
 ```css
 .tabs {
   position: relative;
+  isolation: isolate;
   display: flex;
-  padding: 4px;
+  padding: 3px;
   border-radius: 999px;
+  background: color-mix(in srgb, currentColor 9%, transparent);
+  /* A press drags the thumb across: no page scrolling, no text selection */
   touch-action: none;
+  user-select: none;
 }
-.tabs button {
-  display: grid;
-  justify-items: center;
-  align-content: center;
-  width: 72px;
-  height: 56px;
-  border-radius: 999px;
-  font-size: 11px;
-}
+.tabs button { flex: 1; height: 32px; border-radius: 999px; }
 
-.pill {
+/* Capsule tabs make a capsule thumb: white in the light, a light veil in the dark */
+.tabs__thumb {
   position: absolute;
   z-index: -1;
-  background: color-mix(in srgb, currentColor 12%, transparent);
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.12), 0 0 0 0.5px rgb(0 0 0 / 0.04);
+}
+@media (prefers-color-scheme: dark) {
+  .tabs__thumb { background: rgb(255 255 255 / 0.22); box-shadow: none; }
 }
 ```
 
@@ -299,7 +306,7 @@ The defaults are quick and don't overshoot: most of the way from one item to the
 <Row>
 <Cell title="The indicator">
 
-Your own element, absolutely positioned in the container and under the items. While it runs, its inline position, size, corners, opacity, filter and visibility are the script's, and its own transitions are off: they'd lag behind the springs. It's marked `data-lw-part` and `aria-hidden`, so press behaviors don't press it and a morph doesn't count it as a neighbor.
+Your own element, absolutely positioned in the container and under the items. While it runs, its inline position, size, corners, opacity, filter and visibility are the script's, and its own transitions are off: they'd lag behind the springs. It's marked `data-lw-part` and `aria-hidden`, so press behaviors don't press it and a morph doesn't count it as a neighbor. While a pointer is down on its item (a press, or a click on the hovered one) it's marked `data-pressed`: style that, a deeper shade, to show the press.
 
 </Cell>
 <Cell title="Item to item">
@@ -351,7 +358,7 @@ Any browser with ES2022, `ResizeObserver` and `MutationObserver`. Corner shapes 
 <Section id="limitations" title="Limitations">
 
 - Rotated ancestors aren't supported; scaled ones are.
-- For a finger to drag across items without scrolling the page, give the container `touch-action: none`.
+- For a press to drag across items, give the container `touch-action: none` (a finger doesn't scroll the page) and `user-select: none` (a mouse doesn't select text). A press the browser takes over all the same, such as a drag of something selected, ends without a choice.
 - An item moved by something the container doesn't see, such as a transform animated on an ancestor, needs `update()`.
 
 </Section>

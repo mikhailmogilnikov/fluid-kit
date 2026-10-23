@@ -295,6 +295,9 @@ code {
 .seg {
   position: relative;
   display: inline-flex;
+  /* A press drags the thumb across the buttons: no text selection on the way */
+  -webkit-user-select: none;
+  user-select: none;
   padding: 3px;
   border-radius: 999px;
   background: var(--pill);
@@ -676,15 +679,20 @@ code {
   border-radius: 32px;
   color: var(--ink);
   visibility: hidden;
-  /* A finger drags across the items, as in an iOS menu, without scrolling the page */
+  /* A press drags across the items, as in an iOS menu: no page scrolling, no text selection */
   touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
-/* The highlight: an indicator on the hovered or pressed item, under the items */
+/* The highlight: an indicator on the hovered or pressed item, under the items; deeper while pressed */
 .stage-menu__highlight {
   position: absolute;
   z-index: -1;
   border-radius: 999px;
-  background: color-mix(in srgb, currentColor 13%, transparent);
+  background: color-mix(in srgb, currentColor calc(6% + var(--lb-dark) * 6%), transparent);
+}
+.stage-menu__highlight[data-pressed] {
+  background: color-mix(in srgb, currentColor calc(11% + var(--lb-dark) * 7%), transparent);
 }
 .stage-menu button {
   display: flex;
