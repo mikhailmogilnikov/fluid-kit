@@ -1,0 +1,199 @@
+---
+import Icon from "./Icon.astro";
+
+/**
+ * Morph's card on the landing: one now playing, in three states, a pill, a bar and a card, as an
+ * island grows and shrinks. It goes through them on its own while it's in sight, until it's touched;
+ * then a press on it is the next state, and a hint (the slot) fades. The artwork flies through all
+ * three, the time between the pill and the card, the title and the play button between the bar and
+ * the card.
+ */
+const art =
+  "radial-gradient(circle at 28% 24%, #ffd36e 0, transparent 58%), radial-gradient(circle at 78% 82%, #ff4f81 0, transparent 55%), linear-gradient(135deg, #ff7a59, #b5179e)";
+---
+
+<div class="mprev" data-morph-preview data-hints>
+  <div class="mprev__art"></div>
+
+  <button class="mprev__state mprev__pill lb" type="button" aria-label="Now playing, 3:42 left: show more" data-state>
+    <span class="mprev__cover mprev__cover--pill" style={`background: ${art}`} data-lw-match="art"></span>
+    <span class="mprev__bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    <span class="mprev__time" data-lw-match="time">3:42</span>
+  </button>
+
+  <button class="mprev__state mprev__bar lb" type="button" aria-label="Now playing: Surface Tension. Show more" data-state>
+    <span class="mprev__cover mprev__cover--bar" style={`background: ${art}`} data-lw-match="art"></span>
+    <span class="mprev__meta">
+      <strong data-lw-match="title">Surface Tension</strong>
+      <span>Lumen</span>
+    </span>
+    <span class="mprev__play" data-lw-match="play"><Icon name="play" size={20} /></span>
+  </button>
+
+  <button class="mprev__state mprev__card lb" type="button" aria-label="Now playing: Surface Tension. Show less" data-state>
+    <span class="mprev__cover mprev__cover--card" style={`background: ${art}`} data-lw-match="art"></span>
+    <span class="mprev__meta mprev__meta--card">
+      <strong data-lw-match="title">Surface Tension</strong>
+      <span>Lumen — Neon Tides</span>
+    </span>
+    <span class="mprev__track" aria-hidden="true"><i></i></span>
+    <span class="mprev__row">
+      <span>1:12</span>
+      <span class="mprev__play mprev__play--card" data-lw-match="play"><Icon name="play" size={28} /></span>
+      <span data-lw-match="time">3:42</span>
+    </span>
+  </button>
+  <slot />
+</div>
+
+<style>
+  .mprev {
+    position: relative;
+    height: var(--mdemo-height, 340px);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  /* The same still mesh as Morph's own demo: painted once, nothing to re-blur */
+  .mprev__art {
+    position: absolute;
+    inset: 0;
+    background: #eef0ff url("../assets/mesh-morph-light.png") center / cover;
+  }
+  :global(:root[data-theme="dark"]) .mprev__art {
+    background-color: #2a3c9a;
+    background-image: url("../assets/mesh-morph-dark.png");
+  }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme="light"])) .mprev__art {
+      background-color: #2a3c9a;
+      background-image: url("../assets/mesh-morph-dark.png");
+    }
+  }
+
+  /* All three share the middle, laid out where they are at rest (auto margins, never `transform`),
+     above the shape; all but the pill hidden until the morph shows them */
+  .mprev__state {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    margin: auto;
+    box-sizing: border-box;
+    color: var(--ink);
+    text-align: left;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .mprev__state + .mprev__state { visibility: hidden; }
+  .mprev__state:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+  /* Away while it's grown, back with the pill */
+  .mprev[data-grown] :global(.hint) { opacity: 0; }
+
+  .mprev__pill {
+    width: 128px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 16px 0 10px;
+    border-radius: 22px;
+  }
+  .mprev__bar {
+    width: min(280px, calc(100% - 40px));
+    height: 64px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 18px 0 10px;
+    border-radius: 32px;
+  }
+  .mprev__card {
+    width: min(280px, calc(100% - 40px));
+    height: fit-content;
+    display: grid;
+    justify-items: center;
+    gap: 12px;
+    padding: 20px 20px 16px;
+    border-radius: 36px;
+  }
+
+  .mprev__cover { flex: none; display: block; }
+  .mprev__cover--pill { width: 26px; height: 26px; border-radius: 13px; }
+  .mprev__cover--bar { width: 44px; height: 44px; border-radius: 12px; }
+  .mprev__cover--card { width: 128px; height: 128px; border-radius: 24px; }
+
+  /* A level meter, still: it's a picture of one */
+  .mprev__bars { display: flex; align-items: center; gap: 2px; height: 16px; }
+  .mprev__bars i { width: 3px; border-radius: 2px; background: currentColor; opacity: 0.8; }
+  .mprev__bars i:nth-child(1) { height: 7px; }
+  .mprev__bars i:nth-child(2) { height: 14px; }
+  .mprev__bars i:nth-child(3) { height: 10px; }
+  .mprev__bars i:nth-child(4) { height: 5px; }
+  .mprev__time { margin-left: auto; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  .mprev__meta { display: grid; min-width: 0; font-size: 14px; line-height: 1.3; }
+  .mprev__meta strong { font-weight: 600; justify-self: start; }
+  .mprev__meta span { color: var(--ink-2); }
+  .mprev__meta--card { justify-items: center; text-align: center; }
+  .mprev__meta--card strong { justify-self: center; font-size: 16px; }
+
+  .mprev__play { display: grid; place-items: center; margin-left: auto; }
+  .mprev__play--card { margin: 0; }
+
+  .mprev__track {
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: color-mix(in srgb, currentColor 18%, transparent);
+  }
+  .mprev__track i { display: block; width: 32%; height: 100%; border-radius: inherit; background: currentColor; }
+  .mprev__row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--ink-2);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+  .mprev__row .mprev__play { color: var(--ink); }
+</style>
+
+<script>
+  import { createMorph } from "@liquid-web/morph";
+
+  /** How long each state shows while it goes through them on its own, ms */
+  const STEP = 2400;
+
+  for (const scene of document.querySelectorAll<HTMLElement>("[data-morph-preview]:not([data-ready])")) {
+    scene.dataset.ready = "";
+    const states = [...scene.querySelectorAll<HTMLElement>("[data-state]")];
+    const morph = createMorph({
+      states,
+      onStart(to, from) {
+        // A state pressed from the keyboard hands its focus on to the next, on its way in
+        if (from.contains(document.activeElement)) to.focus({ preventScroll: true });
+        // The hint is for the pill: grown, the bar and the card would lie over it
+        scene.toggleAttribute("data-grown", to !== states[0]);
+      },
+    });
+    const next = () => morph.to(states[(states.indexOf(morph.current) + 1) % states.length]);
+    for (const state of states) state.addEventListener("click", next);
+
+    // On its own while in sight, unless motion is reduced; touched, it's the visitor's
+    let timer = 0;
+    let touched = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const play = (on: boolean) => {
+      clearInterval(timer);
+      if (on && !touched) timer = window.setInterval(next, STEP);
+    };
+    scene.addEventListener(
+      "pointerdown",
+      () => {
+        touched = true;
+        play(false);
+      },
+      { once: true },
+    );
+    new IntersectionObserver(([entry]) => play(entry.isIntersecting), { threshold: 0.5 }).observe(scene);
+  }
+</script>

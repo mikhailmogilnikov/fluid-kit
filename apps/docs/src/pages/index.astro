@@ -3,7 +3,7 @@ import Base from "../layouts/Base.astro";
 import Nav from "../components/Nav.astro";
 import Stage from "../components/Stage.astro";
 import GroupDock from "../components/GroupDock.astro";
-import MorphDemo from "../components/MorphDemo.astro";
+import MorphPreview from "../components/MorphPreview.astro";
 import IndicatorExample from "../components/IndicatorExample.astro";
 import Footer from "../components/Footer.astro";
 import Icon from "../components/Icon.astro";
@@ -52,9 +52,9 @@ const REPO = "https://github.com/mikhailmogilnikov/liquid-web";
         </article>
 
         <article class="lib reveal" style="--d: 80ms">
-          <MorphDemo hint={false}>
-            <Hint text="tap, or snap to a corner" light style="top: calc(50% + 36px); left: 50%" />
-          </MorphDemo>
+          <MorphPreview>
+            <Hint text="tap to switch" light style="top: calc(50% + 30px); left: 50%" />
+          </MorphPreview>
           <div class="lib__body">
             <a class="lib__head" href="/morph">
               <b>Morph</b><code>@liquid-web/morph</code><Icon name="arrow" size={16} />
