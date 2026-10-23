@@ -1,4 +1,18 @@
-import { AWAY, PART, SURFACE, SpringAnimator, type SpringParams } from "@liquid-web/core";
+import {
+  AWAY,
+  PART,
+  SURFACE,
+  SpringAnimator,
+  drawsCornerShape,
+  fitRadii,
+  measureBox,
+  px,
+  radiiCss,
+  still,
+  type Box,
+  type Radii,
+  type SpringParams,
+} from "@liquid-web/core";
 
 /**
  * Morph: one element flows into another. Its states are real elements, each laid out where and as
@@ -130,13 +144,6 @@ export type Morph = {
   destroy(): void;
 };
 
-/** Corner radii, clockwise from the top left */
-type Radii = [number, number, number, number];
-/**
- * A box on screen, its corners' radii, and their shape as a superellipse exponent (the top left
- * one's: a box with corners of different shapes is rare enough)
- */
-type Box = { x: number; y: number; width: number; height: number; radii: Radii; shape: number };
 type Frame = Record<Channel, number>;
 
 /**
@@ -321,51 +328,6 @@ const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 const smooth = (t: number) => t * t * (3 - 2 * t);
 const area = (b: { width: number; height: number }) => b.width * b.height;
 
-/**
- * `corner-shape` as a superellipse exponent: round 1, squircle 2, bevel 0, scoop -1. Square and
- * notch are infinite in CSS; a large exponent draws them all but exactly and still interpolates.
- */
-const CORNER_SHAPES: Record<string, number> = { round: 1, squircle: 2, bevel: 0, scoop: -1, square: 8, notch: -8 };
-const shapeOf = (value: string) => {
-  const v = value.trim().toLowerCase();
-  if (v in CORNER_SHAPES) return CORNER_SHAPES[v];
-  const arg = /^superellipse\(\s*([^)]*?)\s*\)$/.exec(v)?.[1];
-  if (arg === "infinity") return 8;
-  if (arg === "-infinity") return -8;
-  const k = arg === undefined ? NaN : parseFloat(arg);
-  return Number.isFinite(k) ? Math.min(8, Math.max(-8, k)) : 1;
-};
-/** To a hundredth of a pixel, so float noise doesn't reach the style */
-const px = (v: number) => `${Math.round(v * 100) / 100}px`;
-
-/**
- * A computed corner radius (`10px`, `10%`, `10px 20px`) as one circular radius: a percent of the
- * box's width across and its height down, the smaller of the two, so a corner is never an oval
- */
-const cornerOf = (value: string, width: number, height: number) => {
-  const [across, down = across] = value.trim().split(/\s+/);
-  const resolve = (v: string | undefined, side: number) =>
-    !v ? 0 : v.endsWith("%") ? (parseFloat(v) / 100) * side : parseFloat(v) || 0;
-  return Math.max(0, Math.min(resolve(across, width), resolve(down, height)));
-};
-/**
- * Radii as the browser draws them in a box: where two corners on a side ask for more than the side
- * has, all of them shrink by the same factor (so a capsule's `9999px` is half its height)
- */
-const fit = (r: Radii, width: number, height: number): Radii => {
-  const room = (side: number, a: number, b: number) => (a + b > 0 ? side / (a + b) : Infinity);
-  const f = Math.min(
-    1,
-    room(width, r[0], r[1]),
-    room(width, r[3], r[2]),
-    room(height, r[0], r[3]),
-    room(height, r[1], r[2]),
-  );
-  return f < 1 ? (r.map((v) => v * f) as Radii) : r;
-};
-/** Radii as CSS, one value when they're all the same */
-const radiiCss = (r: Radii, scale = 1) =>
-  r.every((v) => v === r[0]) ? px(r[0] / scale) : r.map((v) => px(v / scale)).join(" ");
 /** The translation in a computed `transform` (a matrix, or `none`) */
 const shiftOf = (transform: string) => {
   const m = /^matrix(3d)?\((.*)\)$/.exec(transform);
@@ -395,7 +357,7 @@ export function createMorph({
   const win = doc.defaultView ?? window;
   const reduced = win.matchMedia("(prefers-reduced-motion: reduce)");
   /** Whether corners can have shapes here; if not, they're round and `corner-shape` is left alone */
-  const cornerShapes = win.CSS?.supports?.("corner-shape", "squircle") ?? false;
+  const cornerShapes = drawsCornerShape(win);
   const channels = (set: MorphSprings): Record<Channel, SpringParams> => ({
     cx: set.x,
     cy: set.y,
@@ -404,51 +366,8 @@ export function createMorph({
     p: set.progress,
   });
 
-  /**
-   * An element's inline transforms off for a moment: a control just pressed is still swollen or
-   * pulled, a state flying itself is moved by the morph. Its stylesheet's stay: they're where it is.
-   */
-  const still = <T>(el: HTMLElement, read: () => T, to = ""): T => {
-    const { transform, scale, translate, rotate } = el.style;
-    el.style.transform = el.style.scale = el.style.translate = el.style.rotate = to;
-    const value = read();
-    Object.assign(el.style, { transform, scale, translate, rotate });
-    return value;
-  };
-
-  /** An element's box on screen, with its corners' radii and the top-left one's shape */
-  const measure = (el: HTMLElement): Box => {
-    const r = el.getBoundingClientRect();
-    const style = win.getComputedStyle(el);
-    const corner = (value: string) => cornerOf(value, r.width, r.height);
-    // The longhand where it's computed; else the shorthand's first corner
-    const shape =
-      style.getPropertyValue("corner-top-left-shape") ||
-      (style
-        .getPropertyValue("corner-shape")
-        .trim()
-        .match(/^\S+\([^)]*\)|^\S+/)?.[0] ??
-        "");
-    return {
-      x: r.left,
-      y: r.top,
-      width: r.width,
-      height: r.height,
-      radii: fit(
-        [
-          corner(style.borderTopLeftRadius),
-          corner(style.borderTopRightRadius),
-          corner(style.borderBottomRightRadius),
-          corner(style.borderBottomLeftRadius),
-        ],
-        r.width,
-        r.height,
-      ),
-      shape: cornerShapes ? shapeOf(shape || "round") : 1,
-    };
-  };
   /** The box a state has at rest, put back in the same task so nothing in between is ever painted */
-  const atRest = (el: HTMLElement) => still(el, () => measure(el));
+  const atRest = (el: HTMLElement) => still(el, () => measureBox(el, cornerShapes));
 
   /** What a copy mustn't take along: who it is, what it plays, which radio group it's in */
   const scrub = (root: HTMLElement) => {
@@ -816,7 +735,7 @@ export function createMorph({
      * wobbling leaves them still. Never more than the box allows, as the browser would draw it.
      */
     const e = smooth(p);
-    const radii = fit(a.box.radii.map((r, i) => mix(r, b.box.radii[i], e)) as Radii, w, h);
+    const radii = fitRadii(a.box.radii.map((r, i) => mix(r, b.box.radii[i], e)) as Radii, w, h);
     const k = Math.round(mix(a.box.shape, b.box.shape, e) * 1000) / 1000;
     drawn = { radii, shape: k };
 
