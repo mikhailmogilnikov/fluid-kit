@@ -9,15 +9,15 @@
     "check-types": "astro check"
   },
   "dependencies": {
-    "@astrojs/mdx": "^8.0.3",
+    "@astrojs/mdx": "^8.1.0",
     "@fluidkit/blur": "workspace:*",
     "@fluidkit/core": "workspace:*",
     "@fluidkit/indicator": "workspace:*",
     "@fluidkit/morph": "workspace:*",
-    "astro": "^7.3.6"
+    "astro": "^7.4.1"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.10",
-    "typescript": "^6"
+    "@astrojs/check": "^0.9.11",
+    "typescript": "^7"
   }
 }
