@@ -7,7 +7,7 @@ from one to the other. It works on any element; with
 [`@fluidkit/blur`](https://liquid-web.mogilnikov.dev/blur) it's the same glass.
 
 **[Documentation](https://liquid-web.mogilnikov.dev/morph)** · [Changelog](CHANGELOG.md) · Part of
-[Fluidkit](https://liquid-web.mogilnikov.dev)
+[Fluid Kit](https://liquid-web.mogilnikov.dev)
 
 ```bash
 npm install @fluidkit/morph

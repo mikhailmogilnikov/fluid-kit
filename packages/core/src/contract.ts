@@ -3,7 +3,7 @@
  * imports another; each marks what it does and reads what the others mark, so any one of them
  * works alone and any two work together.
  *
- * `fk` (Fluidkit) names are the family's: shared by its packages, and changed only with a major
+ * `fk` (Fluid Kit) names are the family's: shared by its packages, and changed only with a major
  * version of all of them. What only one package uses stays its own (`data-lb-*`).
  */
 

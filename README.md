@@ -1,4 +1,4 @@
-# Fluidkit
+# Fluid Kit
 
 A family of small, framework-agnostic libraries for fluid interfaces on the web. Each package works
 on its own, on plain DOM; where two meet, they read attributes the other sets (`data-fk-*`, see

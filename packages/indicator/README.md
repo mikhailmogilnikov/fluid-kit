@@ -7,7 +7,7 @@ elsewhere, blurred by its own speed on the way, as iOS does. Works on any elemen
 [`@fluidkit/blur`](https://liquid-web.mogilnikov.dev/blur) it can be glass.
 
 **[Documentation](https://liquid-web.mogilnikov.dev/indicator)** · [Changelog](CHANGELOG.md) · Part of
-[Fluidkit](https://liquid-web.mogilnikov.dev)
+[Fluid Kit](https://liquid-web.mogilnikov.dev)
 
 ```bash
 npm install @fluidkit/indicator

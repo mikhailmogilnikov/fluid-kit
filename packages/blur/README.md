@@ -5,7 +5,7 @@ melts between shapes. Plain CSS classes and optional, framework-agnostic scripts
 calm, blurred surface built only from what every engine renders the same way.
 
 **[Documentation](https://liquid-web.mogilnikov.dev/blur)** · [Changelog](CHANGELOG.md) · Part of
-[Fluidkit](https://liquid-web.mogilnikov.dev)
+[Fluid Kit](https://liquid-web.mogilnikov.dev)
 
 ```bash
 npm install @fluidkit/blur

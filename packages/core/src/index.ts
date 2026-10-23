@@ -1,5 +1,5 @@
 /**
- * What the Fluidkit packages share: the spring every moving part runs on, boxes read as the
+ * What the Fluid Kit packages share: the spring every moving part runs on, boxes read as the
  * browser draws them, and the DOM attributes they recognize each other by. Nothing here touches the
  * page by itself.
  */

@@ -7,7 +7,7 @@ First release.
 - One element flows into another: `createMorph({ states })` and `to(state)`, between any of its states, with independent springs for center, size and progress, interruptible with the velocity kept. Sent back mid-way it turns around; sent elsewhere, it starts over from where the shape is.
 - The bigger state flies itself, live the whole way (pressed, typed into, playing), through transform, opacity, filter and clip-path; the smaller one rides in the shape as a copy. A translation of the bigger state's own (`translate: -50% -50%`) is kept.
 - Shared elements: pieces marked with the same `data-fk-match` in two states fly from one to the other.
-- Works on any element: the shape takes the states' surfaces, and where they differ one dissolves into the other. With `@fluidkit/blur` it's the same glass, and inside a glass group it lifts over the group or melts with it, through the Fluidkit DOM contract.
+- Works on any element: the shape takes the states' surfaces, and where they differ one dissolves into the other. With `@fluidkit/blur` it's the same glass, and inside a glass group it lifts over the group or melts with it, through the Fluid Kit DOM contract.
 - Each corner goes from one state's radius to the other's, circular all the way; corner shapes interpolate as a superellipse where `corner-shape` is supported.
 - Follows scrolling, window resizes and the states' own size changes during a flight; `update()` for any other move.
 - The bigger state, coming in magnified, doesn't widen the page on its way: the nearest element spanning the page clips sideways while it flies (iOS Safari pans past the body's own `overflow`).
