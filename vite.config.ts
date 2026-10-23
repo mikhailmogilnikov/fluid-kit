@@ -14,6 +14,8 @@ export default defineConfig({
     ignorePatterns: ["**/dist/**", "**/.astro/**"],
   },
   staged: {
-    "*.{ts,tsx,js,mjs,json}": ["vp fmt", "vp lint --fix"],
+    "*.{ts,tsx,js,mjs}": ["vp fmt", "vp lint --fix"],
+    // Formatted, not linted: lint takes no JSON, and given only that it fails for want of files
+    "*.json": ["vp fmt"],
   },
 });
