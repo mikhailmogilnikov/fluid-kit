@@ -1,9 +1,9 @@
 ---
 package: "@liquid-web/core"
 name: Core
-order: 3
-description: "What the Liquid Web packages share: an interruptible, velocity-keeping spring, and the DOM contract they meet by."
-intro: "The spring every moving part runs on, and the attributes the packages recognize each other by."
+order: 4
+description: "What the Liquid Web packages share: an interruptible, velocity-keeping spring, boxes read as the browser draws them, and the DOM contract they meet by."
+intro: "The spring every moving part runs on, boxes read as the browser draws them, and the attributes the packages recognize each other by."
 ---
 
 import Section from "../../components/docs/Section.astro";
@@ -56,6 +56,34 @@ new SpringAnimator(
 
 </Section>
 
+<Section id="box" title="Boxes">
+
+What morph and indicator read an element by: where it is, its size, and its corners as the browser draws them, so something else can take its shape. Corners are circular, never an oval: a percent resolves against the box, and an elliptical corner takes the smaller of its two radii. Where two corners on a side ask for more than the side has, all of them shrink by the same factor, so a capsule's `9999px` comes out as half its height.
+
+```ts
+import { measureBox, radiiCss, still } from "@liquid-web/core";
+
+// Its box on screen, without the inline transforms a press left on it
+const box = still(el, () => measureBox(el, true));
+// { x, y, width, height, radii: [tl, tr, br, bl], shape }
+
+other.style.borderRadius = radiiCss(box.radii);
+```
+
+| Export | Meaning |
+| --- | --- |
+| `measureBox(el, cornerShapes)` | Its box on screen, its corners' radii, and the top-left corner's shape as a superellipse exponent (round `1`, squircle `2`); `1` unless `cornerShapes` |
+| `radiiOf(style, width, height)` | The four corners from a computed style, in a box of that size, fitted |
+| `cornerOf(value, width, height)` | One computed corner (`10px`, `10%`, `10px 20px`) as one circular radius |
+| `fitRadii(radii, width, height)` | Radii shrunk as the browser shrinks them where they don't fit |
+| `cornerShapeOf(style)` | The top-left corner's `corner-shape` as a superellipse exponent, so it interpolates |
+| `drawsCornerShape(window)` | Whether that browser draws `corner-shape` |
+| `radiiCss(radii, scale?)` | Radii as CSS, one value when they're all the same |
+| `still(el, read, to?)` | Reads with the element's inline transforms off, put back in the same task, so nothing in between is painted |
+| `px(value)` | A length to a hundredth of a pixel |
+
+</Section>
+
 <Section id="contract" title="Contract">
 
 The packages never import each other. Instead, each marks what it does with attributes in the DOM and reads the attributes the others set, so each works alone and any two work together. The names are exported as constants and change only in a major version of every package.
@@ -63,7 +91,7 @@ The packages never import each other. Instead, each marks what it does with attr
 | Attribute | Constant | Set by | Meaning |
 | --- | --- | --- | --- |
 | `data-lw-surface` | `SURFACE` | Liquid Blur's melt, on a group's root while it runs | Its children share one surface: a morph from one of them lifts its glass over the others or melts with them |
-| `data-lw-part` | `PART` | Melt and morph, on elements they create | Not content: a morph doesn't count it as a neighbor, press doesn't press it |
+| `data-lw-part` | `PART` | Melt and morph, on elements they create; indicator, on its indicator | Not content: a morph doesn't count it as a neighbor, press doesn't press it |
 | `data-lw-away` | `AWAY` | Morph, on states that stepped out for its shape | Not glass for now: melt leaves it out. One that kept focus is still focusable |
 
 </Section>

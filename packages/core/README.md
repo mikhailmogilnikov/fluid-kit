@@ -1,8 +1,9 @@
 # @liquid-web/core
 
 What the [liquid-web](https://liquid-web.mogilnikov.dev) packages share: an interruptible,
-velocity-keeping spring every moving part runs on, and the DOM attributes they meet by. You get it
-with `@liquid-web/blur` or `@liquid-web/morph`; install it on its own for the spring.
+velocity-keeping spring every moving part runs on, boxes read as the browser draws them, and the
+DOM attributes they meet by. You get it with `@liquid-web/blur`, `@liquid-web/morph` or
+`@liquid-web/indicator`; install it on its own for the spring.
 
 **[Documentation](https://liquid-web.mogilnikov.dev/core)** · [Changelog](CHANGELOG.md)
 
