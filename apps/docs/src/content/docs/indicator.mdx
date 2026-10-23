@@ -278,7 +278,6 @@ Unless it's manual, keyboard focus that shows (`:focus-visible`) on an item move
 | `items?: string` | The items, as a selector in the container. By default the container's children, but for the indicator and separators (`hr`, `[role="separator"]`) |
 | `trigger?: "auto" \| "hover" \| "press" \| "manual"` | What moves it; `auto` by default |
 | `rest?: HTMLElement \| null` | Where it stays when nothing points, such as the chosen tab. Away by default |
-| `pull?: number` | How far it leans toward a pointer inside its item and stretches along: `0` (the default) not at all, `1` a quarter of the item's smaller side |
 | `click?: boolean` | With press, an item it's released over is clicked; `true` by default |
 | `focus?: boolean` | Keyboard focus that shows moves it; `true` by default, unless manual |
 | `spring?: Partial<IndicatorSprings>` | Springs for `x`, `y`, `width`, `height` and `presence` (going away); anything left out uses `defaultIndicatorSprings` |

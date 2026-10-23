@@ -85,11 +85,6 @@ export type IndicatorOptions = {
   trigger?: IndicatorTrigger;
   /** Where it stays when nothing points: the chosen item. Away unless given */
   rest?: HTMLElement | null;
-  /**
-   * How far it leans toward a pointer inside its item, and stretches along: 0 (the default) not at
-   * all, 1 a quarter of the item's smaller side
-   */
-  pull?: number;
   /** Released over another item than it went down on, that item is clicked; on unless `false` */
   click?: boolean;
   /** Keyboard focus that shows moves it; on unless `false` or manual */
@@ -139,10 +134,6 @@ const MAX_DIP = 0.3;
 const TOUCH_DELAY = 70;
 /** How long after a release the click it replaced may still come, ms */
 const CLICK_WINDOW = 400;
-/** The pull's rubber band: halfway to its most at this many px from the item's center */
-const SOFTNESS = 40;
-/** The pull at 1, as a share of the item's smaller side */
-const MAX_PULL = 0.25;
 const SEPARATOR = "hr, [role='separator']";
 /** On the indicator while a pointer is down on its item: the page's to style */
 const PRESSED = "data-pressed";
@@ -163,7 +154,6 @@ const PINNED =
 type Spot = { x: number; y: number; w: number; h: number; radii: Radii; shape: number };
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
-const rubber = (d: number, max: number) => (max * d) / (Math.abs(d) + SOFTNESS);
 
 export function createIndicator({
   container,
@@ -171,7 +161,6 @@ export function createIndicator({
   items: selector,
   trigger = "auto",
   rest: initialRest = null,
-  pull = 0,
   click = true,
   focus = trigger !== "manual",
   spring: given,
@@ -308,16 +297,14 @@ export function createIndicator({
     s.visibility = p < 0.001 ? "hidden" : "";
   };
 
-  /** Where it goes for a spot: on it, or leaning toward a pointer inside it (layout pixels) */
-  const goalOf = (spot: Spot, toward?: { x: number; y: number }): Frame => {
-    const cx = spot.x + spot.w / 2;
-    const cy = spot.y + spot.h / 2;
-    if (!toward || !pull) return { cx, cy, w: spot.w, h: spot.h, p: 1 };
-    const most = pull * MAX_PULL * Math.min(spot.w, spot.h);
-    const dx = rubber(toward.x - cx, most);
-    const dy = rubber(toward.y - cy, most);
-    return { cx: cx + dx, cy: cy + dy, w: spot.w + Math.abs(dx), h: spot.h + Math.abs(dy), p: 1 };
-  };
+  /** Where it goes for a spot: on it, there */
+  const goalOf = (spot: Spot): Frame => ({
+    cx: spot.x + spot.w / 2,
+    cy: spot.y + spot.h / 2,
+    w: spot.w,
+    h: spot.h,
+    p: 1,
+  });
 
   const go = (item: HTMLElement | null, instant = false) => {
     if (destroyed) return;
@@ -325,7 +312,6 @@ export function createIndicator({
     if (!spot) item = null;
     const changed = item !== target;
     const was = target ? spotOf(target) : undefined;
-    leaning = false;
     target = item;
     const now = motion!.values();
     let goal: Frame;
@@ -389,23 +375,10 @@ export function createIndicator({
           ? "press"
           : "hover";
 
-  /** Whether it leans toward a pointer in its item now */
-  let leaning = false;
-  /** Onto the item under a point, or leaning in the one it's on; over none it stays, upright */
+  /** Onto the item under a point; over none it stays */
   const follow = (clientX: number, clientY: number) => {
     const item = hit(clientX, clientY);
-    const spot = target ? spotOf(target) : undefined;
-    if (item === undefined) {
-      // Out of its item, it doesn't lean after the pointer: it isn't in it any more
-      if (leaning && spot) motion!.retarget(goalOf(spot));
-      leaning = false;
-      return;
-    }
-    if (item !== target) return go(item);
-    if (!item || !pull || !spot) return;
-    const f = frame();
-    leaning = true;
-    motion!.retarget(goalOf(spot, { x: (clientX - f.left) / f.scale, y: (clientY - f.top) / f.scale }));
+    if (item !== undefined && item !== target) go(item);
   };
 
   /** A pressing pointer, anywhere on the page: out of the container and back, it's still followed */
