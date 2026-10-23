@@ -8,9 +8,11 @@ import Icon from "./Icon.astro";
  */
 interface Props {
   kind: "menu" | "tabs";
+  /** As a library's card on the landing: the card's size and corners, and room for a hint (the slot) */
+  card?: boolean;
 }
 
-const { kind } = Astro.props;
+const { kind, card = false } = Astro.props;
 const tabs = [
   ["play", "Listen"],
   ["search", "Search"],
@@ -19,7 +21,11 @@ const tabs = [
 ] as const;
 ---
 
-<div class:list={["ix", `ix--${kind}`]} data-ix={kind}>
+<div
+  class:list={["ix", `ix--${kind}`, { "ix--card": card }]}
+  data-ix={kind}
+  data-hints={card ? "" : undefined}
+>
   <div class="bd bd-aurora"></div>
 
   {
@@ -64,6 +70,7 @@ const tabs = [
       </div>
     )
   }
+  <slot />
 </div>
 
 <style>
@@ -77,6 +84,10 @@ const tabs = [
     isolation: isolate;
   }
   .ix--tabs { height: 220px; }
+  .ix--card {
+    height: var(--mdemo-height);
+    border-radius: var(--radius);
+  }
 
   /* The container is positioned, and a stacking context of its own (glass is), so the indicator at
      z-index -1 is drawn over its surface and under its items */

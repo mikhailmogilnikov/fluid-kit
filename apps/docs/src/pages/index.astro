@@ -4,6 +4,7 @@ import Nav from "../components/Nav.astro";
 import Stage from "../components/Stage.astro";
 import GroupDock from "../components/GroupDock.astro";
 import MorphDemo from "../components/MorphDemo.astro";
+import IndicatorExample from "../components/IndicatorExample.astro";
 import Footer from "../components/Footer.astro";
 import Icon from "../components/Icon.astro";
 import Hint from "../components/Hint.astro";
@@ -13,7 +14,7 @@ const REPO = "https://github.com/mikhailmogilnikov/liquid-web";
 
 <Base
   title="Liquid Web — fluid interfaces for the web"
-  description="Small, framework-agnostic libraries for fluid interfaces: a glass material, and a control that becomes a panel."
+  description="Small, framework-agnostic libraries for fluid interfaces: a glass material, a control that becomes a panel, and a highlight that follows the pointer."
 >
   <Nav current="home" />
 
@@ -22,7 +23,7 @@ const REPO = "https://github.com/mikhailmogilnikov/liquid-web";
       <div class="mark mark--hero"><span class="lb"></span></div>
       <p class="lead rise" style="--i: 1">
         <b>Liquid Web</b> is a family of libraries for fluid interfaces: a glass material in plain CSS,
-        and controls that grow into panels of it. No framework needed.
+        controls that grow into panels of it, and highlights that follow the pointer. No framework needed.
       </p>
       <div class="actions rise" style="--i: 2">
         <a class="button button--ink breathe" href="/blur">Get started</a>
@@ -59,6 +60,18 @@ const REPO = "https://github.com/mikhailmogilnikov/liquid-web";
               <b>Morph</b><code>@liquid-web/morph</code><Icon name="arrow" size={16} />
             </a>
             <p>One element flows into another and back, on springs you can turn around mid-way.</p>
+          </div>
+        </article>
+
+        <article class="lib reveal" style="--d: 160ms">
+          <IndicatorExample kind="tabs" card>
+            <Hint text="press and drag across" light style="top: calc(50% + 40px); left: 50%" />
+          </IndicatorExample>
+          <div class="lib__body">
+            <a class="lib__head" href="/indicator">
+              <b>Indicator</b><code>@liquid-web/indicator</code><Icon name="arrow" size={16} />
+            </a>
+            <p>One element flies onto whatever is hovered, pressed or chosen: menus, tabs, segmented controls.</p>
           </div>
         </article>
       </div>
