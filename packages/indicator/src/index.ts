@@ -46,7 +46,7 @@ import {
  * Items are measured once, at rest (without their own inline transforms: a swollen button is
  * measured as it is unpressed), in the indicator's own pixels, and again when anything in the
  * container is resized or changed. A pointer is hit-tested against those boxes: nothing is laid out
- * while it moves. Per frame the indicator alone is written to, its size inside its own containment.
+ * while it moves. Per frame the indicator alone is written to, its size laid out inside it alone.
  * With reduced motion it moves at once.
  */
 
@@ -142,11 +142,17 @@ const SOFTNESS = 40;
 const MAX_PULL = 0.25;
 const SEPARATOR = "hr, [role='separator']";
 const DISABLED = ":disabled, [aria-disabled='true']";
-/** Out of the flow, placed by transform alone; transitions of its own would lag behind the springs */
+/**
+ * Out of the flow, placed by transform alone; transitions of its own would lag behind the springs.
+ * Its size is laid out inside it alone. A layer of its own: in Safari, blurred as it flies, it isn't
+ * drawn at all without one (under glass, at least), and with its paint contained instead it leaves
+ * its blurred edges behind.
+ */
 const PINNED =
   "position: absolute; left: 0; top: 0; right: auto; bottom: auto; margin: 0; box-sizing: border-box; " +
   "min-width: 0; min-height: 0; max-width: none; max-height: none; translate: none; rotate: none; " +
-  "scale: none; transition: none; animation: none; pointer-events: none; contain: strict";
+  "scale: none; transition: none; animation: none; pointer-events: none; contain: size layout style; " +
+  "will-change: transform";
 
 /** An item as measured: its box in the indicator's pixels, its corners and their shape */
 type Spot = { x: number; y: number; w: number; h: number; radii: Radii; shape: number };
