@@ -4,10 +4,10 @@ One element that flies onto whichever item is hovered, pressed, focused or chose
 of a menu, the thumb of tabs, the pill of a segmented control. The items stay where they are;
 only the indicator moves, its center, size and corners on springs that keep their speed when sent
 elsewhere, blurred by its own speed on the way, as iOS does. Works on any element; with
-[`@fluidkit/blur`](https://liquid-web.mogilnikov.dev/blur) it can be glass.
+[`@fluidkit/blur`](https://fluidkit.mogilnikov.dev/blur) it can be glass.
 
-**[Documentation](https://liquid-web.mogilnikov.dev/indicator)** · [Changelog](CHANGELOG.md) · Part of
-[Fluid Kit](https://liquid-web.mogilnikov.dev)
+**[Documentation](https://fluidkit.mogilnikov.dev/indicator)** · [Changelog](CHANGELOG.md) · Part of
+[Fluid Kit](https://fluidkit.mogilnikov.dev)
 
 ```bash
 npm install @fluidkit/indicator
@@ -43,7 +43,7 @@ It follows a hovering mouse or pen, and a pressing finger across items (released
 item, that one is clicked). Over a separator it stays on the last item, then crosses in a few
 frames. For a chosen item, such as a tab, set `rest`; for full control, `trigger: "manual"` and
 `to()`. Options, the API and the layout rules are in the
-[documentation](https://liquid-web.mogilnikov.dev/indicator).
+[documentation](https://fluidkit.mogilnikov.dev/indicator).
 
 ## License
 

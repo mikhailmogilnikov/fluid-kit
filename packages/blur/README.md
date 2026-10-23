@@ -4,8 +4,8 @@ A glass material for the web: backdrop blur, fill, rims, springy press behaviors
 melts between shapes. Plain CSS classes and optional, framework-agnostic scripts. No refraction: a
 calm, blurred surface built only from what every engine renders the same way.
 
-**[Documentation](https://liquid-web.mogilnikov.dev/blur)** · [Changelog](CHANGELOG.md) · Part of
-[Fluid Kit](https://liquid-web.mogilnikov.dev)
+**[Documentation](https://fluidkit.mogilnikov.dev/blur)** · [Changelog](CHANGELOG.md) · Part of
+[Fluid Kit](https://fluidkit.mogilnikov.dev)
 
 ```bash
 npm install @fluidkit/blur
@@ -35,7 +35,7 @@ installPress();
 | `@fluidkit/blur/auto` | Installs press on import |
 
 Classes, variables, theming, accessibility, groups, the API and the limitations are in the
-[documentation](https://liquid-web.mogilnikov.dev/blur).
+[documentation](https://fluidkit.mogilnikov.dev/blur).
 
 ## License
 

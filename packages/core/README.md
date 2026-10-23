@@ -1,11 +1,11 @@
 # @fluidkit/core
 
-What the [Fluid Kit](https://liquid-web.mogilnikov.dev) packages share: an interruptible,
+What the [Fluid Kit](https://fluidkit.mogilnikov.dev) packages share: an interruptible,
 velocity-keeping spring every moving part runs on, boxes read as the browser draws them, and the
 DOM attributes they meet by. You get it with `@fluidkit/blur`, `@fluidkit/morph` or
 `@fluidkit/indicator`; install it on its own for the spring.
 
-**[Documentation](https://liquid-web.mogilnikov.dev/core)** · [Changelog](CHANGELOG.md)
+**[Documentation](https://fluidkit.mogilnikov.dev/core)** · [Changelog](CHANGELOG.md)
 
 ```bash
 npm install @fluidkit/core

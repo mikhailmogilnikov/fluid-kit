@@ -9,7 +9,7 @@ import mdx from "@astrojs/mdx";
  * Where the site lives; the packages' READMEs link here too. A build for GitHub Pages says where
  * that is instead: its origin (`SITE`) and the path under it (`BASE_PATH`, `/<repository>`).
  */
-const site = process.env.SITE || "https://liquid-web.mogilnikov.dev";
+const site = process.env.SITE || "https://fluidkit.mogilnikov.dev";
 const base = process.env.BASE_PATH || undefined;
 
 /**

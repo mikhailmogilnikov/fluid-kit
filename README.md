@@ -2,9 +2,9 @@
 
 A family of small, framework-agnostic libraries for fluid interfaces on the web. Each package works
 on its own, on plain DOM; where two meet, they read attributes the other sets (`data-fk-*`, see
-[the contract](https://liquid-web.mogilnikov.dev/core#contract)) instead of importing each other.
+[the contract](https://fluidkit.mogilnikov.dev/core#contract)) instead of importing each other.
 
-**[Documentation](https://liquid-web.mogilnikov.dev)**
+**[Documentation](https://fluidkit.mogilnikov.dev)**
 
 ## Packages
 

@@ -4,10 +4,10 @@ One element flows into another and back: one shape the whole way, its center, si
 springs you can turn around mid-way. The bigger state flies itself, live, coming in magnified and
 out of focus and settling sharp; the smaller one rides along as a copy, and elements they share fly
 from one to the other. It works on any element; with
-[`@fluidkit/blur`](https://liquid-web.mogilnikov.dev/blur) it's the same glass.
+[`@fluidkit/blur`](https://fluidkit.mogilnikov.dev/blur) it's the same glass.
 
-**[Documentation](https://liquid-web.mogilnikov.dev/morph)** · [Changelog](CHANGELOG.md) · Part of
-[Fluid Kit](https://liquid-web.mogilnikov.dev)
+**[Documentation](https://fluidkit.mogilnikov.dev/morph)** · [Changelog](CHANGELOG.md) · Part of
+[Fluid Kit](https://fluidkit.mogilnikov.dev)
 
 ```bash
 npm install @fluidkit/morph
@@ -23,7 +23,7 @@ button.addEventListener("click", () => morph.to(morph.current === panel ? button
 ```
 
 Options, the returned morph, layout rules, shared elements, glass groups, a React hook and the
-limitations are in the [documentation](https://liquid-web.mogilnikov.dev/morph).
+limitations are in the [documentation](https://fluidkit.mogilnikov.dev/morph).
 
 ## License
 
