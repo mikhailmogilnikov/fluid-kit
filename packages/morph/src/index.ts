@@ -1124,6 +1124,12 @@ export function createMorph({
       letGo(f.live);
       away(f.live.el);
     }
+    // Contents from an earlier start over are as faded as they're drawn now, not as they were then:
+    // started over again, they'd show up whole once more
+    const aSmall = area(f.a.box) <= area(f.b.box);
+    const u = aSmall ? p : 1 - p;
+    const faded = aSmall ? small(u) : big(u).o;
+    for (const ghost of f.ghosts) ghost.o *= faded;
     const ghosts = [
       ...f.ghosts,
       ...[f.a.layer, f.b.layer, grounded].filter((piece): piece is Piece => !!piece),
