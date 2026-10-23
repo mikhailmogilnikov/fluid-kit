@@ -1,0 +1,57 @@
+{
+  "name": "@liquid-web/indicator",
+  "version": "1.0.0",
+  "description": "One element that flies onto whatever is hovered, pressed or chosen: menus, tabs, segmented controls. On interruptible springs, blurred by its own speed.",
+  "keywords": [
+    "highlight",
+    "indicator",
+    "liquid-web",
+    "menu",
+    "segmented-control",
+    "spring",
+    "tabs"
+  ],
+  "homepage": "https://liquid-web.mogilnikov.dev/indicator",
+  "bugs": {
+    "url": "https://github.com/mikhailmogilnikov/liquid-web/issues"
+  },
+  "license": "MIT",
+  "author": "Mikhail Mogilnikov",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mikhailmogilnikov/liquid-web.git",
+    "directory": "packages/indicator"
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "vp pack",
+    "dev": "vp pack --watch",
+    "check-types": "tsc --noEmit",
+    "test": "vp test run --passWithNoTests",
+    "prepack": "pnpm build",
+    "prepublishOnly": "pnpm check-types && pnpm test"
+  },
+  "dependencies": {
+    "@liquid-web/core": "workspace:^"
+  },
+  "devDependencies": {
+    "happy-dom": "^20.14.5",
+    "typescript": "^7.0.2",
+    "vite-plus": "^1.1.0"
+  }
+}

@@ -7,6 +7,6 @@ export default {
   // Dependabot writes its own ("Bump …", with release notes in the body)
   ignores: [(message) => message.includes("Signed-off-by: dependabot[bot]")],
   rules: {
-    "scope-enum": [2, "always", ["core", "blur", "morph", "docs", "repo", "ci", "deps", "release"]],
+    "scope-enum": [2, "always", ["core", "blur", "morph", "indicator", "docs", "repo", "ci", "deps", "release"]],
   },
 };
