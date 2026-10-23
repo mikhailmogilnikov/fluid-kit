@@ -1,0 +1,16 @@
+name: Idea
+description: Something the packages could do
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you'd like to do
+      description: The interface you're building, and where the packages fall short of it.
+    validations:
+      required: true
+  - type: textarea
+    id: reference
+    attributes:
+      label: A reference
+      description: A screen recording or a link to it done elsewhere (an iOS control, say), if there is one.

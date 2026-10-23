@@ -1,0 +1,43 @@
+name: Bug report
+description: Something looks or behaves wrong
+labels: [bug]
+body:
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      options:
+        - "@fluidkit/blur"
+        - "@fluidkit/morph"
+        - "@fluidkit/indicator"
+        - "@fluidkit/core"
+        - The docs site
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: "1.0.0"
+  - type: textarea
+    id: what
+    attributes:
+      label: What happens, and what you expected
+      description: A screen recording helps most with anything that moves.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to reproduce
+      description: The smallest markup and script that shows it, or a link to a live example.
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and device
+      description: Rendering differs a lot between engines, and between a phone and a desktop.
+      placeholder: "Safari 26 on iPhone 17, Chrome 141 on Windows 11"
+    validations:
+      required: true
