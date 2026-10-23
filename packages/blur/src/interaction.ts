@@ -1,4 +1,4 @@
-import { PART, SpringAnimator, type SpringParams } from "@liquid-web/core";
+import { PART, SpringAnimator, type SpringParams } from "@fluidkit/core";
 
 /**
  * Press behaviors for glass: `.lb-highlight`, `.lb-swell`, `.lb-stretch`, in any combination, or

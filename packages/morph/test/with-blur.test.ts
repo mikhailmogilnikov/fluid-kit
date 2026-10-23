@@ -1,10 +1,10 @@
-import { createGlassGroup } from "@liquid-web/blur/melt";
+import { createGlassGroup } from "@fluidkit/blur/melt";
 import { afterEach, describe, expect, it } from "vite-plus/test";
 import { createMorph } from "../src/index";
 
 /**
- * Morph and a glass group from @liquid-web/blur, for real: neither imports the other, they meet
- * only through the attributes in @liquid-web/core. This is what keeps that contract honest.
+ * Morph and a glass group from @fluidkit/blur, for real: neither imports the other, they meet
+ * only through the attributes in @fluidkit/core. This is what keeps that contract honest.
  */
 function dock() {
   const root = document.createElement("div");
@@ -38,15 +38,15 @@ describe("morph in a glass group", () => {
     const morph = createMorph({ states: [button, panel] });
     void morph.to(panel);
     // Over the group, as glass of its own; the control marked away, which the group leaves out
-    expect(root.nextElementSibling?.hasAttribute("data-lw-part")).toBe(true);
-    expect(button.hasAttribute("data-lw-away")).toBe(true);
+    expect(root.nextElementSibling?.hasAttribute("data-fk-part")).toBe(true);
+    expect(button.hasAttribute("data-fk-away")).toBe(true);
     morph.destroy();
 
     group.destroy();
     const again = createMorph({ states: [button, panel] });
     void again.to(panel);
     // No group runs: nothing to lift out of, the shape stays beside the control
-    expect(button.nextElementSibling?.hasAttribute("data-lw-part")).toBe(true);
+    expect(button.nextElementSibling?.hasAttribute("data-fk-part")).toBe(true);
     expect(root.nextElementSibling).toBe(panel);
     again.destroy();
   });
@@ -58,7 +58,7 @@ describe("morph in a glass group", () => {
     const group = createGlassGroup(root);
     const morph = createMorph({ states: [button, panel] });
     void morph.to(panel);
-    expect(button.nextElementSibling?.hasAttribute("data-lw-part")).toBe(true);
+    expect(button.nextElementSibling?.hasAttribute("data-fk-part")).toBe(true);
     expect(root.nextElementSibling).toBe(panel);
     morph.destroy();
     group.destroy();

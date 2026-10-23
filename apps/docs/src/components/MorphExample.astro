@@ -75,7 +75,7 @@ const art =
       <>
         <button class="mx__pill mx__sort lb lb-interactive" type="button" aria-haspopup="menu" data-source>
           <Icon name="sort" size={18} match="sort-icon" />
-          <span data-lw-match="sort" data-label>{sorts[0]}</span>
+          <span data-fk-match="sort" data-label>{sorts[0]}</span>
         </button>
         <div class="mx__panel lb" role="menu" aria-label="Sort by" data-content>
           <p class="mx__title">
@@ -84,7 +84,7 @@ const art =
           </p>
           {sorts.map((label, i) => (
             <button type="button" role="menuitemradio" aria-checked={i === 0 ? "true" : "false"} data-pick>
-              <span data-lw-match={i === 0 ? "sort" : undefined}>{label}</span>
+              <span data-fk-match={i === 0 ? "sort" : undefined}>{label}</span>
               <Icon name="check" size={18} class="mx__check" />
             </button>
           ))}
@@ -108,9 +108,9 @@ const art =
 
         <div class="mx__mini lb" data-step>
           <button class="mx__expand" type="button" aria-label="Open player" data-expand>
-            <span class="mx__art" style={`background: ${art}`} data-lw-match="art"></span>
+            <span class="mx__art" style={`background: ${art}`} data-fk-match="art"></span>
             <span class="mx__meta">
-              <strong data-lw-match="title">Surface Tension</strong>
+              <strong data-fk-match="title">Surface Tension</strong>
               <span>Lumen</span>
             </span>
           </button>
@@ -123,9 +123,9 @@ const art =
           <button class="mx__icon mx__collapse" type="button" aria-label="Minimize" data-collapse>
             <Icon name="chevron" size={20} />
           </button>
-          <span class="mx__art mx__art--big" style={`background: ${art}`} data-lw-match="art"></span>
+          <span class="mx__art mx__art--big" style={`background: ${art}`} data-fk-match="art"></span>
           <span class="mx__meta mx__meta--big">
-            <strong data-lw-match="title">Surface Tension</strong>
+            <strong data-fk-match="title">Surface Tension</strong>
             <span>Lumen — Neon Tides</span>
           </span>
           <div class="mx__controls">
@@ -382,9 +382,9 @@ const art =
 </style>
 
 <script>
-  import { createMorph } from "@liquid-web/morph";
+  import { createMorph } from "@fluidkit/morph";
   import { disclosure } from "../scripts/disclosure";
-  import { installGlassGroups } from "@liquid-web/blur/melt";
+  import { installGlassGroups } from "@fluidkit/blur/melt";
 
   installGlassGroups();
 
@@ -406,8 +406,8 @@ const art =
         for (const option of content.querySelectorAll<HTMLElement>("[data-pick]")) {
           option.setAttribute("aria-checked", String(option === pick));
           const label = option.querySelector("span")!;
-          if (option === pick) label.dataset.lwMatch = "sort";
-          else delete label.dataset.lwMatch;
+          if (option === pick) label.dataset.fkMatch = "sort";
+          else delete label.dataset.fkMatch;
         }
         source.querySelector<HTMLElement>("[data-label]")!.textContent = pick.textContent!.trim();
       }
@@ -449,7 +449,7 @@ const art =
       (e) => {
         const target = e.target as Element | null;
         if (!target || step() === 0) return;
-        if (states.some((s) => s.contains(target)) || target.closest("[data-go], [data-lw-part]")) return;
+        if (states.some((s) => s.contains(target)) || target.closest("[data-go], [data-fk-part]")) return;
         morph.to(dot);
       },
       true,

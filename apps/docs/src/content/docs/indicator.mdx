@@ -1,5 +1,5 @@
 ---
-package: "@liquid-web/indicator"
+package: "@fluidkit/indicator"
 name: Indicator
 order: 3
 description: "One element that flies onto whatever is hovered, pressed or chosen: the highlight of a menu, the thumb of tabs. On interruptible springs, blurred by its own speed."
@@ -25,7 +25,7 @@ An indicator is one element of your own, in a container of items. It flies onto 
 
 **Install.**
 
-<Install pkg="@liquid-web/indicator" />
+<Install pkg="@fluidkit/indicator" />
 
 </Step>
 <Step>
@@ -62,7 +62,7 @@ An indicator is one element of your own, in a container of items. It flies onto 
 **Create the indicator** after the elements are in the DOM. The container's children are its items, but for the indicator itself and separators.
 
 ```ts
-import { createIndicator } from "@liquid-web/indicator";
+import { createIndicator } from "@fluidkit/indicator";
 
 const highlight = createIndicator({
   container: document.querySelector(".menu")!,
@@ -105,8 +105,8 @@ The highlight follows a mouse, and deepens while it's pressed (`data-pressed`); 
 <Fragment slot="js">
 
 ```ts
-import "@liquid-web/blur/style.css";
-import { createIndicator } from "@liquid-web/indicator";
+import "@fluidkit/blur/style.css";
+import { createIndicator } from "@fluidkit/indicator";
 
 createIndicator({
   container: document.querySelector(".menu")!,
@@ -176,7 +176,7 @@ Tabs as iOS draws them: a thumb resting on the chosen tab (`rest`). Pressed and 
 <Fragment slot="js">
 
 ```ts
-import { createIndicator } from "@liquid-web/indicator";
+import { createIndicator } from "@fluidkit/indicator";
 
 const list = document.querySelector<HTMLElement>(".tabs")!;
 const tabs = [...list.querySelectorAll<HTMLElement>("[role='tab']")];
@@ -305,7 +305,7 @@ The defaults are quick and don't overshoot: most of the way from one item to the
 <Row>
 <Cell title="The indicator">
 
-Your own element, absolutely positioned in the container and under the items. While it runs, its inline position, size, corners, opacity, filter and visibility are the script's, and its own transitions are off: they'd lag behind the springs. It's marked `data-lw-part` and `aria-hidden`, so press behaviors don't press it and a morph doesn't count it as a neighbor. While a pointer is down on its item (a press, or a click on the hovered one) it's marked `data-pressed`: style that, a deeper shade, to show the press.
+Your own element, absolutely positioned in the container and under the items. While it runs, its inline position, size, corners, opacity, filter and visibility are the script's, and its own transitions are off: they'd lag behind the springs. It's marked `data-fk-part` and `aria-hidden`, so press behaviors don't press it and a morph doesn't count it as a neighbor. While a pointer is down on its item (a press, or a click on the hovered one) it's marked `data-pressed`: style that, a deeper shade, to show the press.
 
 </Cell>
 <Cell title="Item to item">

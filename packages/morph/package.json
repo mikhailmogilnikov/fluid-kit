@@ -1,10 +1,10 @@
 {
-  "name": "@liquid-web/morph",
+  "name": "@fluidkit/morph",
   "version": "1.0.0",
   "description": "One element flows into another: one shape the whole way, on interruptible springs. Works on any element.",
   "keywords": [
     "animation",
-    "liquid-web",
+    "fluidkit",
     "morph",
     "popover",
     "shared-element",
@@ -48,10 +48,10 @@
     "prepublishOnly": "pnpm check-types && pnpm test"
   },
   "dependencies": {
-    "@liquid-web/core": "workspace:^"
+    "@fluidkit/core": "workspace:^"
   },
   "devDependencies": {
-    "@liquid-web/blur": "workspace:*",
+    "@fluidkit/blur": "workspace:*",
     "happy-dom": "^20.14.5",
     "typescript": "^7.0.2",
     "vite-plus": "^1.1.0"

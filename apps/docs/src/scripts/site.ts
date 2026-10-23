@@ -1,4 +1,4 @@
-import { installPress } from "@liquid-web/blur/press";
+import { installPress } from "@fluidkit/blur/press";
 import { segmented } from "./segmented";
 
 installPress();
@@ -50,8 +50,8 @@ const COMMANDS: Record<string, [string, string]> = {
 
 for (const block of document.querySelectorAll<HTMLElement>("[data-install]")) {
   const out = block.querySelector<HTMLElement>("code")!;
-  // The package to install: `data-install="@liquid-web/morph"`
-  const pkg = block.dataset.install || "@liquid-web/blur";
+  // The package to install: `data-install="@fluidkit/morph"`
+  const pkg = block.dataset.install || "@fluidkit/blur";
   const show = (pm: string) => {
     const [cmd, verb] = COMMANDS[pm] ?? COMMANDS.pnpm;
     out.innerHTML = `<span class="tk-cmd">${cmd}</span> ${verb} ${pkg}`;

@@ -1,18 +1,18 @@
-# @liquid-web/core
+# @fluidkit/core
 
-What the [liquid-web](https://liquid-web.mogilnikov.dev) packages share: an interruptible,
+What the [Fluidkit](https://liquid-web.mogilnikov.dev) packages share: an interruptible,
 velocity-keeping spring every moving part runs on, boxes read as the browser draws them, and the
-DOM attributes they meet by. You get it with `@liquid-web/blur`, `@liquid-web/morph` or
-`@liquid-web/indicator`; install it on its own for the spring.
+DOM attributes they meet by. You get it with `@fluidkit/blur`, `@fluidkit/morph` or
+`@fluidkit/indicator`; install it on its own for the spring.
 
 **[Documentation](https://liquid-web.mogilnikov.dev/core)** · [Changelog](CHANGELOG.md)
 
 ```bash
-npm install @liquid-web/core
+npm install @fluidkit/core
 ```
 
 ```js
-import { SpringAnimator } from "@liquid-web/core";
+import { SpringAnimator } from "@fluidkit/core";
 
 const spring = new SpringAnimator({ width: 100 }, { duration: 0.4, bounce: 0.2 }, ({ width }) => {
   el.style.width = `${width}px`;

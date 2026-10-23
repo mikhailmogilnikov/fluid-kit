@@ -48,7 +48,7 @@ const pressed = (el: Element) => el.hasAttribute("data-lb-pressed");
 describe("installPress", () => {
   it("leaves what a module made alone: the element it stands in for is the pressable one", () => {
     const copy = glass("lb-interactive");
-    copy.setAttribute("data-lw-part", "");
+    copy.setAttribute("data-fk-part", "");
     pointer(copy, "pointerdown", 50, 20);
     expect(pressed(copy)).toBe(false);
     pointer(copy, "pointerup", 50, 20);

@@ -16,7 +16,7 @@ export default defineConfig({
     environment: "happy-dom",
     // Core from its source: tests don't wait on a build
     alias: {
-      "@liquid-web/core": source("../core/src/index.ts"),
+      "@fluidkit/core": source("../core/src/index.ts"),
     },
   },
 });

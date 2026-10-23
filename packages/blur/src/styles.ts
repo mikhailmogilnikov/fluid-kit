@@ -1,2 +1,2 @@
-/** Declaration target for side-effect imports of @liquid-web/blur/style.css. */
+/** Declaration target for side-effect imports of @fluidkit/blur/style.css. */
 export {};

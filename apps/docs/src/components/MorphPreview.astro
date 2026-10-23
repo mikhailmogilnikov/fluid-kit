@@ -16,31 +16,31 @@ const art =
   <div class="mprev__art"></div>
 
   <button class="mprev__state mprev__pill lb" type="button" aria-label="Now playing, 3:42 left: show more" data-state>
-    <span class="mprev__cover mprev__cover--pill" style={`background: ${art}`} data-lw-match="art"></span>
+    <span class="mprev__cover mprev__cover--pill" style={`background: ${art}`} data-fk-match="art"></span>
     <span class="mprev__bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-    <span class="mprev__time" data-lw-match="time">3:42</span>
+    <span class="mprev__time" data-fk-match="time">3:42</span>
   </button>
 
   <button class="mprev__state mprev__bar lb" type="button" aria-label="Now playing: Surface Tension. Show more" data-state>
-    <span class="mprev__cover mprev__cover--bar" style={`background: ${art}`} data-lw-match="art"></span>
+    <span class="mprev__cover mprev__cover--bar" style={`background: ${art}`} data-fk-match="art"></span>
     <span class="mprev__meta">
-      <strong data-lw-match="title">Surface Tension</strong>
+      <strong data-fk-match="title">Surface Tension</strong>
       <span>Lumen</span>
     </span>
-    <span class="mprev__play" data-lw-match="play"><Icon name="play" size={20} /></span>
+    <span class="mprev__play" data-fk-match="play"><Icon name="play" size={20} /></span>
   </button>
 
   <button class="mprev__state mprev__card lb" type="button" aria-label="Now playing: Surface Tension. Show less" data-state>
-    <span class="mprev__cover mprev__cover--card" style={`background: ${art}`} data-lw-match="art"></span>
+    <span class="mprev__cover mprev__cover--card" style={`background: ${art}`} data-fk-match="art"></span>
     <span class="mprev__meta mprev__meta--card">
-      <strong data-lw-match="title">Surface Tension</strong>
+      <strong data-fk-match="title">Surface Tension</strong>
       <span>Lumen — Neon Tides</span>
     </span>
     <span class="mprev__track" aria-hidden="true"><i></i></span>
     <span class="mprev__row">
       <span>1:12</span>
-      <span class="mprev__play mprev__play--card" data-lw-match="play"><Icon name="play" size={28} /></span>
-      <span data-lw-match="time">3:42</span>
+      <span class="mprev__play mprev__play--card" data-fk-match="play"><Icon name="play" size={28} /></span>
+      <span data-fk-match="time">3:42</span>
     </span>
   </button>
   <slot />
@@ -159,7 +159,7 @@ const art =
 </style>
 
 <script>
-  import { createMorph } from "@liquid-web/morph";
+  import { createMorph } from "@fluidkit/morph";
 
   /** How long each state shows while it goes through them on its own, ms */
   const STEP = 2400;

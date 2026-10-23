@@ -56,9 +56,9 @@ describe("createMorph", () => {
     const morph = createMorph({ states: [button, panel] });
     expect(morph.current).toBe(button);
     expect(morph.moving).toBe(false);
-    expect(button.hasAttribute("data-lw-away")).toBe(false);
+    expect(button.hasAttribute("data-fk-away")).toBe(false);
     expect(button.style.visibility).toBe("visible");
-    expect(panel.hasAttribute("data-lw-away")).toBe(true);
+    expect(panel.hasAttribute("data-fk-away")).toBe(true);
     expect(panel.style.opacity).toBe("0");
     expect(panel.style.visibility).toBe("hidden");
     expect(panel.style.pointerEvents).toBe("none");
@@ -76,7 +76,7 @@ describe("createMorph", () => {
       onProgress: () => told.push("progress"),
     });
     expect(morph.current).toBe(panel);
-    expect(button.hasAttribute("data-lw-away")).toBe(true);
+    expect(button.hasAttribute("data-fk-away")).toBe(true);
     expect(panel.style.visibility).toBe("visible");
     expect(parent.children).toHaveLength(1);
     expect(told).toEqual([]);
@@ -91,7 +91,7 @@ describe("createMorph", () => {
     const going = morph.to(panel);
     expect(parent.children).toHaveLength(2);
     const shape = button.nextElementSibling as HTMLElement;
-    expect(shape.hasAttribute("data-lw-part")).toBe(true);
+    expect(shape.hasAttribute("data-fk-part")).toBe(true);
     expect(shape.getAttribute("aria-hidden")).toBe("true");
     // Outside a group it wears no classes: copies in it would be its descendants to the stylesheet
     expect(shape.className).toBe("");
@@ -121,11 +121,11 @@ describe("createMorph", () => {
     expect(panel.style.opacity).toBe("0");
     expect(panel.style.clipPath.startsWith("inset(")).toBe(true);
     // The control is away the whole time
-    expect(button.hasAttribute("data-lw-away")).toBe(true);
+    expect(button.hasAttribute("data-fk-away")).toBe(true);
     expect(button.style.opacity).toBe("0");
     await going;
     // At rest it's itself again: nothing of the morph stays on it
-    expect(panel.hasAttribute("data-lw-away")).toBe(false);
+    expect(panel.hasAttribute("data-fk-away")).toBe(false);
     expect(panel.style.transform).toBe("");
     expect(panel.style.clipPath).toBe("");
     expect(panel.style.filter).toBe("");
@@ -273,10 +273,10 @@ describe("createMorph", () => {
     const back = morph.to(button);
     expect(await going).toBe(false);
     expect(await back).toBe(true);
-    expect(button.hasAttribute("data-lw-away")).toBe(false);
+    expect(button.hasAttribute("data-fk-away")).toBe(false);
     expect(button.style.opacity).toBe("");
     expect(parent.children).toHaveLength(1);
-    expect(panel.hasAttribute("data-lw-away")).toBe(true);
+    expect(panel.hasAttribute("data-fk-away")).toBe(true);
     expect(panel.style.visibility).toBe("hidden");
     morph.destroy();
   });
@@ -309,7 +309,7 @@ describe("createMorph", () => {
     expect(await elsewhere).toBe(true);
     expect(morph.current).toBe(sheet);
     expect(sheet.style.visibility).toBe("visible");
-    for (const el of [button, panel]) expect(el.hasAttribute("data-lw-away")).toBe(true);
+    for (const el of [button, panel]) expect(el.hasAttribute("data-fk-away")).toBe(true);
     await frame();
     await frame();
     expect(parent.children).toHaveLength(1);
@@ -440,21 +440,21 @@ describe("createMorph", () => {
   it("stays in a group when the panel opens beside the neighbors", () => {
     const { parent, button, panel } = scene();
     // A group running on the parent, as the contract says: no group code needed here
-    parent.setAttribute("data-lw-surface", "");
+    parent.setAttribute("data-fk-surface", "");
     const bar = document.createElement("div");
     bar.getBoundingClientRect = () => new DOMRect(300, 20, 80, 44);
     parent.prepend(bar);
     const morph = createMorph({ states: [button, panel], spring: fast });
     void morph.to(panel);
     const shape = button.nextElementSibling as HTMLElement;
-    expect(shape.hasAttribute("data-lw-part")).toBe(true);
+    expect(shape.hasAttribute("data-fk-part")).toBe(true);
     expect(shape.style.zIndex).toBe("");
     morph.destroy();
   });
 
   it("lifts out over a group when the panel covers a neighbor, leaving a stub in it", async () => {
     const { parent, button, panel } = scene();
-    parent.setAttribute("data-lw-surface", "");
+    parent.setAttribute("data-fk-surface", "");
     const bar = document.createElement("div");
     bar.getBoundingClientRect = () => new DOMRect(70, 120, 160, 44);
     parent.prepend(bar);
@@ -463,9 +463,9 @@ describe("createMorph", () => {
     const stub = button.nextElementSibling as HTMLElement;
     const shape = parent.nextElementSibling as HTMLElement;
     // Out of the group, right after it and above it; the stub in the group where the control was
-    expect(shape.hasAttribute("data-lw-part")).toBe(true);
+    expect(shape.hasAttribute("data-fk-part")).toBe(true);
     expect(shape.style.zIndex).toBe("1");
-    expect(stub.hasAttribute("data-lw-part")).toBe(true);
+    expect(stub.hasAttribute("data-fk-part")).toBe(true);
     expect(stub.style.width).toBe("44px");
     // First frame: the stub whole under the lifted shape
     expect(stub.style.transform).toBe("translate(20px, 20px) scale(1)");
@@ -480,7 +480,7 @@ describe("createMorph", () => {
     document.body.append(container);
     const morph = createMorph({ states: [button, panel], container, spring: fast });
     const going = morph.to(panel);
-    expect(container.lastElementChild?.hasAttribute("data-lw-part")).toBe(true);
+    expect(container.lastElementChild?.hasAttribute("data-fk-part")).toBe(true);
     expect(parent.children).toHaveLength(1);
     await going;
     expect(await morph.to(button)).toBe(true);
@@ -589,7 +589,7 @@ describe("createMorph", () => {
     expect(parent.children).toHaveLength(1);
     expect(morph.moving).toBe(false);
     expect(panel.style.visibility).toBe("visible");
-    expect(button.hasAttribute("data-lw-away")).toBe(true);
+    expect(button.hasAttribute("data-fk-away")).toBe(true);
     expect(await done).toBe(true);
     const going = morph.to(button);
     expect(morph.moving).toBe(true);
@@ -711,14 +711,14 @@ describe("createMorph", () => {
     morph.add(card);
     // Added twice: once
     morph.add(card);
-    expect(card.hasAttribute("data-lw-away")).toBe(true);
+    expect(card.hasAttribute("data-fk-away")).toBe(true);
     expect(card.style.visibility).toBe("hidden");
     expect(await morph.to(card)).toBe(true);
     expect(morph.current).toBe(card);
     expect(card.style.visibility).toBe("visible");
     morph.destroy();
     // Destroyed, it gives the added one its own styles back too
-    expect(card.hasAttribute("data-lw-away")).toBe(false);
+    expect(card.hasAttribute("data-fk-away")).toBe(false);
     expect(card.style.visibility).toBe("");
   });
 
@@ -728,7 +728,7 @@ describe("createMorph", () => {
     const morph = createMorph({ states: [button, panel], spring: fast });
     expect(() => morph.remove(button)).toThrow();
     morph.remove(panel);
-    expect(panel.hasAttribute("data-lw-away")).toBe(false);
+    expect(panel.hasAttribute("data-fk-away")).toBe(false);
     expect(panel.style.opacity).toBe("0.9");
     expect(panel.style.visibility).toBe("");
     expect(panel.style.pointerEvents).toBe("");
@@ -745,7 +745,7 @@ describe("createMorph", () => {
     morph.remove(button);
     expect(morph.moving).toBe(false);
     expect(await going).toBe(true);
-    expect(button.hasAttribute("data-lw-away")).toBe(false);
+    expect(button.hasAttribute("data-fk-away")).toBe(false);
     expect(button.style.opacity).toBe("");
     expect(panel.style.transform).toBe("");
     morph.destroy();
@@ -760,10 +760,10 @@ describe("createMorph", () => {
     expect(parent.children).toHaveLength(1);
     expect(parent.nextElementSibling).toBe(panel);
     expect(panel.getAttribute("style")).toBe("border-radius: 28px;");
-    expect(button.hasAttribute("data-lw-away")).toBe(false);
+    expect(button.hasAttribute("data-fk-away")).toBe(false);
     expect(await morph.to(panel)).toBe(false);
     morph.add(document.body);
-    expect(document.body.hasAttribute("data-lw-away")).toBe(false);
+    expect(document.body.hasAttribute("data-fk-away")).toBe(false);
     expect(parent.children).toHaveLength(1);
   });
 
@@ -778,7 +778,7 @@ describe("createMorph", () => {
     const morph = createMorph({ states: [fab, panel], spring: fast });
     const going = morph.to(panel);
     const shape = fab.nextElementSibling as HTMLElement;
-    expect(shape.hasAttribute("data-lw-part")).toBe(true);
+    expect(shape.hasAttribute("data-fk-part")).toBe(true);
     expect(shape.querySelector(".fab")?.textContent).toBe("+");
     await going;
     expect(shape.style.width).toBe("240px");

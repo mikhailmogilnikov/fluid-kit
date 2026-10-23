@@ -1,4 +1,4 @@
-import { createMorph, type Morph, type MorphOptions } from "@liquid-web/morph";
+import { createMorph, type Morph, type MorphOptions } from "@fluidkit/morph";
 
 /**
  * A control that flows into its panel and back: what a menu needs on top of a morph, until the UI
@@ -51,7 +51,7 @@ export function disclosure(
   const onPress = (e: PointerEvent) => {
     if (morph.current !== panel) return;
     const target = e.target as Element | null;
-    if (target && (panel.contains(target) || control.contains(target) || target.closest("[data-lw-part]"))) return;
+    if (target && (panel.contains(target) || control.contains(target) || target.closest("[data-fk-part]"))) return;
     close();
   };
   document.addEventListener("keydown", onKey);

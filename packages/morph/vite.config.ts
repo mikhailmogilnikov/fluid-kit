@@ -16,8 +16,8 @@ export default defineConfig({
     environment: "happy-dom",
     // The packages it meets, from their source: tests don't wait on a build
     alias: {
-      "@liquid-web/core": source("../core/src/index.ts"),
-      "@liquid-web/blur/melt": source("../blur/src/melt.ts"),
+      "@fluidkit/core": source("../core/src/index.ts"),
+      "@fluidkit/blur/melt": source("../blur/src/melt.ts"),
     },
   },
 });

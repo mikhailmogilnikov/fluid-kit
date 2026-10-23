@@ -11,7 +11,7 @@ First release.
 - `rest`, where it stays when nothing points, such as the chosen tab; `to()`, `current`, `update()`, `destroy()`; partial springs; `onChange`.
 - Each item lends it its corners, circular and fitted as the browser draws them; corner shapes where `corner-shape` is supported. An item with square corners lends it the indicator's own.
 - Items are measured at rest, in the indicator's own pixels (a scaled container works), and again when anything in the container is resized or changed; pointers are hit-tested against those boxes, without layout. Reduced motion moves it at once.
-- ESM with TypeScript declarations. Depends on `@liquid-web/core`.
+- ESM with TypeScript declarations. Depends on `@fluidkit/core`.
 
 ### Compatibility
 

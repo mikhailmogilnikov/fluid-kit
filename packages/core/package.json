@@ -1,10 +1,10 @@
 {
-  "name": "@liquid-web/core",
+  "name": "@fluidkit/core",
   "version": "1.0.0",
-  "description": "Shared ground of the liquid-web packages: an interruptible, velocity-keeping spring, and the DOM contract they meet by.",
+  "description": "Shared ground of the Fluidkit packages: an interruptible, velocity-keeping spring, and the DOM contract they meet by.",
   "keywords": [
     "animation",
-    "liquid-web",
+    "fluidkit",
     "spring"
   ],
   "homepage": "https://liquid-web.mogilnikov.dev/core",

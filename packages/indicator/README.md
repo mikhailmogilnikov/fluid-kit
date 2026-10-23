@@ -1,16 +1,16 @@
-# @liquid-web/indicator
+# @fluidkit/indicator
 
 One element that flies onto whichever item is hovered, pressed, focused or chosen: the highlight
 of a menu, the thumb of tabs, the pill of a segmented control. The items stay where they are;
 only the indicator moves, its center, size and corners on springs that keep their speed when sent
 elsewhere, blurred by its own speed on the way, as iOS does. Works on any element; with
-[`@liquid-web/blur`](https://liquid-web.mogilnikov.dev/blur) it can be glass.
+[`@fluidkit/blur`](https://liquid-web.mogilnikov.dev/blur) it can be glass.
 
 **[Documentation](https://liquid-web.mogilnikov.dev/indicator)** · [Changelog](CHANGELOG.md) · Part of
-[liquid-web](https://liquid-web.mogilnikov.dev)
+[Fluidkit](https://liquid-web.mogilnikov.dev)
 
 ```bash
-npm install @liquid-web/indicator
+npm install @fluidkit/indicator
 ```
 
 Put the indicator in the container, positioned and under the items:
@@ -31,7 +31,7 @@ Put the indicator in the container, positioned and under the items:
 ```
 
 ```js
-import { createIndicator } from "@liquid-web/indicator";
+import { createIndicator } from "@fluidkit/indicator";
 
 createIndicator({
   container: document.querySelector(".menu"),

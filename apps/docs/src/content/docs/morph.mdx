@@ -1,5 +1,5 @@
 ---
-package: "@liquid-web/morph"
+package: "@fluidkit/morph"
 name: Morph
 order: 2
 description: "One element flows into another: one shape the whole way, on interruptible springs. Works on any element; with Liquid Blur, it's the same glass."
@@ -25,7 +25,7 @@ A morph flows between states: real elements, each laid out where and as it is at
 
 **Install.**
 
-<Install pkg="@liquid-web/morph" />
+<Install pkg="@fluidkit/morph" />
 
 </Step>
 <Step>
@@ -65,8 +65,8 @@ A morph flows between states: real elements, each laid out where and as it is at
 **Create the morph** after the elements are in the DOM, and send it to a state from your own handlers. What a menu needs on top (its `aria-expanded`, Escape, focus) is yours, in `onStart` and `onRest`.
 
 ```ts
-import "@liquid-web/blur/style.css"; // the glass, if the states are glass
-import { createMorph } from "@liquid-web/morph";
+import "@fluidkit/blur/style.css"; // the glass, if the states are glass
+import { createMorph } from "@fluidkit/morph";
 
 const button = document.getElementById("more")!;
 const panel = document.getElementById("panel")!;
@@ -133,7 +133,7 @@ Without Liquid Blur: a solid pill flows into a solid panel.
 <Fragment slot="js">
 
 ```ts
-import { createMorph } from "@liquid-web/morph";
+import { createMorph } from "@fluidkit/morph";
 
 const share = document.getElementById("share")!;
 const panel = document.getElementById("share-panel")!;
@@ -229,8 +229,8 @@ The pill is glass covered by a solid layer, the panel plain glass. The two surfa
 <Fragment slot="js">
 
 ```ts
-import "@liquid-web/blur/style.css";
-import { createMorph } from "@liquid-web/morph";
+import "@fluidkit/blur/style.css";
+import { createMorph } from "@fluidkit/morph";
 
 const share = document.getElementById("share")!;
 const panel = document.getElementById("share-panel")!;
@@ -335,9 +335,9 @@ A button in a merged toolbar. The panel opens over the neighboring buttons, so t
 <Fragment slot="js">
 
 ```ts
-import "@liquid-web/blur/style.css";
-import { installGlassGroups } from "@liquid-web/blur/melt";
-import { createMorph } from "@liquid-web/morph";
+import "@fluidkit/blur/style.css";
+import { installGlassGroups } from "@fluidkit/blur/melt";
+import { createMorph } from "@fluidkit/morph";
 
 // Melts the toolbar's buttons into one glass, and the shape with them while it's beside them
 installGlassGroups();
@@ -412,7 +412,7 @@ document.addEventListener("keydown", (e) => {
 
 <Section id="match" title="Shared elements">
 
-Mark an element in each of two states with the same `data-lw-match`, and it flies from where it is in one to where it is in the other, crossing over from one to the other on the way. Here the pill's icon flies into the menu's title, and its label into the option picked. Pick another and the pill comes back with it.
+Mark an element in each of two states with the same `data-fk-match`, and it flies from where it is in one to where it is in the other, crossing over from one to the other on the way. Here the pill's icon flies into the menu's title, and its label into the option picked. Pick another and the pill comes back with it.
 
 <Example>
 <MorphExample kind="match" />
@@ -422,13 +422,13 @@ Mark an element in each of two states with the same `data-lw-match`, and it flie
 ```html
 <div class="scene">
   <button id="sort" class="lb lb-interactive" type="button" aria-haspopup="menu" aria-expanded="false">
-    <svg data-lw-match="sort-icon">…</svg>
-    <span data-lw-match="sort">Newest</span>
+    <svg data-fk-match="sort-icon">…</svg>
+    <span data-fk-match="sort">Newest</span>
   </button>
   <div id="sort-panel" class="lb" role="menu" aria-label="Sort by">
-    <p><svg data-lw-match="sort-icon">…</svg> Sort by</p>
+    <p><svg data-fk-match="sort-icon">…</svg> Sort by</p>
     <button type="button" role="menuitemradio" aria-checked="true">
-      <span data-lw-match="sort">Newest</span><svg class="check">…</svg>
+      <span data-fk-match="sort">Newest</span><svg class="check">…</svg>
     </button>
     <button type="button" role="menuitemradio" aria-checked="false">
       <span>Oldest</span><svg class="check">…</svg>
@@ -447,8 +447,8 @@ Mark an element in each of two states with the same `data-lw-match`, and it flie
 <Fragment slot="js">
 
 ```ts
-import "@liquid-web/blur/style.css";
-import { createMorph } from "@liquid-web/morph";
+import "@fluidkit/blur/style.css";
+import { createMorph } from "@fluidkit/morph";
 
 const sort = document.getElementById("sort")!;
 const panel = document.getElementById("sort-panel")!;
@@ -467,8 +467,8 @@ panel.addEventListener("click", (e) => {
   for (const option of panel.querySelectorAll<HTMLElement>("[role=menuitemradio]")) {
     option.setAttribute("aria-checked", String(option === pick));
     const label = option.querySelector("span")!;
-    if (option === pick) label.dataset.lwMatch = "sort";
-    else delete label.dataset.lwMatch;
+    if (option === pick) label.dataset.fkMatch = "sort";
+    else delete label.dataset.fkMatch;
   }
   sort.querySelector("span")!.textContent = pick.textContent!.trim();
   morph.to(sort);
@@ -552,30 +552,30 @@ A morph takes any number of states, and flows from whichever is shown to whichev
 ```html
 <div class="scene">
   <button id="dot" class="lb lb-interactive" type="button" aria-label="Now playing">
-    <svg data-lw-match="play">…</svg>
+    <svg data-fk-match="play">…</svg>
   </button>
 
   <div id="bar" class="lb">
     <button id="expand" type="button" aria-label="Open player">
-      <span class="art" data-lw-match="art"></span>
+      <span class="art" data-fk-match="art"></span>
       <span class="meta">
-        <strong data-lw-match="title">Surface Tension</strong>
+        <strong data-fk-match="title">Surface Tension</strong>
         <span>Lumen</span>
       </span>
     </button>
-    <button class="icon" type="button" aria-label="Play"><svg data-lw-match="play">…</svg></button>
+    <button class="icon" type="button" aria-label="Play"><svg data-fk-match="play">…</svg></button>
   </div>
 
   <div id="card" class="lb" role="dialog" aria-label="Now playing">
     <button id="collapse" class="icon" type="button" aria-label="Minimize"><svg>…</svg></button>
-    <span class="art" data-lw-match="art"></span>
+    <span class="art" data-fk-match="art"></span>
     <span class="meta">
-      <strong data-lw-match="title">Surface Tension</strong>
+      <strong data-fk-match="title">Surface Tension</strong>
       <span>Lumen — Neon Tides</span>
     </span>
     <div class="controls">
       <button class="icon" type="button" aria-label="Previous"><svg>…</svg></button>
-      <button class="icon" type="button" aria-label="Play"><svg data-lw-match="play">…</svg></button>
+      <button class="icon" type="button" aria-label="Play"><svg data-fk-match="play">…</svg></button>
       <button class="icon" type="button" aria-label="Next"><svg>…</svg></button>
     </div>
   </div>
@@ -586,8 +586,8 @@ A morph takes any number of states, and flows from whichever is shown to whichev
 <Fragment slot="js">
 
 ```ts
-import "@liquid-web/blur/style.css";
-import { createMorph } from "@liquid-web/morph";
+import "@fluidkit/blur/style.css";
+import { createMorph } from "@fluidkit/morph";
 
 const dot = document.getElementById("dot")!;
 const bar = document.getElementById("bar")!;
@@ -791,7 +791,7 @@ Each corner animates from one state's radius to the other's and stays circular, 
 <Row>
 <Cell title="Hidden states">
 
-A state not shown is hidden (`opacity: 0`, `visibility: hidden`, with `data-lw-away`) and takes no presses. One that holds focus as it goes keeps it: it's only made transparent, so a control's `aria-expanded` is still announced. Pressing the shape on its way presses the smallest state under it, so a button can be pressed again before the shape is home.
+A state not shown is hidden (`opacity: 0`, `visibility: hidden`, with `data-fk-away`) and takes no presses. One that holds focus as it goes keeps it: it's only made transparent, so a control's `aria-expanded` is still announced. Pressing the shape on its way presses the smallest state under it, so a button can be pressed again before the shape is home.
 
 </Cell>
 <Cell title="Mounting">
@@ -823,7 +823,7 @@ A small hook creates the morph on mount and destroys it on unmount. Keep the pan
 
 ```tsx
 import { useEffect, useRef, useState } from "react";
-import { createMorph, type Morph, type MorphOptions } from "@liquid-web/morph";
+import { createMorph, type Morph, type MorphOptions } from "@fluidkit/morph";
 
 /** A button and its panel; options are read once, on mount */
 export function useMorph(options: Omit<MorphOptions, "states"> = {}) {

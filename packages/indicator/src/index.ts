@@ -11,7 +11,7 @@ import {
   still,
   type Radii,
   type SpringParams,
-} from "@liquid-web/core";
+} from "@fluidkit/core";
 
 /**
  * Indicator: one element that flies onto whichever item is hovered, pressed, focused or chosen, as
@@ -43,7 +43,7 @@ import {
  * The indicator is the page's own element, styled by the page, absolutely positioned in the
  * container (which needs a position of its own) and under its items: the container isolated, the
  * indicator at `z-index: -1`, or the items positioned above it. While it runs, its inline position,
- * size, corners, opacity, filter and visibility are the indicator's; it's marked `data-lw-part`
+ * size, corners, opacity, filter and visibility are the indicator's; it's marked `data-fk-part`
  * (made by a module: press behaviors don't press it, a morph doesn't count it as a neighbor).
  *
  * Items are measured once, at rest (without their own inline transforms: a swollen button is

@@ -4,12 +4,12 @@ import { describe, expect, it } from "vite-plus/test";
 
 /**
  * Who may import whom. Press and melt never import each other, and the package imports nothing of
- * the family but @liquid-web/core: where it meets morph it does so through the DOM names there.
+ * the family but @fluidkit/core: where it meets morph it does so through the DOM names there.
  */
 const allowed: Record<string, string[]> = {
   blob: [],
-  interaction: ["@liquid-web/core"],
-  group: ["./blob", "@liquid-web/core"],
+  interaction: ["@fluidkit/core"],
+  group: ["./blob", "@fluidkit/core"],
   // Entries
   press: ["./interaction"],
   melt: ["./group"],
@@ -39,6 +39,6 @@ describe("module boundaries", () => {
 
   it("depends on core alone", () => {
     const { dependencies } = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-    expect(Object.keys(dependencies)).toEqual(["@liquid-web/core"]);
+    expect(Object.keys(dependencies)).toEqual(["@fluidkit/core"]);
   });
 });

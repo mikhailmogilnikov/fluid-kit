@@ -1,14 +1,14 @@
 {
-  "name": "@liquid-web/blur",
+  "name": "@fluidkit/blur",
   "version": "1.0.0",
   "description": "A glass material for the web: backdrop blur, fill, rims, springy press behaviors and glass that melts between shapes. No refraction.",
   "keywords": [
     "backdrop-filter",
     "blur",
     "css",
+    "fluidkit",
     "glass",
     "liquid-glass",
-    "liquid-web",
     "material"
   ],
   "homepage": "https://liquid-web.mogilnikov.dev/blur",
@@ -63,7 +63,7 @@
     "prepublishOnly": "pnpm check-types && pnpm test"
   },
   "dependencies": {
-    "@liquid-web/core": "workspace:^"
+    "@fluidkit/core": "workspace:^"
   },
   "devDependencies": {
     "happy-dom": "^20.14.5",

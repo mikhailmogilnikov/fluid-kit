@@ -53,7 +53,7 @@ describe("createGlassGroup", () => {
 
   it("leaves a morph's away control out", () => {
     const root = groupOf("", [0, 0, 100, 40], [110, 0, 100, 40]);
-    root.children[1].setAttribute("data-lw-away", "");
+    root.children[1].setAttribute("data-fk-away", "");
     const group = createGlassGroup(root);
     expect(root.hasAttribute("data-lb-melted")).toBe(false);
     group.destroy();
@@ -92,14 +92,14 @@ describe("createGlassGroup", () => {
     createGlassGroup(root).destroy();
     expect(root.className).toBe("lb-group");
     expect(root.children).toHaveLength(1);
-    expect(root.hasAttribute("data-lw-surface")).toBe(false);
+    expect(root.hasAttribute("data-fk-surface")).toBe(false);
   });
 
   it("marks its root a surface and its own elements parts while it runs", () => {
     const root = groupOf("", [0, 0, 100, 40]);
     const group = createGlassGroup(root);
-    expect(root.hasAttribute("data-lw-surface")).toBe(true);
-    const parts = [...root.children].filter((el) => el.hasAttribute("data-lw-part"));
+    expect(root.hasAttribute("data-fk-surface")).toBe(true);
+    const parts = [...root.children].filter((el) => el.hasAttribute("data-fk-part"));
     expect(parts.map((el) => el.className).sort()).toEqual(["lb-group__glass", "lb-group__paint"]);
     group.destroy();
   });

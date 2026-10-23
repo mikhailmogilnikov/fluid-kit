@@ -139,13 +139,13 @@ const features = [
             aria-controls="stage-now"
             data-player-open
           >
-            <span class="player__art" style={`background: ${albums[0].art}`} data-lw-match="art"></span>
+            <span class="player__art" style={`background: ${albums[0].art}`} data-fk-match="art"></span>
             <span class="player__meta">
-              <strong data-lw-match="title">Surface Tension</strong>
+              <strong data-fk-match="title">Surface Tension</strong>
               <span>Lumen — Neon Tides</span>
             </span>
           </button>
-          <button class="play-toggle" type="button" data-play data-lw-match="play" aria-pressed="true" aria-label="Pause">
+          <button class="play-toggle" type="button" data-play data-fk-match="play" aria-pressed="true" aria-label="Pause">
             <Icon name="play" size={20} class="is-play" />
             <Icon name="pause" size={20} class="is-pause" />
           </button>
@@ -161,15 +161,15 @@ const features = [
         <button class="now__close" type="button" aria-label="Minimize" data-now-close>
           <Icon name="chevron" size={22} />
         </button>
-        <span class="now__art" style={`background: ${albums[0].art}`} data-lw-match="art"></span>
+        <span class="now__art" style={`background: ${albums[0].art}`} data-fk-match="art"></span>
         <span class="now__meta">
-          <strong data-lw-match="title">Surface Tension</strong>
+          <strong data-fk-match="title">Surface Tension</strong>
           <span>Lumen — Neon Tides</span>
         </span>
         <span class="now__track" aria-hidden="true"><i></i></span>
         <div class="now__controls">
           <button type="button" aria-label="Previous"><Icon name="back" size={24} /></button>
-          <button class="now__play play-toggle" type="button" data-play data-lw-match="play" aria-pressed="true" aria-label="Pause">
+          <button class="now__play play-toggle" type="button" data-play data-fk-match="play" aria-pressed="true" aria-label="Pause">
             <Icon name="play" size={30} class="is-play" />
             <Icon name="pause" size={30} class="is-pause" />
           </button>
@@ -181,8 +181,8 @@ const features = [
 </div>
 
 <script>
-  import { installGlassGroups } from "@liquid-web/blur/melt";
-  import { createIndicator } from "@liquid-web/indicator";
+  import { installGlassGroups } from "@fluidkit/blur/melt";
+  import { createIndicator } from "@fluidkit/indicator";
   import { disclosure } from "../scripts/disclosure";
   import { segmented } from "../scripts/segmented";
 

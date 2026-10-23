@@ -1,5 +1,5 @@
 ---
-package: "@liquid-web/blur"
+package: "@fluidkit/blur"
 name: Liquid Blur
 order: 1
 description: "A glass material for the web: backdrop blur, fill, rims, springy press behaviors and glass that melts between shapes. Plain CSS classes and optional scripts. No refraction."
@@ -29,7 +29,7 @@ Install the package, import the stylesheet once, and put `lb` on anything.
 
 **Install.**
 
-<Install pkg="@liquid-web/blur" />
+<Install pkg="@fluidkit/blur" />
 
 </Step>
 <Step>
@@ -37,7 +37,7 @@ Install the package, import the stylesheet once, and put `lb` on anything.
 **Import the stylesheet**, once, anywhere in your app.
 
 ```ts
-import "@liquid-web/blur/style.css";
+import "@fluidkit/blur/style.css";
 ```
 
 </Step>
@@ -55,7 +55,7 @@ import "@liquid-web/blur/style.css";
 **Install press** if you use the press classes (`lb-highlight`, `lb-swell`, `lb-stretch`, `lb-interactive`). It adds one listener to the document, so elements added later work too, with any framework. On the server it does nothing.
 
 ```ts
-import { installPress } from "@liquid-web/blur/press";
+import { installPress } from "@fluidkit/blur/press";
 
 installPress();
 ```
@@ -63,11 +63,11 @@ installPress();
 </Step>
 </Steps>
 
-No build step? Link the stylesheet and load the `auto` entry, which installs press itself. With a bundler, `import "@liquid-web/blur/auto"` does the same.
+No build step? Link the stylesheet and load the `auto` entry, which installs press itself. With a bundler, `import "@fluidkit/blur/auto"` does the same.
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@liquid-web/blur@1/dist/style.css" />
-<script type="module" src="https://cdn.jsdelivr.net/npm/@liquid-web/blur@1/dist/auto.js/+esm"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fluidkit/blur@1/dist/style.css" />
+<script type="module" src="https://cdn.jsdelivr.net/npm/@fluidkit/blur@1/dist/auto.js/+esm"></script>
 ```
 
 </Section>
@@ -78,24 +78,24 @@ The material is plain CSS. Press and melt are optional scripts, each in its own 
 
 <Rows>
 <Row>
-<Cell title="Material <code>@liquid-web/blur/style.css</code>">
+<Cell title="Material <code>@fluidkit/blur/style.css</code>">
 
 The glass: `lb`, its variants, and the styles press and melt rely on.
 
 </Cell>
-<Cell title="Press <code>@liquid-web/blur/press</code>">
+<Cell title="Press <code>@fluidkit/blur/press</code>">
 
 Exports `installPress`. Runs highlight, swell and stretch on springs.
 
 </Cell>
 </Row>
 <Row>
-<Cell title="Melt <code>@liquid-web/blur/melt</code>">
+<Cell title="Melt <code>@fluidkit/blur/melt</code>">
 
 Exports `installGlassGroups`, `createGlassGroup` and the type `GlassGroup`. Merges nearby glass into one surface; needs the stylesheet.
 
 </Cell>
-<Cell title="Auto <code>@liquid-web/blur/auto</code>">
+<Cell title="Auto <code>@fluidkit/blur/auto</code>">
 
 Installs press on import. No named exports. For pages without a build step. Glass groups aren't installed: load `melt` too and call `installGlassGroups()`.
 
@@ -224,7 +224,7 @@ All styles are in `@layer liquid-blur`, so your unlayered CSS overrides them wit
 ```css
 @layer liquid-blur, theme, base, components, utilities;
 @import "tailwindcss";
-@import "@liquid-web/blur/style.css";
+@import "@fluidkit/blur/style.css";
 ```
 
 </Section>
@@ -299,7 +299,7 @@ Glass elements inside an `lb-group` merge into one surface when they get close a
 </div>
 
 <script type="module">
-  import { installGlassGroups } from "@liquid-web/blur/melt";
+  import { installGlassGroups } from "@fluidkit/blur/melt";
 
   installGlassGroups();
 </script>
@@ -309,7 +309,7 @@ Glass elements inside an `lb-group` merge into one surface when they get close a
 <Row>
 <Cell title="Optional script">
 
-Groups need the `@liquid-web/blur/melt` entry. Without it, or while the children are far apart, they render as ordinary glass.
+Groups need the `@fluidkit/blur/melt` entry. Without it, or while the children are far apart, they render as ordinary glass.
 
 </Cell>
 <Cell title="Merge distance">
@@ -336,7 +336,7 @@ The group uses the same variables as any glass. While it draws the shared surfac
 
 ```tsx
 import { useEffect } from "react";
-import { installGlassGroups } from "@liquid-web/blur/melt";
+import { installGlassGroups } from "@fluidkit/blur/melt";
 
 export function Toolbar() {
   // After hydration: the group adds its own elements to the root
@@ -377,7 +377,7 @@ Turns every `.lb-group` in the document into a group, including ones added later
 Creates a group for one element you manage yourself. Adds `lb` and `lb-group` to `root` if missing. Calling it again for the same root returns the existing group.
 
 ```ts
-import { createGlassGroup } from "@liquid-web/blur/melt";
+import { createGlassGroup } from "@fluidkit/blur/melt";
 
 const group = createGlassGroup(toolbar);
 
@@ -424,7 +424,7 @@ Use the classes as they are, and install press once at the root. It returns its 
 
 ```tsx
 import { useEffect } from "react";
-import { installPress } from "@liquid-web/blur/press";
+import { installPress } from "@fluidkit/blur/press";
 
 export function App() {
   useEffect(() => installPress(), []);

@@ -17,9 +17,9 @@ const here = (id: string) => (current === id ? "page" : undefined);
 
 <header class="nav">
   <div class="nav__bar lb">
-    <a class="brand" href="/" aria-label="Liquid Web, home">
+    <a class="brand" href="/" aria-label="Fluidkit, home">
       <span class="mark"><span class="lb"></span></span>
-      Liquid Web <span class="brand__by">by Mikhail Mogilnikov</span>
+      Fluidkit <span class="brand__by">by Mikhail Mogilnikov</span>
     </a>
     <nav class="nav__links" aria-label="Packages">
       {packages.map((p) => <a href={`/${p.id}`} aria-current={here(p.id)}>{p.data.name}</a>)}
@@ -29,7 +29,7 @@ const here = (id: string) => (current === id ? "page" : undefined);
         Docs
       </a>
       <ThemeSwitch />
-      <a class="icon-link" href="https://github.com/mikhailmogilnikov/liquid-web" aria-label="liquid-web on GitHub">
+      <a class="icon-link" href="https://github.com/mikhailmogilnikov/liquid-web" aria-label="Fluidkit on GitHub">
         <Icon name="github" size={19} />
       </a>
     </div>

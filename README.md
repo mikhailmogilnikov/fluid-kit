@@ -1,7 +1,7 @@
-# liquid-web
+# Fluidkit
 
 A family of small, framework-agnostic libraries for fluid interfaces on the web. Each package works
-on its own, on plain DOM; where two meet, they read attributes the other sets (`data-lw-*`, see
+on its own, on plain DOM; where two meet, they read attributes the other sets (`data-fk-*`, see
 [the contract](https://liquid-web.mogilnikov.dev/core#contract)) instead of importing each other.
 
 **[Documentation](https://liquid-web.mogilnikov.dev)**
@@ -10,9 +10,10 @@ on its own, on plain DOM; where two meet, they read attributes the other sets (`
 
 | Package | What |
 | --- | --- |
-| [`@liquid-web/blur`](packages/blur/README.md) | A glass material: backdrop blur, fill, rims, press behaviors, glass that melts between shapes |
-| [`@liquid-web/morph`](packages/morph/README.md) | One element flows into another and back, on interruptible springs; any element |
-| [`@liquid-web/core`](packages/core/README.md) | What they share: the spring, and the DOM contract |
+| [`@fluidkit/blur`](packages/blur/README.md) | A glass material: backdrop blur, fill, rims, press behaviors, glass that melts between shapes |
+| [`@fluidkit/morph`](packages/morph/README.md) | One element flows into another and back, on interruptible springs; any element |
+| [`@fluidkit/indicator`](packages/indicator/README.md) | One element flies onto whatever is hovered, pressed or chosen: menus, tabs, segmented controls |
+| [`@fluidkit/core`](packages/core/README.md) | What they share: the spring, boxes as the browser draws them, and the DOM contract |
 
 `apps/docs` is the docs site: one page per package, written in MDX in
 `apps/docs/src/content/docs/`, with live demos.
@@ -29,8 +30,8 @@ pnpm install
 
 Installing also sets up the git hooks (`.vite-hooks/`): before a commit, staged files are formatted
 and linted; a commit message has to be a [conventional commit](https://www.conventionalcommits.org),
-`type(scope): subject`, with an optional scope from `core`, `blur`, `morph`, `docs`, `repo`, `ci`,
-`deps` and `release`.
+`type(scope): subject`, with an optional scope from `core`, `blur`, `morph`, `indicator`, `docs`,
+`repo`, `ci`, `deps` and `release`.
 
 | Script | What |
 | --- | --- |
@@ -52,11 +53,11 @@ line for the changelog, and commit it with the change. CI asks for one when a pa
 
 On `main`, the release workflow keeps a "Version packages" pull request up to date with the pending
 changesets. Merging it bumps the versions, writes the changelogs, publishes to npm with provenance
-and tags each package (`@liquid-web/blur@1.1.0`). Publishing goes through pnpm, which turns the
-`workspace:^` dependencies on `@liquid-web/core` into real version ranges.
+and tags each package (`@fluidkit/blur@1.1.0`). Publishing goes through pnpm, which turns the
+`workspace:^` dependencies on `@fluidkit/core` into real version ranges.
 
 The first release publishes every package at `1.0.0` as it is, with no changeset: `pnpm release`
-publishes whatever version isn't on npm yet. It needs the `liquid-web` organization on npm and an
+publishes whatever version isn't on npm yet. It needs the `fluidkit` organization on npm and an
 `NPM_TOKEN` secret in the repository; `pnpm exec changeset publish-plan` shows what would go out.
 
 ## License

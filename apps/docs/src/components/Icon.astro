@@ -33,7 +33,7 @@ interface Props {
   name: keyof typeof icons;
   size?: number;
   class?: string;
-  /** The same in two states of a morph: it flies from one to the other (`data-lw-match`) */
+  /** The same in two states of a morph: it flies from one to the other (`data-fk-match`) */
   match?: string;
 }
 
@@ -42,7 +42,7 @@ const { name, size = 18, class: className, match } = Astro.props;
 
 <svg
   class={className}
-  data-lw-match={match}
+  data-fk-match={match}
   width={size}
   height={size}
   viewBox="0 0 24 24"

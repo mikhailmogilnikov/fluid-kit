@@ -9,7 +9,7 @@ const art =
   "radial-gradient(circle at 20% 25%, #ffd36e 0, transparent 40%), radial-gradient(circle at 80% 30%, #2f7bff 0, transparent 45%), radial-gradient(circle at 60% 85%, #1fd1a5 0, transparent 45%), radial-gradient(circle at 15% 90%, #ff4f81 0, transparent 40%), linear-gradient(135deg, #b5179e, #3a0ca3)";
 ---
 
-<Base title="Lab — Liquid Web" description="Experiments: glass that melts between shapes.">
+<Base title="Lab — Fluidkit" description="Experiments: glass that melts between shapes.">
   <Nav current="lab" />
 
   <main class="lab">
@@ -231,8 +231,8 @@ const art =
 </style>
 
 <script>
-  import { SpringAnimator } from "@liquid-web/core";
-  import { installGlassGroups } from "@liquid-web/blur/melt";
+  import { SpringAnimator } from "@fluidkit/core";
+  import { installGlassGroups } from "@fluidkit/blur/melt";
 
   // Every .lb-group on the page; springs and lb-stretch move the children through their style,
   // and the groups follow on their own

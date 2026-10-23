@@ -12,7 +12,7 @@ import {
   type Nearest,
   type Shape,
 } from "./blob";
-import { AWAY, PART, SURFACE } from "@liquid-web/core";
+import { AWAY, PART, SURFACE } from "@fluidkit/core";
 
 /**
  * Glass group: the children of `.lb-group` share one piece of glass, which melts between them
@@ -20,9 +20,9 @@ import { AWAY, PART, SURFACE } from "@liquid-web/core";
  * children and their CSS transitions and animations are picked up on their own: anything that
  * moves them through `style` (a spring, `lb-stretch`, `lb-swell`) or CSS just works. Moved some
  * other way (layout changes from outside the group, a script animating an ancestor's child list),
- * call `update()`. A child with `visibility: hidden` makes no glass, nor one marked `data-lw-away`
+ * call `update()`. A child with `visibility: hidden` makes no glass, nor one marked `data-fk-away`
  * (a morph's state while its shape stands in for it: maybe still there to focus and read). While
- * it runs the root is marked `data-lw-surface` and its own elements `data-lw-part` (contract.ts).
+ * it runs the root is marked `data-fk-surface` and its own elements `data-fk-part` (contract.ts).
  *
  * The children are glass themselves (`.lb`), and while none of them melt they stay exactly that:
  * the group draws nothing and costs a few dozen microseconds a frame to watch them. Without the

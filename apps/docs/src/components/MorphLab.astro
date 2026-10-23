@@ -76,11 +76,11 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
     <p class="ms__words" aria-hidden="true">Sort</p>
     <div class="ms__layer">
       <button class="src src--pill lb lb-interactive" type="button" aria-controls="m-pill" data-morph-source>
-        <span data-label data-lw-match="sort">Newest</span>
+        <span data-label data-fk-match="sort">Newest</span>
       </button>
     </div>
     <div class="panel panel--pill lb" id="m-pill" role="menu">
-      <button type="button" role="menuitemradio" aria-checked="true" data-pick><span data-lw-match="sort">Newest</span></button>
+      <button type="button" role="menuitemradio" aria-checked="true" data-pick><span data-fk-match="sort">Newest</span></button>
       <button type="button" role="menuitemradio" aria-checked="false" data-pick><span>Oldest</span></button>
       <button type="button" role="menuitemradio" aria-checked="false" data-pick><span>Most popular</span></button>
       <button type="button" role="menuitemradio" aria-checked="false" data-pick><span>A–Z</span></button>
@@ -478,7 +478,7 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
 </style>
 
 <script>
-  import { createMorph, defaultMorphSprings, type Morph, type MorphSprings } from "@liquid-web/morph";
+  import { createMorph, defaultMorphSprings, type Morph, type MorphSprings } from "@fluidkit/morph";
 
   type Entry = { scene: HTMLElement; source: HTMLElement; content: HTMLElement; morph: Morph | null };
 
@@ -579,8 +579,8 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
         for (const option of entry.content.querySelectorAll<HTMLElement>("[data-pick]")) {
           option.setAttribute("aria-checked", String(option === pick));
           const label = option.querySelector("span")!;
-          if (option === pick) label.dataset.lwMatch = "sort";
-          else delete label.dataset.lwMatch;
+          if (option === pick) label.dataset.fkMatch = "sort";
+          else delete label.dataset.fkMatch;
         }
         entry.source.querySelector<HTMLElement>("[data-label]")!.textContent = pick.textContent!.trim();
       }

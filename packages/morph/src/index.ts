@@ -12,7 +12,7 @@ import {
   type Box,
   type Radii,
   type SpringParams,
-} from "@liquid-web/core";
+} from "@fluidkit/core";
 
 /**
  * Morph: one element flows into another. Its states are real elements, each laid out where and as
@@ -45,14 +45,14 @@ import {
  * translation of its own in the stylesheet (`translate: -50% -50%`, or the same as `transform`) is
  * kept. The smaller one rides in the shape as a copy of it, frozen as it was when the shape set off,
  * where it is in its element, fading as the shape leaves it. Pieces marked with the same
- * `data-lw-match` in both fly from where they are in one to where they are in the other, as far
+ * `data-fk-match` in both fly from where they are in one to where they are in the other, as far
  * along as the shape's size is, and cross over from one to the other on the way. Turned around,
  * the copies are taken again as the states are then.
  *
  * Turned around mid-way it heads back keeping its speed; sent to a third state mid-way it starts
  * over from where it is, the contents on their way fading where they are.
  *
- * Away, a state is unseen (`opacity: 0`, `visibility: hidden`, marked `data-lw-away`) and takes no
+ * Away, a state is unseen (`opacity: 0`, `visibility: hidden`, marked `data-fk-away`) and takes no
  * presses. One holding focus as it goes keeps it: it's only made transparent, still focusable and
  * read. A press on the shape on its way is a press on the smallest state whose box is under it at
  * rest, so a control can be pressed again before the shape is all the way home.
@@ -63,7 +63,7 @@ import {
  * custom properties) is from where it's placed; their own classes come with them, selectors
  * through the elements' parents don't.
  *
- * In a glass group (a parent a group runs on, marked `data-lw-surface`: see @liquid-web/core) the
+ * In a glass group (a parent a group runs on, marked `data-fk-surface`: see @fluidkit/core) the
  * shape is placed next to the state that's in the group, and how it goes depends on the other:
  *   - beside the neighbors (and no container): it stays in the group and melts with them on the
  *     way, as anything there does
@@ -271,7 +271,7 @@ const LIVE_SURFACE = [
 /** What the shape keeps of the bigger one while the fills are in it */
 const CARRIED = ["backdrop-filter", "-webkit-backdrop-filter", "box-shadow"];
 /** What of an element's attributes isn't its look, left off a copy wearing it */
-const NOT_LOOK = /^(id|style|name|tabindex|autofocus|inert|hidden|on.*|data-lw-away)$/;
+const NOT_LOOK = /^(id|style|name|tabindex|autofocus|inert|hidden|on.*|data-fk-away)$/;
 /** Shrinking from rest, the shape holds this share of its width's duration before it goes */
 const SHRINK_HOLD = 0.12;
 /** Lifted over a group: share of the progress over which the stub left in it shrinks away */
@@ -292,7 +292,7 @@ const MATCH_FROM = 0.2;
 const MATCH_SPAN = 0.6;
 /**
  * Press behaviors stay with the states: the copies only look like them. Press behaviors skip a
- * `data-lw-part` already; their classes come off too, so their CSS without the script (`:active`)
+ * `data-fk-part` already; their classes come off too, so their CSS without the script (`:active`)
  * doesn't scale the copies either. Names only: nothing of theirs is loaded.
  */
 const BEHAVIORS = ["lb-highlight", "lb-swell", "lb-stretch", "lb-interactive"];
@@ -414,7 +414,7 @@ export function createMorph({
     scrub(node);
     node.style.cssText += `; ${BARE}; ${PINNED}; transform-origin: 0 0; width: ${box.width}px; height: ${box.height}px`;
     for (const key of matched) {
-      const twin = node.querySelector<HTMLElement>(`[data-lw-match="${win.CSS.escape(key)}"]`);
+      const twin = node.querySelector<HTMLElement>(`[data-fk-match="${win.CSS.escape(key)}"]`);
       if (twin) twin.style.visibility = "hidden";
     }
     return { node, of: el, w: box.width, h: box.height, left: box.x, top: box.y, s: 1, o: 1, blur: 0 };
@@ -431,10 +431,10 @@ export function createMorph({
     if (!(r.height >= line * 1.5)) node.style.whiteSpace = "nowrap";
     return { node, of: el, w: r.width, h: r.height, left: r.left, top: r.top, s: 1, o: 1, blur: 0 };
   };
-  /** The pieces two states share, each by its `data-lw-match`, where they are in each at rest */
+  /** The pieces two states share, each by its `data-fk-match`, where they are in each at rest */
   const matchesOf = (a: HTMLElement, aBox: Box, b: HTMLElement, bBox: Box) => {
     const marked = (el: HTMLElement) =>
-      new Map([...el.querySelectorAll<HTMLElement>("[data-lw-match]")].map((m) => [m.dataset.lwMatch ?? "", m]));
+      new Map([...el.querySelectorAll<HTMLElement>("[data-fk-match]")].map((m) => [m.dataset.fkMatch ?? "", m]));
     const inA = marked(a);
     const inB = marked(b);
     const spot = (r: DOMRect, box: Box): Spot => ({
@@ -577,7 +577,7 @@ export function createMorph({
   const hide = (el: HTMLElement, matched: Set<string>) => {
     const twins: [HTMLElement, string][] = [];
     for (const key of matched) {
-      const twin = el.querySelector<HTMLElement>(`[data-lw-match="${win.CSS.escape(key)}"]`);
+      const twin = el.querySelector<HTMLElement>(`[data-fk-match="${win.CSS.escape(key)}"]`);
       if (!twin) continue;
       twins.push([twin, twin.style.visibility]);
       twin.style.visibility = "hidden";
@@ -1026,7 +1026,7 @@ export function createMorph({
     const stubbed = lifted && grouped(anchor);
     shape.style.zIndex = lifted ? "1" : "";
     const matches = matchesOf(from, aBox, to, bBox);
-    const keys = new Set(matches.map((m) => m.a.node.dataset.lwMatch ?? ""));
+    const keys = new Set(matches.map((m) => m.a.node.dataset.fkMatch ?? ""));
     // The smaller one as a copy in the shape; the bigger one flies itself
     const smallBox = small === from ? aBox : bBox;
     const layer = layerOf(small, smallBox, keys);
@@ -1081,7 +1081,7 @@ export function createMorph({
       m.b.node.remove();
     }
     f.matches = matchesOf(f.a.el, f.a.box, f.b.el, f.b.box);
-    const keys = new Set(f.matches.map((m) => m.a.node.dataset.lwMatch ?? ""));
+    const keys = new Set(f.matches.map((m) => m.a.node.dataset.fkMatch ?? ""));
     const layer = layerOf(end.el, end.box, keys);
     Object.assign(layer, { left: old.left, top: old.top, s: old.s, o: old.o, blur: old.blur });
     old.node.replaceWith(layer.node);
@@ -1109,7 +1109,7 @@ export function createMorph({
       shape: drawn.shape,
     };
     // The one flying itself lets go: a copy of it fades where it is, with what else was on its way
-    const keys = new Set(f.matches.map((m) => m.a.node.dataset.lwMatch ?? ""));
+    const keys = new Set(f.matches.map((m) => m.a.node.dataset.fkMatch ?? ""));
     let grounded: Piece | null = null;
     if (f.live) {
       grounded = layerOf(f.live.el, f[f.live.end].box, keys);

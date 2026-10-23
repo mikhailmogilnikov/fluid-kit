@@ -187,16 +187,16 @@ importers:
       '@astrojs/mdx':
         specifier: ^8.0.3
         version: 8.0.3(@astrojs/markdown-satteri@0.4.3)(astro@7.3.6(@types/node@26.6.4)(jiti@2.6.1)(yaml@2.9.1))
-      '@liquid-web/blur':
+      '@fluidkit/blur':
         specifier: workspace:*
         version: link:../../packages/blur
-      '@liquid-web/core':
+      '@fluidkit/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@liquid-web/indicator':
+      '@fluidkit/indicator':
         specifier: workspace:*
         version: link:../../packages/indicator
-      '@liquid-web/morph':
+      '@fluidkit/morph':
         specifier: workspace:*
         version: link:../../packages/morph
       astro:
@@ -212,7 +212,7 @@ importers:
 
   packages/blur:
     dependencies:
-      '@liquid-web/core':
+      '@fluidkit/core':
         specifier: workspace:^
         version: link:../core
     devDependencies:
@@ -240,7 +240,7 @@ importers:
 
   packages/indicator:
     dependencies:
-      '@liquid-web/core':
+      '@fluidkit/core':
         specifier: workspace:^
         version: link:../core
     devDependencies:
@@ -256,11 +256,11 @@ importers:
 
   packages/morph:
     dependencies:
-      '@liquid-web/core':
+      '@fluidkit/core':
         specifier: workspace:^
         version: link:../core
     devDependencies:
-      '@liquid-web/blur':
+      '@fluidkit/blur':
         specifier: workspace:*
         version: link:../blur
       happy-dom:
