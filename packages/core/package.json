@@ -9,13 +9,13 @@
   ],
   "homepage": "https://liquid-web.mogilnikov.dev/core",
   "bugs": {
-    "url": "https://github.com/mikhailmogilnikov/liquid-web/issues"
+    "url": "https://github.com/mikhailmogilnikov/fluid-kit/issues"
   },
   "license": "MIT",
   "author": "Mikhail Mogilnikov",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mikhailmogilnikov/liquid-web.git",
+    "url": "git+https://github.com/mikhailmogilnikov/fluid-kit.git",
     "directory": "packages/core"
   },
   "files": [
