@@ -1,6 +1,9 @@
+import { createIndicator } from "@liquid-web/indicator";
+
 /**
- * A `.seg`: buttons with `data-value`, one of them `aria-pressed`, and a `.seg__thumb` that slides
- * to it. The thumb is placed from the button's box, so it follows font loading and resizes.
+ * A `.seg`: buttons with `data-value`, one of them `aria-pressed`, and a `.seg__thumb` resting on
+ * it. The thumb is an indicator: pressed and dragged across the buttons it follows the pointer, and
+ * the one it's released on is chosen. It follows font loading and resizes on its own.
  */
 export function segmented(seg: HTMLElement, onChange?: (value: string) => void) {
   const thumb = seg.querySelector<HTMLElement>(".seg__thumb");
@@ -8,21 +11,21 @@ export function segmented(seg: HTMLElement, onChange?: (value: string) => void) 
 
   const pressed = () => buttons.find((b) => b.getAttribute("aria-pressed") === "true");
 
-  const place = (instant = false) => {
-    const on = pressed();
-    if (!thumb || !on) return;
-    if (instant) seg.classList.add("is-instant");
-    thumb.style.width = `${on.offsetWidth}px`;
-    thumb.style.transform = `translateX(${on.offsetLeft}px)`;
-    if (instant) {
-      void thumb.offsetWidth;
-      seg.classList.remove("is-instant");
-    }
-  };
+  // The thumb shows the choice, not the focus: keyboard focus keeps its own ring
+  const indicator = thumb
+    ? createIndicator({
+        container: seg,
+        indicator: thumb,
+        items: "button[data-value]",
+        trigger: "press",
+        focus: false,
+        rest: pressed() ?? null,
+      })
+    : null;
 
   const select = (value: string, silent = false) => {
     for (const b of buttons) b.setAttribute("aria-pressed", String(b.dataset.value === value));
-    place();
+    if (indicator) indicator.rest = pressed() ?? null;
     if (!silent) onChange?.(value);
   };
 
@@ -31,8 +34,6 @@ export function segmented(seg: HTMLElement, onChange?: (value: string) => void) 
       if (b.getAttribute("aria-pressed") !== "true") select(b.dataset.value!);
     });
   }
-  new ResizeObserver(() => place(true)).observe(seg);
-  place(true);
 
   return { select, value: () => pressed()?.dataset.value };
 }

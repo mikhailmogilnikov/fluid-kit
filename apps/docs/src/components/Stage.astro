@@ -121,6 +121,7 @@ const features = [
 
       <!-- The menu the pair grows into from its more button: laid out where it opens, hidden until then -->
       <div class="stage-menu lb" id="stage-menu" role="menu" aria-label="More" data-stage-menu>
+        <span class="stage-menu__highlight" aria-hidden="true" data-stage-highlight></span>
         <button type="button" role="menuitem"><Icon name="plus" size={18} />Add to Library</button>
         <button type="button" role="menuitem"><Icon name="heart" size={18} />Love</button>
         <button type="button" role="menuitem"><Icon name="arrow" size={18} />Share Album</button>
@@ -181,6 +182,7 @@ const features = [
 
 <script>
   import { installGlassGroups } from "@liquid-web/blur/melt";
+  import { createIndicator } from "@liquid-web/indicator";
   import { disclosure } from "../scripts/disclosure";
   import { segmented } from "../scripts/segmented";
 
@@ -200,6 +202,9 @@ const features = [
   const menu = document.querySelector<HTMLElement>("[data-stage-menu]");
   if (pair && more && menu) {
     const morph = disclosure(pair, menu, { trigger: more });
+    // The highlight follows the mouse, or a finger dragged across the items, over the separator too
+    const highlight = menu.querySelector<HTMLElement>("[data-stage-highlight]");
+    if (highlight) createIndicator({ container: menu, indicator: highlight });
     more.addEventListener("click", () => morph.toggle());
     menu.addEventListener("click", (e) => {
       if ((e.target as Element).closest("button")) morph.close();

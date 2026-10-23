@@ -317,20 +317,13 @@ code {
 .seg button:hover { color: var(--ink-2); }
 .seg button[aria-pressed="true"] { color: var(--ink); }
 .seg__thumb {
+  /* An indicator: placed on the chosen button by its script */
   position: absolute;
   z-index: 0;
-  top: 3px;
-  bottom: 3px;
-  left: 0;
-  width: 0;
   border-radius: 999px;
   background: var(--thumb);
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.1), 0 0 0 0.5px rgb(0 0 0 / 0.04);
-  transition:
-    transform 0.45s var(--settle),
-    width 0.45s var(--settle);
 }
-.seg.is-instant .seg__thumb { transition: none; }
 
 /* Icon-only segmented control on glass, for the theme */
 .seg--glass {
@@ -344,8 +337,6 @@ code {
   justify-content: center;
 }
 .seg--glass .seg__thumb {
-  top: 0;
-  bottom: 0;
   background: var(--hair);
   box-shadow: none;
 }
@@ -685,6 +676,15 @@ code {
   border-radius: 32px;
   color: var(--ink);
   visibility: hidden;
+  /* A finger drags across the items, as in an iOS menu, without scrolling the page */
+  touch-action: none;
+}
+/* The highlight: an indicator on the hovered or pressed item, under the items */
+.stage-menu__highlight {
+  position: absolute;
+  z-index: -1;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 13%, transparent);
 }
 .stage-menu button {
   display: flex;
@@ -696,7 +696,6 @@ code {
   font-size: 15px;
   text-align: left;
 }
-.stage-menu button:hover { background: color-mix(in srgb, currentColor 13%, transparent); }
 .stage-menu button:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
 .stage-menu hr {
   width: calc(100% - 24px);
@@ -719,8 +718,6 @@ code {
 .screen__seg .seg button { height: 36px; padding: 0 16px; }
 .screen__seg .seg button:not([aria-pressed="true"]):hover { color: var(--ink-3); }
 .screen__seg .seg__thumb {
-  top: 0;
-  bottom: 0;
   background: var(--hair);
   box-shadow: none;
 }
