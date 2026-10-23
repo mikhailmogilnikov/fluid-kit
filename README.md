@@ -56,9 +56,11 @@ changesets. Merging it bumps the versions, writes the changelogs, publishes to n
 and tags each package (`@fluidkit/blur@1.1.0`). Publishing goes through pnpm, which turns the
 `workspace:^` dependencies on `@fluidkit/core` into real version ranges.
 
-The first release publishes every package at `1.0.0` as it is, with no changeset: `pnpm release`
-publishes whatever version isn't on npm yet. It needs the `fluidkit` organization on npm and an
-`NPM_TOKEN` secret in the repository; `pnpm exec changeset publish-plan` shows what would go out.
+It publishes with [Trusted Publishing](https://docs.npmjs.com/trusted-publishers): no npm token is
+stored anywhere. Each package on npm trusts this repository's `release.yml`, and the workflow proves
+who it is with its own OIDC token. A new package has to be published once by hand first
+(`pnpm release`, with your npm two-factor code), then trust the workflow in its settings on npm.
+`pnpm exec changeset publish-plan` shows what would go out.
 
 ## License
 
