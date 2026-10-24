@@ -109,7 +109,7 @@ To flow a control into a panel of the same glass, use [Morph](/morph). It works 
 
 <Section id="classes" title="Classes">
 
-`lb` is the material. `lb-clear` and `lb-tinted` change its look. `lb-highlight`, `lb-swell` and `lb-stretch` react to presses, and `lb-interactive` turns on all three. Combine them freely.
+`lb` is the material. `lb-clear`, `lb-tinted` and `lb-lens` change its look. `lb-highlight`, `lb-swell` and `lb-stretch` react to presses, and `lb-interactive` turns on all three. Combine them freely.
 
 <ClassTiles />
 
@@ -120,8 +120,34 @@ Set the shape with `border-radius`; the default is a capsule.
 <div class="lb lb-highlight lb-stretch">A bar: lights and stretches, doesn't swell</div>
 <button class="lb lb-tinted lb-highlight">Tinted</button>
 <div class="lb lb-clear">Over a photo</div>
+<div class="lb lb-lens">A lens</div>
 <div class="lb" style="border-radius: 24px; padding: 16px">Card</div>
 ```
+
+### A lens while it's held
+
+`lb-lens` is a lens for good. To turn glass into one while something holds it and back, set `--lb-lens` from 0 to 1 instead: it's registered, so it transitions, and it can be set by any selector. A switch's thumb, solid white at rest, a lens over its track while it's pressed or dragged (by [Drag](/drag#examples), which marks it `data-dragging`):
+
+```css
+.switch__thumb {
+  --lb-transparency: 0;
+  --lb-fill: #fff;
+  transition: --lb-lens 0.3s, scale 0.35s;
+}
+.switch:active .switch__thumb,
+.switch__thumb[data-dragging] {
+  --lb-lens: 1;
+  scale: 1.3 1.2;
+}
+```
+
+```html
+<button class="switch" role="switch" aria-checked="true">
+  <span class="switch__thumb lb"></span>
+</button>
+```
+
+The lens shows what's under it as it is: it doesn't magnify, which takes refraction. Solid glass (reduced transparency, more contrast) stays solid.
 
 </Section>
 
@@ -401,7 +427,8 @@ Any browser with `backdrop-filter`, `color-mix()` and CSS `pow()`. Without `@pro
 - **Backdrop roots.** Glass blurs only what's inside its backdrop root. An ancestor with `filter`, `opacity` below 1, `mask`, `clip-path`, `mix-blend-mode` or its own `backdrop-filter` cuts the glass off from everything behind that ancestor.
 - **Transforms on groups.** Scaling a group or its ancestors works; rotating doesn't. Movement the group can't see needs `update()`. The merged outline uses circular arcs, even for squircle children.
 - **Clipping around a group.** In Chromium, an ancestor with `overflow: hidden` (or `clip`, or paint containment) and a `corner-shape` other than `round` shows a blurred rectangle around merged glass. Put the shape on the ancestor's background instead and leave it unclipped. Clipping with plain `border-radius` is fine.
-- **No refraction.** See the [FAQ](#faq).
+- **No refraction.** See the [FAQ](#faq). So a lens doesn't magnify what's under it.
+- **A lens in a group.** A group's children give their glass to the group's shared surface while melted, a lens too: keep lens glass out of a group's direct children.
 
 </Section>
 

@@ -110,7 +110,7 @@ const toggles = [
               aria-labelledby={`dx-${label.replace(/\W/g, "")}`}
               data-dx-switch
             >
-              <span class="dx__thumb" data-dx-thumb />
+              <span class="dx__thumb lb" data-dx-thumb />
             </button>
           </li>
         ))}
@@ -346,20 +346,25 @@ const toggles = [
     user-select: none;
   }
   .dx__switch:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+  /* Glass, opaque and white at rest; held or dragged, a lens over the track, a little bigger, as
+     iOS 26's is. `--lb-lens` is the material's own, so it transitions */
   .dx__thumb {
+    --lb-transparency: 0;
+    --lb-fill: #fff;
     position: absolute;
     top: 2px;
     left: 2px;
     width: 38px;
     height: 26px;
-    border-radius: 999px;
-    background: #fff;
-    box-shadow: 0 2px 6px rgb(0 0 0 / 0.16), 0 0 0 0.5px rgb(0 0 0 / 0.04);
-    transition: scale 0.2s var(--settle);
+    transition:
+      scale 0.35s var(--settle),
+      --lb-lens 0.3s var(--glide);
   }
-  /* Held, it swells a little, as iOS 26's does */
   .dx__switch:active .dx__thumb,
-  .dx__thumb[data-dragging] { scale: 1.12 1.08; }
+  .dx__thumb[data-dragging] {
+    --lb-lens: 1;
+    scale: 1.3 1.2;
+  }
 
   /* A video, laid out in the top-left corner; the drag throws it into the others. Two sizes,
      double-tapped between or pinched; its corners follow its size */
