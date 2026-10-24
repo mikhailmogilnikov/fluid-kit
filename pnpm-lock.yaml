@@ -193,6 +193,9 @@ importers:
       '@fluidkit/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@fluidkit/drag':
+        specifier: workspace:*
+        version: link:../../packages/drag
       '@fluidkit/indicator':
         specifier: workspace:*
         version: link:../../packages/indicator
@@ -227,6 +230,22 @@ importers:
         version: 1.3.0(@astrojs/compiler-rs@0.5.1)(@types/node@26.6.4)(@vitest/ui@5.0.5)(@volar/typescript@2.4.28(typescript@7.0.2))(esbuild@0.28.2)(happy-dom@21.0.4)(jiti@2.6.1)(typescript@7.0.2)(yaml@2.9.1)
 
   packages/core:
+    devDependencies:
+      happy-dom:
+        specifier: ^21.0.4
+        version: 21.0.4
+      typescript:
+        specifier: ^7.0.2
+        version: 7.0.2
+      vite-plus:
+        specifier: ^1.3.0
+        version: 1.3.0(@astrojs/compiler-rs@0.5.1)(@types/node@26.6.4)(@vitest/ui@5.0.5)(@volar/typescript@2.4.28(typescript@7.0.2))(esbuild@0.28.2)(happy-dom@21.0.4)(jiti@2.6.1)(typescript@7.0.2)(yaml@2.9.1)
+
+  packages/drag:
+    dependencies:
+      '@fluidkit/core':
+        specifier: workspace:^
+        version: link:../core
     devDependencies:
       happy-dom:
         specifier: ^21.0.4

@@ -13,6 +13,7 @@ on its own, on plain DOM; where two meet, they read attributes the other sets (`
 | [`@fluidkit/blur`](packages/blur/README.md) | A glass material: backdrop blur, fill, rims, press behaviors, glass that melts between shapes |
 | [`@fluidkit/morph`](packages/morph/README.md) | One element flows into another and back, on interruptible springs; any element |
 | [`@fluidkit/indicator`](packages/indicator/README.md) | One element flies onto whatever is hovered, pressed or chosen: menus, tabs, segmented controls |
+| [`@fluidkit/drag`](packages/drag/README.md) | Drag with rubber-band edges, let go onto the snap point a flick reaches: sheets, swipe actions, switches |
 | [`@fluidkit/core`](packages/core/README.md) | What they share: the spring, boxes as the browser draws them, and the DOM contract |
 
 `apps/docs` is the docs site: one page per package, written in MDX in
@@ -30,7 +31,7 @@ pnpm install
 
 Installing also sets up the git hooks (`.vite-hooks/`): before a commit, staged files are formatted
 and linted; a commit message has to be a [conventional commit](https://www.conventionalcommits.org),
-`type(scope): subject`, with an optional scope from `core`, `blur`, `morph`, `indicator`, `docs`,
+`type(scope): subject`, with an optional scope from `core`, `blur`, `morph`, `indicator`, `drag`, `docs`,
 `repo`, `ci`, `deps` and `release`.
 
 | Script | What |

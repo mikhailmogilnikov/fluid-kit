@@ -1,0 +1,59 @@
+{
+  "name": "@fluidkit/drag",
+  "version": "0.0.0",
+  "description": "Drag one element with rubber-band edges and snap points, let go on a spring that keeps the finger's speed: sheets, swipe actions, switches.",
+  "keywords": [
+    "drag",
+    "fluidkit",
+    "gesture",
+    "rubber-band",
+    "sheet",
+    "snap",
+    "spring",
+    "swipe"
+  ],
+  "homepage": "https://fluidkit.mogilnikov.dev/drag",
+  "bugs": {
+    "url": "https://github.com/mikhailmogilnikov/fluid-kit/issues"
+  },
+  "license": "MIT",
+  "author": "Mikhail Mogilnikov",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mikhailmogilnikov/fluid-kit.git",
+    "directory": "packages/drag"
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "vp pack",
+    "dev": "vp pack --watch",
+    "check-types": "tsc --noEmit",
+    "test": "vp test run --passWithNoTests",
+    "prepack": "pnpm build",
+    "prepublishOnly": "pnpm check-types && pnpm test"
+  },
+  "dependencies": {
+    "@fluidkit/core": "workspace:^"
+  },
+  "devDependencies": {
+    "happy-dom": "^21.0.4",
+    "typescript": "^7.0.2",
+    "vite-plus": "^1.3.0"
+  }
+}
