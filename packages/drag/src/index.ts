@@ -24,6 +24,12 @@ import { SpringAnimator, px, swallowClick, type SpringParams } from "@fluidkit/c
  * for the page and for press behaviors. While a pointer drags it, it's marked `data-dragging`.
  * Snap points and bounds can be functions: read again when the element, its parent or the window
  * is resized, so a sheet's "half the screen" stays half.
+ *
+ * With a `scroll` area inside, such as a sheet's list, a finger hands one gesture between the two,
+ * as iOS sheets do: pulled toward its later snap points (a bottom sheet down) with the list at its
+ * start, or pushed back while it isn't at its first, the element moves, else the list scrolls; a list
+ * scrolled back to its start and still pulled hands the gesture to the element, and an element
+ * pushed all the way hands the rest of it to the list. That's touch: a mouse drags, a wheel scrolls.
  */
 
 export type DragAxis = "x" | "y" | "both";
@@ -42,6 +48,11 @@ export type DragOptions = {
   axis?: DragAxis;
   /** Where it may come to rest; a function is read again on a resize */
   snaps?: DragSnaps | (() => DragSnaps);
+  /**
+   * An area inside that scrolls along its axis, such as a sheet's list: a finger's gesture goes
+   * from one to the other, as in iOS sheets. Along one axis only
+   */
+  scroll?: HTMLElement;
   /** How far it moves before it's rubber; the farthest snap points unless given, else unbounded */
   bounds?: DragBounds | (() => DragBounds);
   /** The snap point it starts at; the first unless given */
@@ -107,6 +118,8 @@ const DECELERATION = 0.998;
 /** How far a pointer moves before it drags, px: a finger is less exact than a mouse */
 const SLOP = 4;
 const TOUCH_SLOP = 8;
+/** How far a finger in the scroll area moves before it's the area's or the drag's, px */
+const DECIDE = 3;
 /** The pointer's speed is how far it went in this long before it let go, ms */
 const VELOCITY_WINDOW = 100;
 /** How long after a drag the click it would make may still come, ms */
@@ -128,6 +141,8 @@ const unband = (shown: number, size: number, c: number) => (size / c) * (shown /
 const project = (v: number, rate: number) => ((v / 1000) * rate) / (1 - rate);
 
 type Sample = { t: number; x: number; y: number };
+/** A pointer, or a touch, as the drag reads it: where it is on screen and when */
+type Input = { id: number; touch: boolean; x: number; y: number; t: number };
 
 /** Pointers a drag has: in nested handles the innermost drag that starts takes one, alone */
 const claimed = new Set<number>();
@@ -272,13 +287,29 @@ export function createDrag(options: DragOptions): Drag {
     return parent.getBoundingClientRect().width / parent.offsetWidth || 1;
   };
 
-  // On touch the browser keeps the other axis, and pinching
-  handle.style.touchAction = axis === "x" ? "pan-y pinch-zoom" : axis === "y" ? "pan-x pinch-zoom" : "none";
+  /** The area inside that scrolls along its axis, and hands gestures over with it */
+  const area = axis === "both" ? null : (options.scroll ?? null);
+  const k: "x" | "y" = axis === "x" ? "x" : "y";
+  const scrolled = () => (!area ? 0 : k === "y" ? area.scrollTop : area.scrollLeft);
+  const scrollEnd = () =>
+    !area ? 0 : k === "y" ? area.scrollHeight - area.clientHeight : area.scrollWidth - area.clientWidth;
+  const scrollTo = (v: number) => {
+    if (!area) return;
+    if (k === "y") area.scrollTop = v;
+    else area.scrollLeft = v;
+  };
+
+  // On touch the browser keeps the other axis, and pinching. With a scroll area, fingers are followed
+  // by their touch events instead, which stop the browser's scroll themselves: a `touch-action`
+  // here would be one the area's own scroll has to get past
+  if (!area) handle.style.touchAction = axis === "x" ? "pan-y pinch-zoom" : axis === "y" ? "pan-x pinch-zoom" : "none";
 
   /** The pointer down on the handle, until it's let go or given up */
   let pointer: {
     id: number;
     touch: boolean;
+    /** A finger followed by its touch events (with a scroll area): not a pointer the browser takes */
+    viaTouch: boolean;
     /** Where it was when the drag started, on screen */
     x0: number;
     y0: number;
@@ -296,15 +327,15 @@ export function createDrag(options: DragOptions): Drag {
 
   const listen = (on: boolean) => {
     if (on) {
-      win.addEventListener("pointermove", moved, true);
-      win.addEventListener("pointerup", up, true);
-      win.addEventListener("pointercancel", cancelled, true);
+      win.addEventListener("pointermove", movedPointer, true);
+      win.addEventListener("pointerup", upPointer, true);
+      win.addEventListener("pointercancel", cancelledPointer, true);
       doc.addEventListener("selectstart", unselect, true);
       return;
     }
-    win.removeEventListener("pointermove", moved, true);
-    win.removeEventListener("pointerup", up, true);
-    win.removeEventListener("pointercancel", cancelled, true);
+    win.removeEventListener("pointermove", movedPointer, true);
+    win.removeEventListener("pointerup", upPointer, true);
+    win.removeEventListener("pointercancel", cancelledPointer, true);
     doc.removeEventListener("selectstart", unselect, true);
   };
 
@@ -343,7 +374,7 @@ export function createDrag(options: DragOptions): Drag {
   };
 
   /** The drag takes the pointer: dragged from here (`moved`), or caught on its way and held */
-  const begin = (e: PointerEvent, moved: boolean) => {
+  const begin = (input: Input, moved: boolean) => {
     if (!pointer) return;
     // A drag inside its handle has it already
     if (claimed.has(pointer.id)) {
@@ -357,14 +388,16 @@ export function createDrag(options: DragOptions): Drag {
     moving = true;
     pointer.started = true;
     pointer.moved = moved;
-    pointer.x0 = e.clientX;
-    pointer.y0 = e.clientY;
+    pointer.x0 = input.x;
+    pointer.y0 = input.y;
     pointer.from = unstretch(position);
-    pointer.samples = [{ t: e.timeStamp, x: position.x, y: position.y }];
-    try {
-      handle.setPointerCapture(e.pointerId);
-    } catch {
-      // A pointer that's gone already
+    pointer.samples = [{ t: input.t, x: position.x, y: position.y }];
+    if (!pointer.viaTouch) {
+      try {
+        handle.setPointerCapture(input.id);
+      } catch {
+        // A pointer that's gone already
+      }
     }
     element.setAttribute(DRAGGING, "");
     doc.getSelection()?.removeAllRanges();
@@ -380,38 +413,37 @@ export function createDrag(options: DragOptions): Drag {
     return dt > 0 ? { x: (b.x - a.x) / dt, y: (b.y - a.y) / dt } : { ...ZERO };
   };
 
-  const down = (e: PointerEvent) => {
-    if (disabled || destroyed || pointer || !e.isPrimary) return;
-    if (e.pointerType === "mouse" && e.button !== 0) return;
-    if ((e.target as Element | null)?.closest?.(NO_DRAG)) return;
+  /** A pointer goes down on the handle: followed from here */
+  const press = (input: Input, viaTouch: boolean) => {
     pointer = {
-      id: e.pointerId,
-      touch: e.pointerType === "touch",
-      x0: e.clientX,
-      y0: e.clientY,
+      id: input.id,
+      touch: input.touch,
+      viaTouch,
+      x0: input.x,
+      y0: input.y,
       from: position,
       scale: scaleOf(),
       started: false,
       moved: false,
       samples: [],
     };
-    listen(true);
+    if (!viaTouch) listen(true);
     // Caught on its way: it stops under the pointer
-    if (moving) begin(e, false);
+    if (moving) begin(input, false);
   };
 
-  const moved = (e: PointerEvent) => {
-    if (!pointer || e.pointerId !== pointer.id) return;
-    const dx = (e.clientX - pointer.x0) / pointer.scale;
-    const dy = (e.clientY - pointer.y0) / pointer.scale;
+  const move = (input: Input) => {
+    if (!pointer || input.id !== pointer.id) return;
+    const dx = (input.x - pointer.x0) / pointer.scale;
+    const dy = (input.y - pointer.y0) / pointer.scale;
     if (!pointer.moved) {
       if (Math.hypot(dx, dy) < (pointer.touch ? TOUCH_SLOP : SLOP)) return;
       if (pointer.started) {
         // Caught, and now dragged: from here
         pointer.moved = true;
-        pointer.x0 = e.clientX;
-        pointer.y0 = e.clientY;
-        pointer.samples = [{ t: e.timeStamp, x: position.x, y: position.y }];
+        pointer.x0 = input.x;
+        pointer.y0 = input.y;
+        pointer.samples = [{ t: input.t, x: position.x, y: position.y }];
         return;
       }
       // Across its axis first: the page's, such as a list scrolled past a row that swipes
@@ -419,14 +451,14 @@ export function createDrag(options: DragOptions): Drag {
         finish(null);
         return;
       }
-      begin(e, true);
+      begin(input, true);
       return;
     }
-    const raw = { x: pointer.from.x + (onX ? dx : 0), y: pointer.from.y + (onY ? dy : 0) };
+    const raw = handOver({ x: pointer.from.x + (onX ? dx : 0), y: pointer.from.y + (onY ? dy : 0) });
     const shown = stretch(raw);
     const samples = pointer.samples;
-    samples.push({ t: e.timeStamp, x: shown.x, y: shown.y });
-    while (samples.length > 2 && samples[0].t < e.timeStamp - VELOCITY_WINDOW) samples.shift();
+    samples.push({ t: input.t, x: shown.x, y: shown.y });
+    while (samples.length > 2 && samples[0].t < input.t - VELOCITY_WINDOW) samples.shift();
     // The spring holds the pull, as it shows it stretched: let go past the bounds, it sets off from there
     spring.jump(raw);
     write(shown, speed(samples));
@@ -435,22 +467,174 @@ export function createDrag(options: DragOptions): Drag {
   /** A drag ends in a click where it's let go: not a press of what's under it */
   let unswallow = () => {};
 
-  const up = (e: PointerEvent) => {
-    if (!pointer || e.pointerId !== pointer.id) return;
+  const release = (input: Input) => {
+    if (!pointer || input.id !== pointer.id) return;
     if (pointer.moved) {
       unswallow();
       unswallow = swallowClick(doc, null, CLICK_WINDOW);
     }
     // Its speed as it was let go: a pointer that stopped a while before has none
-    const v = pointer.started ? speed(pointer.samples.filter((s) => s.t >= e.timeStamp - VELOCITY_WINDOW)) : null;
+    const v = pointer.started ? speed(pointer.samples.filter((s) => s.t >= input.t - VELOCITY_WINDOW)) : null;
     finish(v);
   };
 
   /** Taken by the browser (a scroll, a gesture of its own): it settles from where it is */
-  const cancelled = (e: PointerEvent) => {
-    if (!pointer || e.pointerId !== pointer.id) return;
+  const cancel = (id: number) => {
+    if (!pointer || id !== pointer.id) return;
     finish(pointer.started ? { ...ZERO } : null);
   };
+
+  const fromPointer = (e: PointerEvent): Input => ({
+    id: e.pointerId,
+    touch: e.pointerType === "touch",
+    x: e.clientX,
+    y: e.clientY,
+    t: e.timeStamp,
+  });
+
+  const down = (e: PointerEvent) => {
+    if (disabled || destroyed || pointer || !e.isPrimary) return;
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    if ((e.target as Element | null)?.closest?.(NO_DRAG)) return;
+    // With a scroll area, a finger is followed by its touch events, which can stop the scroll
+    if (area && e.pointerType === "touch") return;
+    press(fromPointer(e), false);
+  };
+  const movedPointer = (e: PointerEvent) => {
+    if (!pointer?.viaTouch) move(fromPointer(e));
+  };
+  const upPointer = (e: PointerEvent) => {
+    if (!pointer?.viaTouch) release(fromPointer(e));
+  };
+  const cancelledPointer = (e: PointerEvent) => {
+    if (!pointer?.viaTouch) cancel(e.pointerId);
+  };
+
+  /**
+   * A finger dragging it from the scroll area, the element at the start of its bounds (a sheet all
+   * the way open): the rest of the push scrolls the area on; pulled back, the area scrolls back to
+   * its start before the element moves
+   */
+  const handOver = (raw: DragPoint): DragPoint => {
+    if (!area || !pointer?.viaTouch) return raw;
+    const lo = bounds[k][0];
+    const at = scrolled();
+    let shift = 0;
+    if (raw[k] < lo && at < scrollEnd()) shift = Math.min(lo - raw[k], scrollEnd() - at);
+    else if (raw[k] > lo && at > 0 && position[k] <= lo + 0.5) shift = -Math.min(raw[k] - lo, at);
+    if (!shift) return raw;
+    scrollTo(at + shift);
+    pointer.from = { ...pointer.from, [k]: pointer.from[k] + shift };
+    return { ...raw, [k]: raw[k] + shift };
+  };
+
+  /**
+   * A finger on the handle, with a scroll area, followed by its touch events: they can stop the
+   * area's scroll, which a pointer can't once the browser has it. Undecided until it has moved a
+   * little; then the drag's, the area's to scroll, or neither's (across the axis)
+   */
+  let touch: {
+    id: number;
+    /** It went down in the scroll area */
+    inArea: boolean;
+    mode: "undecided" | "drag" | "scroll" | "none";
+    x0: number;
+    y0: number;
+    last: number;
+  } | null = null;
+  const touchInput = (t: Touch, time: number): Input => ({
+    // Apart from pointers' ids
+    id: -1 - t.identifier,
+    touch: true,
+    x: t.clientX,
+    y: t.clientY,
+    t: time,
+  });
+  const ours = (e: TouchEvent) => [...e.changedTouches].find((t) => t.identifier === touch?.id);
+  /** The drag takes the finger, here */
+  const takeTouch = (input: Input) => {
+    if (!touch) return;
+    touch.mode = "drag";
+    if (!pointer) press(input, true);
+    if (!pointer?.started) begin(input, true);
+    // Another drag had it
+    if (!pointer) touch.mode = "none";
+  };
+
+  const touchStart = (e: TouchEvent) => {
+    // A second finger: not a drag's
+    if (e.touches.length > 1) {
+      if (pointer?.viaTouch) cancel(pointer.id);
+      touch = null;
+      return;
+    }
+    if (disabled || destroyed || pointer) return;
+    const t = e.changedTouches[0];
+    if ((t.target as Element | null)?.closest?.(NO_DRAG)) return;
+    const along = k === "y" ? t.clientY : t.clientX;
+    const inArea = !!area?.contains(t.target as Node);
+    touch = { id: t.identifier, inArea, mode: "undecided", x0: t.clientX, y0: t.clientY, last: along };
+    // Caught on its way: held, as any pointer catches it
+    if (moving) {
+      touch.mode = "drag";
+      press(touchInput(t, e.timeStamp), true);
+    }
+  };
+
+  const touchMove = (e: TouchEvent) => {
+    const t = ours(e);
+    if (!t || !touch) return;
+    const input = touchInput(t, e.timeStamp);
+    const along = k === "y" ? t.clientY : t.clientX;
+    const step = along - touch.last;
+    touch.last = along;
+    if (touch.mode === "undecided") {
+      const dx = t.clientX - touch.x0;
+      const dy = t.clientY - touch.y0;
+      if (Math.hypot(dx, dy) < DECIDE) return;
+      const forward = k === "y" ? dy : dx;
+      if (Math.abs(k === "y" ? dx : dy) > Math.abs(forward)) {
+        touch.mode = "none";
+        return;
+      }
+      // Out of the area, the element's. In it: pulled toward its later snap points with the area at
+      // its start, or pushed back while it isn't at the start of its bounds. Else the area scrolls
+      const take = !touch.inArea || (forward > 0 ? scrolled() <= 0 : position[k] > bounds[k][0] + 0.5);
+      if (take) takeTouch(input);
+      else touch.mode = "scroll";
+    } else if (touch.mode === "scroll") {
+      // Scrolled back to its start and still pulled: the element's, if the browser lets go of the
+      // scroll (a scroll under way can't be stopped everywhere)
+      if (step > 0 && scrolled() <= 0 && e.cancelable) takeTouch(input);
+    }
+    if (touch.mode !== "drag") return;
+    if (!pointer) {
+      // Taken by `snap()`, `to()` or `disabled`
+      touch.mode = "none";
+      return;
+    }
+    e.preventDefault();
+    move(input);
+  };
+
+  const touchEnd = (e: TouchEvent) => {
+    const t = ours(e);
+    if (!t) return;
+    if (pointer?.viaTouch) {
+      if (e.type === "touchcancel") cancel(pointer.id);
+      else release(touchInput(t, e.timeStamp));
+    }
+    touch = null;
+  };
+
+  /** Where fingers are followed: the handle, and the area too if it isn't in the handle */
+  const touched = !area ? [] : handle.contains(area) ? [handle] : [handle, area];
+  for (const el of touched) {
+    el.addEventListener("touchstart", touchStart, { passive: true });
+    el.addEventListener("touchmove", touchMove, { passive: false });
+    el.addEventListener("touchend", touchEnd);
+    el.addEventListener("touchcancel", touchEnd);
+  }
 
   /** A link or an image in the handle isn't dragged off by the browser while a pointer is down */
   const nativeDrag = (e: DragEvent) => {
@@ -526,6 +710,12 @@ export function createDrag(options: DragOptions): Drag {
       win.removeEventListener("resize", relayout);
       handle.removeEventListener("pointerdown", down);
       handle.removeEventListener("dragstart", nativeDrag);
+      for (const el of touched) {
+        el.removeEventListener("touchstart", touchStart);
+        el.removeEventListener("touchmove", touchMove);
+        el.removeEventListener("touchend", touchEnd);
+        el.removeEventListener("touchcancel", touchEnd);
+      }
       element.removeAttribute(DRAGGING);
       element.style.translate = own.translate;
       handle.style.touchAction = own.touchAction;

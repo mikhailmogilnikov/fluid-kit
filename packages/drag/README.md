@@ -29,7 +29,9 @@ createDrag({
 
 It moves the element with its inline `translate` alone, so `transform` and `scale` stay yours. On
 touch the browser keeps the other axis (a list still scrolls past a row that swipes sideways), and
-the click a drag would end in is dropped. Options, the API and how a snap point is chosen are in the
+the click a drag would end in is dropped. A sheet's list given as `scroll` shares one gesture with
+the sheet, as in iOS: the sheet opens before the list scrolls, and the list scrolls back to its
+start before the sheet goes down. Options, the API and how a snap point is chosen are in the
 [documentation](https://fluidkit.mogilnikov.dev/drag).
 
 ## License
