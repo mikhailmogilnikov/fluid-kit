@@ -243,7 +243,7 @@ for (const row of document.querySelectorAll<HTMLElement>(".row")) {
 
 ### A switch
 
-The thumb is the element and the whole switch its `handle`. Dragged, it goes to the side its flick reaches and the track turns green as far as it has gone; a tap flips it, and two quick taps flip it back. It stays in its track: `rubberband: 0` stops it at the ends, dragged or on its spring. The thumb is glass, solid white at rest and [a lens](/blur#classes) while it's held or dragged: clear, unblurred and nearly as wide as the track, Liquid Blur's `--lb-lens` and `--lb-transparency`, set by `data-dragging`. With `lb-stretch` at a low `--lb-stretch` it gives a little toward the finger, mostly where the track ends.
+The thumb is the element and the whole switch its `handle`. Dragged, it goes to the side its flick reaches and the track turns green as far as it has gone; a tap flips it, and two quick taps flip it back. It stays in its track: `rubberband: 0` stops it at the ends, dragged or on its spring. The thumb is glass, solid white at rest and [a lens](/blur#classes) while it's held or dragged: clear, unblurred and nearly as wide as the track, Liquid Blur's `--lb-lens` and `--lb-transparency`, set by `data-dragging`. With `lb-stretch` at a low `--lb-stretch`, along `x` only (`--lb-stretch-axis`), it gives a little toward the finger, mostly where the track ends.
 
 <Example>
 <DragExample kind="switch" />
@@ -299,11 +299,12 @@ toggle.addEventListener("click", () => {
   background: color-mix(in srgb, #34c759 calc(var(--on, 0) * 100%), rgb(120 120 128 / 0.32));
   user-select: none;
 }
-/* Glass, solid white at rest; stretched toward the finger a little, felt at the track's ends */
+/* Glass, solid white at rest; stretched toward the finger a little, along the track, felt at its ends */
 .switch__thumb {
   --lb-transparency: 0;
   --lb-fill: #fff;
   --lb-stretch: 0.5;
+  --lb-stretch-axis: x;
   position: absolute;
   top: 2px;
   left: 2px;
