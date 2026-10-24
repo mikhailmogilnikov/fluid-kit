@@ -1,4 +1,5 @@
 import { installPress } from "@fluidkit/blur/press";
+import { createIndicator } from "@fluidkit/indicator";
 import { segmented } from "./segmented";
 
 installPress();
@@ -134,6 +135,12 @@ const sections = links
   .map((a) => document.getElementById(a.hash.slice(1)))
   .filter((el): el is HTMLElement => el !== null);
 
+// The dot beside the current section's link flies from one to the next as the page is read
+const toc = document.querySelector<HTMLElement>("[data-toc]");
+const tocMark = toc?.querySelector<HTMLElement>("[data-toc-mark]");
+const tocIndicator =
+  toc && tocMark ? createIndicator({ container: toc, indicator: tocMark, items: "a", trigger: "manual" }) : null;
+
 let tocFrame = 0;
 const markCurrent = () => {
   tocFrame = 0;
@@ -147,6 +154,9 @@ const markCurrent = () => {
     current = sections[sections.length - 1];
   }
   for (const a of links) a.setAttribute("aria-current", String(a.hash === `#${current?.id}`));
+  // Only when it isn't there already: this runs on every frame of a scroll
+  const currentLink = toc?.querySelector<HTMLElement>(`a[href="#${current?.id}"]`) ?? null;
+  if (tocIndicator && tocIndicator.current !== currentLink) tocIndicator.rest = currentLink;
   if (foldCurrent) foldCurrent.textContent = links.find((a) => a.hash === `#${current?.id}`)?.textContent ?? "";
 };
 if (sections.length) {
