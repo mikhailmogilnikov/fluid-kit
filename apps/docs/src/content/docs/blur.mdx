@@ -126,18 +126,19 @@ Set the shape with `border-radius`; the default is a capsule.
 
 ### A lens while it's held
 
-`lb-lens` is a lens for good. To turn glass into one while something holds it and back, set `--lb-lens` from 0 to 1 instead: it's registered, so it transitions, and it can be set by any selector. A switch's thumb, solid white at rest, a lens over its track while it's pressed or dragged (by [Drag](/drag#examples), which marks it `data-dragging`):
+A lens is the same glass with no blur, so what's under it shows sharp through it. `lb-lens` is one for good. To turn glass into one while something holds it and back, set `--lb-lens` from 0 to 1 instead: it's registered, so it transitions, and any selector can set it; so is `--lb-transparency`. A switch's thumb, solid white at rest, a clear lens over its track while it's pressed or dragged (by [Drag](/drag#examples), which marks it `data-dragging`), as in iOS:
 
 ```css
 .switch__thumb {
   --lb-transparency: 0;
   --lb-fill: #fff;
-  transition: --lb-lens 0.3s, scale 0.35s;
+  transition: --lb-lens 0.3s, --lb-transparency 0.3s, scale 0.35s;
 }
 .switch:active .switch__thumb,
 .switch__thumb[data-dragging] {
   --lb-lens: 1;
-  scale: 1.3 1.2;
+  --lb-transparency: 1;
+  scale: 1.45 1.5;
 }
 ```
 

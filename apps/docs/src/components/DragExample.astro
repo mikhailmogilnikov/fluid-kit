@@ -110,7 +110,7 @@ const toggles = [
               aria-labelledby={`dx-${label.replace(/\W/g, "")}`}
               data-dx-switch
             >
-              <span class="dx__thumb lb" data-dx-thumb />
+              <span class="dx__thumb lb lb-stretch" data-dx-thumb />
             </button>
           </li>
         ))}
@@ -346,11 +346,15 @@ const toggles = [
     user-select: none;
   }
   .dx__switch:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
-  /* Glass, opaque and white at rest; held or dragged, a lens over the track, a little bigger, as
-     iOS 26's is. `--lb-lens` is the material's own, so it transitions */
+  /* Glass, opaque and white at rest; held or dragged, a lens over the track: clear, unblurred and
+     nearly as wide as the track, taller than it, as iOS 27's is. The material's own variables,
+     registered, so they transition */
   .dx__thumb {
     --lb-transparency: 0;
     --lb-fill: #fff;
+    /* Stretched toward the finger a little, mostly felt at the track's ends where the drag stops it:
+       the drag moves it already, so the default pull would carry it far off to the side */
+    --lb-stretch: 0.5;
     position: absolute;
     top: 2px;
     left: 2px;
@@ -358,12 +362,14 @@ const toggles = [
     height: 26px;
     transition:
       scale 0.35s var(--settle),
-      --lb-lens 0.3s var(--glide);
+      --lb-lens 0.3s var(--glide),
+      --lb-transparency 0.3s var(--glide);
   }
   .dx__switch:active .dx__thumb,
   .dx__thumb[data-dragging] {
     --lb-lens: 1;
-    scale: 1.3 1.2;
+    --lb-transparency: 1;
+    scale: 1.45 1.5;
   }
 
   /* A video, laid out in the top-left corner; the drag throws it into the others. Two sizes,
