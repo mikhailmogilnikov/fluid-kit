@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0
+
+### Minor Changes
+
+- 5ab426d: A lens: `lb-lens`, or `--lb-lens` from 0 to 1. The same glass with no blur, so what's under it shows sharp, as a thumb that's held is in iOS. `--lb-lens` is inherited and registered, so it transitions and any selector can set it: `.thumb[data-dragging] { --lb-lens: 1 }` turns a held thumb into a lens and back. `--lb-transparency` is registered now too, so it transitions as well.
+- 0321a06: `--lb-stretch-axis`: which way `lb-stretch` pulls, `x`, `y` or `both` (the default), read once per press like `--lb-stretch`. A switch's thumb that stays in its track stretches along `x` only.
+
 ## 1.0.0
 
 First release.
