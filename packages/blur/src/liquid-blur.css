@@ -16,9 +16,9 @@
  * Usage: class="lb", plus modifiers
  *   lb-clear      at least transparency 1, for glass over photos and video
  *   lb-tinted     the fill is --lb-tint; volume and rims stay
- *   lb-lens       a lens: clear, unblurred glass with a bright ring at its rim and a deeper
- *                 shadow, as a thumb that's held is in iOS. --lb-lens at 1 for this glass alone,
- *                 not glass inside it; to turn into one and back, transition --lb-lens instead
+ *   lb-lens       a lens: the same glass with no blur, as a thumb that's held is in iOS.
+ *                 --lb-lens at 1 for this glass alone, not glass inside it; to turn into one
+ *                 and back, transition --lb-lens instead
  * Press behaviors, independent, combine as needed (driven by installLiquidBlur() from
  * interaction.ts; without it highlight and swell fall back to :active, centered):
  *   lb-highlight  lights up where it's pressed
@@ -39,11 +39,11 @@
  *   --lb-dark           theme: 0 = light, 1 = dark. Follows the system and data-theme; set it
  *                       yourself to plug in any theme switch, e.g. `.dark { --lb-dark: 1 }`.
  *   --lb-transparency   0 = opaque, 0.5 = default, 1 = clear. Moves fill and blur together.
+ *                       Registered, so it transitions.
  *   --lb-depth          0 = flat, 0.5 = default, 1 = pronounced. Moves shade, glow and rims.
- *   --lb-lens           0 = glass, 1 = a lens (as lb-lens). Registered, so it transitions:
- *                       `.thumb[data-dragging] { --lb-lens: 1 }` with `transition: --lb-lens .3s`
- *                       on the glass turns a held thumb into a lens and back. No magnification:
- *                       the backdrop can't be scaled without refraction, which this doesn't do.
+ *   --lb-lens           0 = glass, 1 = a lens (as lb-lens): no blur. Registered, so it
+ *                       transitions: `.thumb[data-dragging] { --lb-lens: 1 }` with
+ *                       `transition: --lb-lens .3s` on the glass turns a held thumb into a lens.
  *   --lb-fill-light, --lb-fill-dark
  *                       base fill color in each theme.
  *   --lb-fill           one fill for both themes; unset by default, wins over the two above.
@@ -103,7 +103,12 @@
   inherits: false;
   initial-value: 0;
 }
-/* Glass to lens, 0..1; inherited like the other public values, registered so it can transition */
+/* Inherited like the other public values; registered so they can transition */
+@property --lb-transparency {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.5;
+}
 @property --lb-lens {
   syntax: "<number>";
   inherits: true;
@@ -156,11 +161,6 @@
     --_lb-light-glow: 0.2;
     --_lb-light-glow-size: 12px;
     --_lb-light-press: 0.8;
-    --_lb-light-lens-ring: 0.6;
-    --_lb-light-lens-glow: 0.6;
-    --_lb-light-lens-glow-size: 14px;
-    --_lb-light-lens-rim: 0.4;
-    --_lb-light-lens-shadow: 0.2;
 
     --_lb-dark-alpha: 0.62;
     --_lb-dark-alpha-clear: 0.25;
@@ -178,11 +178,6 @@
     --_lb-dark-glow: 0.08;
     --_lb-dark-glow-size: 4px;
     --_lb-dark-press: 0.13;
-    --_lb-dark-lens-ring: 0.35;
-    --_lb-dark-lens-glow: 0.3;
-    --_lb-dark-lens-glow-size: 12px;
-    --_lb-dark-lens-rim: 0.3;
-    --_lb-dark-lens-shadow: 0.45;
   }
 
   @media (resolution < 1.5dppx) {
@@ -227,13 +222,8 @@
     --_lb-glow: calc(var(--_lb-light-glow) + (var(--_lb-dark-glow) - var(--_lb-light-glow)) * var(--lb-dark));
     --_lb-glow-size: calc(var(--_lb-light-glow-size) + (var(--_lb-dark-glow-size) - var(--_lb-light-glow-size)) * var(--lb-dark));
     --_lb-press: calc(var(--_lb-light-press) + (var(--_lb-dark-press) - var(--_lb-light-press)) * var(--lb-dark));
-    --_lb-lens-ring: calc(var(--_lb-light-lens-ring) + (var(--_lb-dark-lens-ring) - var(--_lb-light-lens-ring)) * var(--lb-dark));
-    --_lb-lens-glow: calc(var(--_lb-light-lens-glow) + (var(--_lb-dark-lens-glow) - var(--_lb-light-lens-glow)) * var(--lb-dark));
-    --_lb-lens-glow-size: calc(var(--_lb-light-lens-glow-size) + (var(--_lb-dark-lens-glow-size) - var(--_lb-light-lens-glow-size)) * var(--lb-dark));
-    --_lb-lens-rim: calc(var(--_lb-light-lens-rim) + (var(--_lb-dark-lens-rim) - var(--_lb-light-lens-rim)) * var(--lb-dark));
-    --_lb-lens-shadow: calc(var(--_lb-light-lens-shadow) + (var(--_lb-dark-lens-shadow) - var(--_lb-light-lens-shadow)) * var(--lb-dark));
 
-    /* Glass to lens: the fill and blur go, the rim lights up */
+    /* Glass to lens: the blur goes */
     --_lens: var(--lb-lens, 0);
 
     /* Fill opacity: as calibrated at transparency 0.5, opaque at 0, alpha-clear at 1 */
@@ -242,24 +232,18 @@
     --_a-default: var(--_lb-alpha);
     --_a-clear: var(--_lb-alpha-clear);
     --_t: max(var(--lb-transparency), var(--_lb-floor, 0));
-    /* A lens has none: solid glass (reduced transparency, more contrast) keeps it all the same */
     --_alpha: max(
       var(--_lb-solid, 0),
       calc(
-        (
-          var(--_a-default)
-          + (1 - var(--_a-default)) * max(0, 1 - 2 * var(--_t))
-          - (var(--_a-default) - var(--_a-clear)) * max(0, 2 * var(--_t) - 1)
-        )
-        * (1 - var(--_lens))
+        var(--_a-default)
+        + (1 - var(--_a-default)) * max(0, 1 - 2 * var(--_t))
+        - (var(--_a-default) - var(--_a-clear)) * max(0, 2 * var(--_t) - 1)
       )
     );
     --_fill: color-mix(in srgb, var(--_color) calc(var(--_alpha) * 100%), transparent);
-    /* Clearer glass blurs less: down to 60% at transparency 1; a lens, to a tenth */
-    --_blur: calc(var(--_lb-blur) * (1 - 0.4 * max(0, 2 * var(--_t) - 1)) * (1 - 0.9 * var(--_lens)));
-    /* A lens shows what's under it nearly as it is: hardly any more saturated */
-    --_saturate: calc(1 + (var(--_lb-saturate) - 1) * (1 - 0.8 * var(--_lens)));
-    --_backdrop: blur(var(--_blur)) saturate(var(--_saturate));
+    /* Clearer glass blurs less: down to 60% at transparency 1; a lens, not at all */
+    --_blur: calc(var(--_lb-blur) * (1 - 0.4 * max(0, 2 * var(--_t) - 1)) * (1 - var(--_lens)));
+    --_backdrop: blur(var(--_blur)) saturate(var(--_lb-saturate));
     /* Depth scales shade, glow and rims: none at 0, as calibrated at 0.5, double at 1 */
     --_k: calc(2 * var(--lb-depth));
     /*
@@ -270,8 +254,7 @@
      */
     --_s: var(--_lb-shade-size);
     --_sv: calc(var(--_lb-shade-size) * 0.6);
-    /* A lens's edges are light, not shaded: half the shade */
-    --_a: calc(var(--_lb-shade) * var(--_k) * (1 - 0.5 * var(--_lens)));
+    --_a: calc(var(--_lb-shade) * var(--_k));
     --_v: calc(var(--_a) * var(--_lb-shade-v));
     --_p: calc(2 + var(--_lb-shade-focus) * 4);
     --_ends: linear-gradient(
@@ -331,19 +314,12 @@
     background: var(--_glow), var(--_ends), var(--_rows), var(--_fill);
     -webkit-backdrop-filter: var(--_backdrop);
     backdrop-filter: var(--_backdrop);
-    /*
-     * Inset rims follow the curve, so on a capsule they fade out toward the ends by themselves. A
-     * lens adds a ring of light all around its rim, a glow inside it, brighter rims and a deeper
-     * shadow, lifted: none of them there at --lb-lens 0
-     */
+    /* Inset rims follow the curve, so on a capsule they fade out toward the ends by themselves */
     box-shadow:
-      inset 0 var(--_lb-hair) 0 color-mix(in srgb, var(--lb-shine-color) calc(min(1, (var(--_lb-rim-top) + var(--_lb-lens-rim) * var(--_lens)) * var(--_k)) * 100%), transparent),
-      inset 0 calc(var(--_lb-hair) * -1) 0 color-mix(in srgb, var(--lb-shine-color) calc(min(1, (var(--_lb-rim-bottom) + var(--_lb-lens-rim) * var(--_lens)) * var(--_k)) * 100%), transparent),
-      inset 0 0 0 calc(var(--_lb-hair) * 3) color-mix(in srgb, var(--lb-shine-color) calc(min(1, var(--_lb-lens-ring) * var(--_lens) * var(--_k)) * 100%), transparent),
-      inset 0 0 var(--_lb-lens-glow-size) color-mix(in srgb, var(--lb-shine-color) calc(min(1, var(--_lb-lens-glow) * var(--_lens) * var(--_k)) * 100%), transparent),
+      inset 0 var(--_lb-hair) 0 color-mix(in srgb, var(--lb-shine-color) calc(min(1, var(--_lb-rim-top) * var(--_k)) * 100%), transparent),
+      inset 0 calc(var(--_lb-hair) * -1) 0 color-mix(in srgb, var(--lb-shine-color) calc(min(1, var(--_lb-rim-bottom) * var(--_k)) * 100%), transparent),
       0 0 0 var(--_lb-hair) color-mix(in srgb, var(--lb-shade-color) calc(var(--_lb-edge) * 100%), transparent),
-      0 2px 10px -3px color-mix(in srgb, var(--lb-shade-color) calc(var(--_lb-shadow) * 100%), transparent),
-      0 8px 22px -6px color-mix(in srgb, var(--lb-shade-color) calc(var(--_lb-lens-shadow) * var(--_lens) * 100%), transparent);
+      0 2px 10px -3px color-mix(in srgb, var(--lb-shade-color) calc(var(--_lb-shadow) * 100%), transparent);
   }
 
   /* ── Modifiers ── */
@@ -351,7 +327,7 @@
   /* Clear: at least transparency 1, for glass over photos and video */
   .lb.lb-clear { --_lb-floor: 1; }
 
-  /* Lens: clear, unblurred glass with a lit rim; --lb-lens all the way, for this glass alone */
+  /* Lens: the same glass with no blur; --lb-lens all the way, for this glass alone */
   .lb.lb-lens { --_lens: 1; }
 
   /* Tinted: the fill is the tint; volume and rims stay */
