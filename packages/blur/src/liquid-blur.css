@@ -57,6 +57,8 @@
  *                       sizes the light to the element; without it the reach is 130px.
  *   --lb-swell          scale of a pressed swell at button size; the script scales it by size.
  *   --lb-stretch        stretch strength: 0 = off, 2 = default.
+ *   --lb-stretch-axis   which way it stretches: x, y or both (the default), e.g. x for a
+ *                       switch's thumb that stays in its track.
  * Everything resolves on the glass itself, so it can be set on any ancestor.
  * data-lb-material="solid" on any ancestor makes glass opaque.
  *
@@ -125,6 +127,7 @@
     --lb-transparency: 0.5;
     --lb-depth: 0.5;
     --lb-stretch: 2;
+    --lb-stretch-axis: both;
     --lb-tint: #007aff;
     --lb-tint-text: #ffffff;
     --lb-fill-light: #ffffff;

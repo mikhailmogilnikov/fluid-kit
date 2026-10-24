@@ -24,7 +24,8 @@ import { PART, SpringAnimator, type SpringParams } from "@fluidkit/core";
  * along the drag, keeping its area; on release it springs back. Per frame only `transform` is
  * written — no layout, no inherited custom properties. The element's own transform is kept: the
  * stretch is appended to it, and its inline `transform` / `will-change` are restored afterwards.
- * Strength comes from the inherited `--lb-stretch` (0 = off, 2 = default), read once per press.
+ * Strength comes from the inherited `--lb-stretch` (0 = off, 2 = default), and the direction from
+ * `--lb-stretch-axis` (`x`, `y` or `both`, the default), both read once per press.
  * Size counts too, like mass: a big panel gives less, follows slower and barely bounces back; a
  * small chip gives more and springs back livelier.
  * Swell scale comes from `--lb-swell` the same way, and size counts the same way too: `--lb-swell`
@@ -122,6 +123,8 @@ type Press = {
   light: boolean;
   /** Rubber-band limit for this press, px; 0 when the element doesn't stretch */
   maxOffset: number;
+  /** Which way it stretches: a switch's thumb only along its track */
+  axis: { x: boolean; y: boolean };
   /** Springs for this element's size: following the finger, and settling back on release */
   follow: SpringParams;
   settle: SpringParams;
@@ -425,6 +428,7 @@ export function installPress(root?: Document): () => void {
         ? Number.parseFloat(win.getComputedStyle(el).getPropertyValue("--lb-stretch")) || 0
         : 0;
     const stretch = strength > 0 ? stretchFor(el) : null;
+    const along = win.getComputedStyle(el).getPropertyValue("--lb-stretch-axis").trim();
     const box = measure(el, stretch ? stretch.spring.values() : ZERO, scaleOf(el, stretch));
     if (!box.width || !box.height) return;
     const give = giveOf(box);
@@ -439,6 +443,7 @@ export function installPress(root?: Document): () => void {
       shown: false,
       light: has(el, "highlight"),
       maxOffset: MAX_OFFSET * strength * give,
+      axis: { x: along !== "y", y: along !== "x" },
       ...springsFor(give),
       stretch,
     };
@@ -461,7 +466,7 @@ export function installPress(root?: Document): () => void {
 
   const onMove = (event: PointerEvent) => {
     if (!press || event.pointerId !== press.pointerId) return;
-    const { box, startX, startY, maxOffset, stretch, follow } = press;
+    const { box, startX, startY, maxOffset, axis, stretch, follow } = press;
 
     // Only decides whether the release activates; the press itself stays on however far the
     // pointer goes, the light waiting at the nearest edge
@@ -470,7 +475,10 @@ export function installPress(root?: Document): () => void {
       Math.abs(event.clientY - box.cy) < box.height / 2 + SLOP;
 
     stretch?.spring.to(
-      { x: rubber(event.clientX - startX, maxOffset), y: rubber(event.clientY - startY, maxOffset) },
+      {
+        x: axis.x ? rubber(event.clientX - startX, maxOffset) : 0,
+        y: axis.y ? rubber(event.clientY - startY, maxOffset) : 0,
+      },
       follow,
     );
     if (press.light) moveLight(event.clientX, event.clientY);
