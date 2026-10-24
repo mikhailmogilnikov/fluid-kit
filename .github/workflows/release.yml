@@ -29,14 +29,16 @@ jobs:
           VP_GIT_HOOKS: "0"
 
       # Pending changesets: opens or updates the "Version packages" pull request.
-      # None pending: publishes whatever version isn't on npm yet, and tags it.
-      - uses: changesets/action@v1
+      # None pending: publishes whatever version isn't on npm yet, then tags it and makes its GitHub
+      # release. v2 is the action for Changesets v3: it learns what was published from the file
+      # `CHANGESETS_OUTPUT` names, which `pnpm release` passes down to `changeset publish`; v1 read
+      # v2's output and found nothing in v3's
+      - uses: changesets/action@v2
         with:
-          version: pnpm version-packages
-          publish: pnpm release
-          commit: "chore(release): version packages"
-          title: "chore(release): version packages"
+          version-script: pnpm version-packages
+          publish-script: pnpm release
+          commit-message: "chore(release): version packages"
+          pr-title: "chore(release): version packages"
         # Publishing needs no npm token: each package trusts this workflow on npm (Trusted Publishing)
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_PROVENANCE: "true"
