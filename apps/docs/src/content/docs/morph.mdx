@@ -804,6 +804,42 @@ Can be imported on the server. Create the morph in the browser after mounting or
 
 </Section>
 
+<Section id="top-layer" title="Dialogs and popovers">
+
+A state can be a `<dialog>` or a popover. Open it before the morph goes to it, so it's laid out and can be measured, and close it once the morph has come back:
+
+```ts
+const morph = createMorph({ states: [button, dialog] });
+
+button.addEventListener("click", () => {
+  dialog.showModal(); // or dialog.show(), panel.showPopover()
+  morph.to(dialog);
+});
+close.addEventListener("click", async () => {
+  // `false` if it was sent elsewhere on the way: then it stays open
+  if (await morph.to(button)) dialog.close();
+});
+```
+
+A modal dialog and a popover are drawn in the top layer, above everything else on the page, the shape included: the state flies itself up there, while the shape goes under it, and under a modal's backdrop too. Fade the backdrop in with the flight, so the shape isn't dimmed before the dialog is there:
+
+```ts
+const morph = createMorph({
+  states: [button, dialog],
+  onProgress(progress, to) {
+    dialog.style.setProperty("--open", String(to === dialog ? progress : 1 - progress));
+  },
+});
+```
+
+```css
+dialog::backdrop { opacity: var(--open, 1); }
+```
+
+A popover with `popover="auto"` closes on any press outside it, a press on the shape on its way included. Use `popover="manual"` and close it yourself, as a morph's state.
+
+</Section>
+
 <Section id="glass" title="With Liquid Blur">
 
 Inside a Liquid Blur [glass group](/blur#groups), the shape is placed by the state in the group, and the behavior depends on where the other one is:
