@@ -110,7 +110,7 @@ const toggles = [
               aria-labelledby={`dx-${label.replace(/\W/g, "")}`}
               data-dx-switch
             >
-              <span class="dx__thumb lb lb-stretch" data-dx-thumb />
+              <span class="dx__thumb lb" data-dx-thumb />
             </button>
           </li>
         ))}
@@ -352,10 +352,6 @@ const toggles = [
   .dx__thumb {
     --lb-transparency: 0;
     --lb-fill: #fff;
-    /* Stretched toward the finger a little, along the track only, mostly felt at its ends where the
-       drag stops it: the drag moves it already, so the default pull would carry it far off */
-    --lb-stretch: 0.5;
-    --lb-stretch-axis: x;
     position: absolute;
     top: 2px;
     left: 2px;
