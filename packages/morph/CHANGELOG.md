@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.1
+
+### Patch Changes
+
+- 875cd45: A state that's a popover keeps its surface on the way: the shape's fill and the copies no longer take its `popover` attribute, which hid them (a popover that isn't open is `display: none`).
+
 ## 1.0.0
 
 First release.
