@@ -270,8 +270,11 @@ const LIVE_SURFACE = [
 ];
 /** What the shape keeps of the bigger one while the fills are in it */
 const CARRIED = ["backdrop-filter", "-webkit-backdrop-filter", "box-shadow"];
-/** What of an element's attributes isn't its look, left off a copy wearing it */
-const NOT_LOOK = /^(id|style|name|tabindex|autofocus|inert|hidden|on.*|data-fk-away)$/;
+/**
+ * What of an element's attributes isn't its look, left off a copy wearing it. `popover` among them:
+ * a copy is never shown as a popover, and one that isn't is `display: none`.
+ */
+const NOT_LOOK = /^(id|style|name|tabindex|autofocus|inert|hidden|popover|on.*|data-fk-away)$/;
 /** Shrinking from rest, the shape holds this share of its width's duration before it goes */
 const SHRINK_HOLD = 0.12;
 /** Lifted over a group: share of the progress over which the stub left in it shrinks away */
@@ -379,6 +382,8 @@ export function createMorph({
     }
     root.classList.remove(...BEHAVIORS);
     root.removeAttribute(AWAY);
+    // A state that's a popover is shown in the top layer; a copy of it isn't, and would be hidden
+    root.removeAttribute("popover");
     root.setAttribute(PART, "");
     root.setAttribute("aria-hidden", "true");
     root.inert = true;
