@@ -1,0 +1,472 @@
+---
+package: "@fluidkit/drag"
+name: Drag
+order: 4
+description: "Drag one element with rubber-band edges and snap points, and let go on a spring that keeps the finger's speed: sheets, swipe actions, switches."
+intro: "Sheets, rows swiped open, the thumb of a switch: one element dragged with rubber-band edges, let go onto the snap point its flick reaches, on a spring that keeps the finger's speed. Any element; with <a href=\"/blur\">Liquid Blur</a>, glass."
+---
+
+import Section from "../../components/docs/Section.astro";
+import Rows from "../../components/docs/Rows.astro";
+import Row from "../../components/docs/Row.astro";
+import Cell from "../../components/docs/Cell.astro";
+import Steps from "../../components/docs/Steps.astro";
+import Step from "../../components/docs/Step.astro";
+import Install from "../../components/docs/Install.astro";
+import DragExample from "../../components/DragExample.astro";
+import Example from "../../components/docs/Example.astro";
+
+<Section id="start" title="Get started">
+
+A drag moves one element of yours by a pointer, along one axis or both. Under the pointer it follows exactly; past its bounds it pulls back like rubber. Let go, it heads for one of its snap points on a spring that starts at the pointer's own speed, so a flick carries it as far as a flick should. Caught on its way, it stops under the finger.
+
+<Steps>
+<Step>
+
+**Install.**
+
+<Install pkg="@fluidkit/drag" />
+
+</Step>
+<Step>
+
+**Lay the element out where it rests at offset 0.** Snap points and bounds are offsets from there, in pixels; the drag moves it with its inline `translate`, so `transform` and `scale` stay yours.
+
+```html
+<section class="sheet">…</section>
+
+<style>
+  /* Laid out open; the drag moves it down to its detents */
+  .sheet { position: absolute; top: 12px; left: 0; right: 0; height: 100%; }
+</style>
+```
+
+</Step>
+<Step>
+
+**Create the drag** after the element is in the DOM.
+
+```ts
+import { createDrag } from "@fluidkit/drag";
+
+const sheet = createDrag({
+  element: document.querySelector(".sheet")!,
+  axis: "y",
+  // Open, half way, and down to its title; read again on a resize
+  snaps: () => [0, innerHeight / 2, innerHeight - 88],
+  initial: 1,
+});
+
+// On unmount:
+// sheet.destroy();
+```
+
+</Step>
+</Steps>
+
+</Section>
+
+<Section id="examples" title="Examples">
+
+### A sheet
+
+Three detents: open, half way, and down to its title. A slow drag settles on the nearest; a flick goes as far as it would have slid by itself, so a hard one goes from the bottom to the top. Past the top or the bottom it's rubber.
+
+<Example>
+<DragExample kind="sheet" />
+
+<Fragment slot="html">
+
+```html
+<div class="screen">
+  <section class="sheet lb" aria-label="Nearby">
+    <span class="sheet__grabber" aria-hidden="true"></span>
+    <h3>Nearby</h3>
+    <ul>…</ul>
+  </section>
+</div>
+```
+
+</Fragment>
+<Fragment slot="js">
+
+```ts
+import "@fluidkit/blur/style.css";
+import { createDrag } from "@fluidkit/drag";
+
+const screen = document.querySelector<HTMLElement>(".screen")!;
+
+createDrag({
+  element: screen.querySelector(".sheet")!,
+  axis: "y",
+  // Offsets from where it's laid out (12px from the top): open, half way, and just its title
+  snaps: () => {
+    const h = screen.clientHeight;
+    return [0, h / 2 - 12, h - 12 - 76];
+  },
+  initial: 1,
+});
+```
+
+</Fragment>
+<Fragment slot="css">
+
+```css
+.screen { position: relative; height: 460px; overflow: clip; border-radius: 20px; }
+
+/* Taller than the screen, so pulled past the top it doesn't show its bottom edge */
+.sheet {
+  position: absolute;
+  top: 12px;
+  left: 10px;
+  right: 10px;
+  height: calc(100% + 160px);
+  padding: 8px 20px 0;
+  border-radius: 28px;
+  cursor: grab;
+  user-select: none;
+}
+.sheet[data-dragging] { cursor: grabbing; }
+```
+
+</Fragment>
+</Example>
+
+### Swipe actions
+
+Mail's rows: swiped right to mark read or unread, left to flag or delete. Past the actions, all the way, the outermost one takes the room and is done as it's let go: a full swipe left deletes, a full swipe right marks it. `axis: "x"` leaves the other axis to the browser, so a finger moving up and down scrolls the list past the rows. Five snap points, from all the way right to all the way left; `onEnd` does the outermost action as the row is let go there. A slower `deceleration` makes a full swipe take a pull, not just a flick.
+
+<Example>
+<DragExample kind="swipe" />
+
+<Fragment slot="html">
+
+```html
+<ul class="inbox lb">
+  <li class="row">
+    <div class="row__lead" aria-hidden="true">
+      <button type="button" class="unread" tabindex="-1">Unread</button>
+    </div>
+    <div class="row__trail" aria-hidden="true">
+      <button type="button" class="flag" tabindex="-1">Flag</button>
+      <button type="button" class="delete" tabindex="-1">Delete</button>
+    </div>
+    <div class="row__face">…</div>
+  </li>
+  …
+</ul>
+```
+
+</Fragment>
+<Fragment slot="js">
+
+```ts
+import { createDrag, type Drag } from "@fluidkit/drag";
+
+const LEAD = 92;
+const TRAIL = 168;
+// Snap points: all the way right, the lead action, closed, the trail actions, all the way left
+const ALL_RIGHT = 0;
+const CLOSED = 2;
+const ALL_LEFT = 4;
+const drags = new Map<HTMLElement, Drag>();
+// Yours: remove(row) folds it away, toggleUnread(row) flips its dot
+
+for (const row of document.querySelectorAll<HTMLElement>(".row")) {
+  const face = row.querySelector<HTMLElement>(".row__face")!;
+  const drag = createDrag({
+    element: face,
+    axis: "x",
+    snaps: () => [row.clientWidth, LEAD, 0, -TRAIL, -row.clientWidth],
+    initial: CLOSED,
+    deceleration: 0.99,
+    onStart: () => {
+      for (const [other, d] of drags) if (other !== row && d.current !== CLOSED) d.snap(CLOSED);
+    },
+    onMove: ({ x }) => {
+      // The actions' room; nearer all the way than the actions, the outermost takes it
+      row.style.setProperty("--x", String(x));
+      const w = row.clientWidth;
+      row.toggleAttribute("data-full", x < -(TRAIL + w) / 2 || x > (LEAD + w) / 2);
+    },
+    // All the way is done as it's let go
+    onEnd: (snap) => {
+      if (snap === ALL_LEFT) remove(row);
+      if (snap === ALL_RIGHT) {
+        toggleUnread(row);
+        // Back, once the drag has set off for its snap point
+        queueMicrotask(() => drag.snap(CLOSED));
+      }
+    },
+  });
+  drags.set(row, drag);
+  // A click that ends a drag is dropped: this is a tap
+  face.addEventListener("click", () => drag.current !== CLOSED && drag.snap(CLOSED));
+  row.querySelector(".delete")!.addEventListener("click", () => {
+    drag.snap(ALL_LEFT);
+    remove(row);
+  });
+  // Unread and Flag: do it, then drag.snap(CLOSED)
+}
+```
+
+</Fragment>
+<Fragment slot="css">
+
+```css
+/* The face slides out under the row's edge; the separator is the row's, so it stays put */
+.row { position: relative; overflow: clip; }
+.row:not([hidden]) ~ .row::before { content: ""; position: absolute; top: 0; left: 16px; right: 16px; border-top: 1px solid rgb(127 127 127 / 0.18); }
+.row__face { display: flex; gap: 12px; margin: 0 16px; padding: 12px 0; cursor: grab; user-select: none; }
+
+/* As wide as the room the face leaves, on its side */
+.row__lead, .row__trail { position: absolute; top: 6px; bottom: 6px; display: flex; gap: 6px; overflow: hidden; }
+.row__lead { left: 10px; width: max(0px, calc(var(--x, 0) * 1px - 16px)); }
+.row__trail { right: 10px; width: max(0px, calc(var(--x, 0) * -1px - 16px)); }
+.row button { flex: 1 0 0; min-width: 0; border-radius: 999px; color: #fff; transition: flex-grow 0.25s; }
+/* All the way: Delete takes the room */
+.row[data-full] .flag { flex-grow: 0; opacity: 0; }
+```
+
+</Fragment>
+</Example>
+
+### A switch
+
+The thumb is the element and the whole switch its `handle`. Dragged, it goes to the side its flick reaches and the track turns green as far as it has gone; a tap flips it, and two quick taps flip it back. It stays in its track: `rubberband: 0` stops it at the ends, dragged or on its spring.
+
+<Example>
+<DragExample kind="switch" />
+
+<Fragment slot="html">
+
+```html
+<button type="button" class="switch" role="switch" aria-checked="true" aria-label="Wi-Fi">
+  <span class="switch__thumb"></span>
+</button>
+```
+
+</Fragment>
+<Fragment slot="js">
+
+```ts
+import { createDrag } from "@fluidkit/drag";
+
+const toggle = document.querySelector<HTMLElement>(".switch")!;
+const thumb = toggle.querySelector<HTMLElement>(".switch__thumb")!;
+const travel = () => toggle.clientWidth - thumb.offsetWidth - 4;
+const set = (on: boolean) => toggle.setAttribute("aria-checked", String(on));
+
+const drag = createDrag({
+  element: thumb,
+  handle: toggle,
+  axis: "x",
+  snaps: () => [0, travel()],
+  initial: toggle.getAttribute("aria-checked") === "true" ? 1 : 0,
+  rubberband: 0,
+  spring: { duration: 0.3, bounce: 0 },
+  onMove: ({ x }) => toggle.style.setProperty("--on", String(x / travel())),
+  onEnd: (snap) => set(snap === 1),
+});
+
+// A tap, or Space: a click that ends a drag is dropped
+toggle.addEventListener("click", () => {
+  const on = toggle.getAttribute("aria-checked") !== "true";
+  set(on);
+  drag.snap(on ? 1 : 0);
+});
+```
+
+</Fragment>
+<Fragment slot="css">
+
+```css
+.switch {
+  position: relative;
+  width: 64px;
+  height: 30px;
+  border-radius: 999px;
+  background: color-mix(in srgb, #34c759 calc(var(--on, 0) * 100%), rgb(120 120 128 / 0.32));
+  user-select: none;
+}
+.switch__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 38px;
+  height: 26px;
+  border-radius: 999px;
+  background: #fff;
+  transition: scale 0.2s;
+}
+/* Held, it swells a little: the drag leaves `scale` alone */
+.switch:active .switch__thumb,
+.switch__thumb[data-dragging] { scale: 1.12 1.08; }
+```
+
+</Fragment>
+</Example>
+
+### Picture in picture
+
+A video on both axes, four corners. Thrown, it goes to the corner its flight would reach, not the nearest one to where it's let go; past the edges it's rubber, and so is its spring's swing. A double tap switches its size, and so does a pinch: the corners are a function of its size, read again as it resizes, so it stays in its corner.
+
+<Example>
+<DragExample kind="pip" />
+
+<Fragment slot="js">
+
+```ts
+import { createDrag } from "@fluidkit/drag";
+
+const room = document.querySelector<HTMLElement>(".room")!;
+const video = room.querySelector<HTMLElement>(".pip")!;
+
+const drag = createDrag({
+  element: video,
+  // Laid out in the top-left corner, 16px in
+  snaps: () => {
+    const x = room.clientWidth - video.offsetWidth - 32;
+    const y = room.clientHeight - video.offsetHeight - 32;
+    return [{ x: 0, y: 0 }, { x, y: 0 }, { x: 0, y }, { x, y }];
+  },
+  initial: 3,
+  spring: { duration: 0.45, bounce: 0.2 },
+});
+
+// A double tap: the other size
+let lastTap = 0;
+video.addEventListener("click", (e) => {
+  if (e.timeStamp - lastTap > 320) return void (lastTap = e.timeStamp);
+  lastTap = 0;
+  video.toggleAttribute("data-big");
+});
+// A pinch: drag.disabled = true while two fingers size it, then false again
+```
+
+</Fragment>
+<Fragment slot="css">
+
+```css
+.room { position: relative; height: 380px; overflow: clip; }
+.pip {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 160px;
+  aspect-ratio: 16 / 10;
+  border-radius: 16px;
+  cursor: grab;
+  transition: width 0.4s, scale 0.25s;
+}
+.pip[data-big] { width: 264px; }
+/* Picked up: a little closer. The drag leaves `scale` alone */
+.pip[data-dragging] { cursor: grabbing; scale: 1.04; }
+```
+
+</Fragment>
+</Example>
+
+</Section>
+
+<Section id="snapping" title="Snapping">
+
+Let go, it doesn't go to the snap point nearest to where it is, but to the one nearest to where it would have come to rest by itself, slowing down as a scroll does. A slow drag stays near; a flick reaches as far as it's thrown, past points in between. This is how iOS picks a sheet's detent or a corner for picture in picture.
+
+`deceleration` is how quickly that imagined slide slows down, per millisecond: `0.998`, a scroll's, by default; `0.99` stops sooner, so a flick reaches less far. With no snap points it comes to rest where it would have, within its bounds.
+
+The spring it settles on starts at the pointer's speed. The default has no bounce, yet a hard flick carries it past its point once and back, as sheets go; a bounce of its own adds a swing. A swing past its bounds is rubber, as a pull is, so it never flies off its edge; with `rubberband: 0` it stops there.
+
+</Section>
+
+<Section id="options" title="Options">
+
+`createDrag(options: DragOptions): Drag`
+
+| Option | Meaning |
+| --- | --- |
+| `element: HTMLElement` | What moves. Its inline `translate` is the drag's |
+| `handle?: HTMLElement` | What's grabbed, such as a sheet's grabber or a whole switch; the element unless given |
+| `axis?: "x" \| "y" \| "both"` | Along which it moves; `both` by default |
+| `snaps?: DragSnaps \| () => DragSnaps` | Where it may come to rest: offsets along the axis, or `{ x, y }` points for `both`. A function is read again when the element, its parent or the window is resized |
+| `bounds?: DragBounds \| () => DragBounds` | `{ x?: [min, max], y?: [min, max] }`: how far it moves before it's rubber. The farthest snap points by default; unbounded with none |
+| `initial?: number` | The snap point it starts at; the first by default |
+| `rubberband?: number` | How hard it pulls back past its bounds, dragged or swinging on its spring: `0.55` by default, iOS's; `0` stops it at them |
+| `deceleration?: number` | How quickly a flick would slow down by itself, per millisecond: `0.998` by default |
+| `spring?: SpringParams` | The spring it settles on: `defaultDragSpring`, `{ duration: 0.4, bounce: 0 }`, by default. As in [core](/core#spring) |
+| `onStart?: () => void` | A pointer starts dragging it, or catches it on its way |
+| `onMove?: (position, velocity) => void` | Whenever it moves (dragged, settling, put somewhere), with its offset and its speed in px/s, as copies: for whatever follows it, such as a backdrop's opacity |
+| `onEnd?: (snap) => void` | It's let go, heading for this snap point (`null` with none) |
+| `onRest?: () => void` | It has come to rest after moving, at once too (reduced motion, `instant`) |
+
+</Section>
+
+<Section id="api" title="API">
+
+| Member | Meaning |
+| --- | --- |
+| `position` | Its offset now, `{ x, y }`, a copy |
+| `velocity` | Its speed now, px/s, a copy |
+| `dragging` | A pointer is dragging it |
+| `moving` | Dragged, or on its way somewhere |
+| `current` | The snap point it's at or heads for; `null` when it was put elsewhere, or has none |
+| `disabled` | While `true` it isn't dragged; a drag under way is let go |
+| `snap(index, move?)` | To a snap point. `{ instant: true }` puts it there at once; `{ velocity }` sets it off at a speed of your own |
+| `to(position, move?)` | To an offset within its bounds: a number along the axis, or `{ x, y }` |
+| `update()` | Reads the snap points and bounds again and follows them, to the same snap point |
+| `destroy()` | Stops it, removes its listeners and gives the element its own `translate` and the handle its `touch-action` back. Later calls do nothing |
+
+</Section>
+
+<Section id="gesture" title="The gesture">
+
+<Rows>
+<Row>
+<Cell title="Starting">
+
+A drag starts once the pointer has moved 4px (8px for a finger), so a tap stays a tap. Along one axis, a pointer that moves across it first isn't the drag's: a finger scrolling a list past a row that swipes sideways scrolls. Caught on its way, it stops under the pointer and is dragged from there; let go without being moved, it goes on where it was going and the tap is a click, so a switch tapped twice quickly flips back. In nested handles, such as rows that swipe inside a sheet, the innermost drag that starts has the pointer, alone.
+
+</Cell>
+<Cell title="Touch">
+
+The handle's `touch-action` is set so the browser keeps what the drag doesn't take: `pan-y` for `x`, `pan-x` for `y`, and pinch-zoom; `none` for `both`. A gesture the browser takes all the same ends the drag, and it settles from where it is.
+
+</Cell>
+</Row>
+<Row>
+<Cell title="Clicks">
+
+The click a drag would end in is dropped, so a dragged button isn't pressed and a tap on it is still a click. Nothing starts on a text field (`input`, `textarea`, `select`, `contenteditable`), and links and images in the handle aren't dragged off by the browser.
+
+</Cell>
+<Cell title="Measuring">
+
+Offsets are in the element's own pixels, so in a scaled container it still follows the pointer exactly; its own `scale` doesn't count, as it doesn't scale its `translate`. While a pointer drags it, it's marked `data-dragging`, and text isn't selected. With reduced motion it follows the pointer, and let go, it's on its point at once.
+
+</Cell>
+</Row>
+</Rows>
+
+Roles, labels and keys are yours: a sheet's `dialog`, a switch's `role="switch"` and its click, arrow keys on a slider. The drag only moves things.
+
+</Section>
+
+<Section id="glass" title="With Liquid Blur">
+
+The element can be glass, as the sheet and the picture above are: the drag writes `translate` alone, so press behaviors keep their `scale` and `transform`.
+
+</Section>
+
+<Section id="support" title="Browser support">
+
+Any browser with ES2022, Pointer Events and `ResizeObserver`, and the individual `translate` property.
+
+</Section>
+
+<Section id="limitations" title="Limitations">
+
+- A sheet holding a list that scrolls doesn't yet take over from the list when it's scrolled to the top, as iOS sheets do. That's coming: keep a sheet's content short, or give it a handle of its own.
+- Rotated ancestors aren't supported; scaled ones are.
+- Snap points that move with something the drag doesn't see, other than its element, its parent or the window resizing, need `update()`.
+
+</Section>

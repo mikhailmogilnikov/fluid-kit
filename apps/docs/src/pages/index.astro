@@ -5,6 +5,7 @@ import Stage from "../components/Stage.astro";
 import GroupDock from "../components/GroupDock.astro";
 import MorphPreview from "../components/MorphPreview.astro";
 import IndicatorExample from "../components/IndicatorExample.astro";
+import DragExample from "../components/DragExample.astro";
 import Footer from "../components/Footer.astro";
 import Icon from "../components/Icon.astro";
 import Hint from "../components/Hint.astro";
@@ -14,7 +15,7 @@ const REPO = "https://github.com/mikhailmogilnikov/fluid-kit";
 
 <Base
   title="Fluid Kit — fluid interfaces for the web"
-  description="Small, framework-agnostic libraries for fluid interfaces: a glass material, a control that becomes a panel, and a highlight that follows the pointer."
+  description="Small, framework-agnostic libraries for fluid interfaces: a glass material, a control that becomes a panel, a highlight that follows the pointer, and things you drag and flick."
 >
   <Nav current="home" />
 
@@ -23,7 +24,8 @@ const REPO = "https://github.com/mikhailmogilnikov/fluid-kit";
       <div class="mark mark--hero"><span class="lb"></span></div>
       <p class="lead rise" style="--i: 1">
         <b>Fluid Kit</b> is a family of libraries for fluid interfaces: a glass material in plain CSS,
-        controls that grow into panels of it, and highlights that follow the pointer. No framework needed.
+        controls that grow into panels of it, highlights that follow the pointer, and sheets you flick.
+        No framework needed.
       </p>
       <div class="actions rise" style="--i: 2">
         <a class="button button--ink breathe" href="/blur">Get started</a>
@@ -70,6 +72,18 @@ const REPO = "https://github.com/mikhailmogilnikov/fluid-kit";
               <b>Indicator</b><code>@fluidkit/indicator</code><Icon name="arrow" size={16} />
             </a>
             <p>One element flies onto whatever is hovered, pressed or chosen: menus, tabs, segmented controls.</p>
+          </div>
+        </article>
+
+        <article class="lib reveal" style="--d: 240ms">
+          <DragExample kind="pip" card>
+            <Hint text="throw it" light style="top: 124px; left: 96px" />
+          </DragExample>
+          <div class="lib__body">
+            <a class="lib__head" href="/drag">
+              <b>Drag</b><code>@fluidkit/drag</code><Icon name="arrow" size={16} />
+            </a>
+            <p>Drag with rubber-band edges, and let go onto the snap point a flick reaches: sheets, swipes, switches.</p>
           </div>
         </article>
       </div>

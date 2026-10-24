@@ -1,0 +1,610 @@
+---
+/**
+ * One of Drag's examples, live:
+ *   - sheet: a glass sheet with three detents, flicked up and down
+ *   - swipe: rows of a list swiped either way to their actions, or all the way to do the last one
+ *   - switch: iOS-style switches, dragged or tapped
+ *   - pip: a video thrown into a corner, double-tapped or pinched to resize
+ */
+interface Props {
+  kind: "sheet" | "swipe" | "switch" | "pip";
+  /** As a library's card on the landing: the card's size and corners, and room for a hint (the slot) */
+  card?: boolean;
+}
+
+const { kind, card = false } = Astro.props;
+const places = [
+  ["Blue Bottle Coffee", "Café · 4 min walk"],
+  ["Tartine Bakery", "Bakery · 7 min walk"],
+  ["Dolores Park", "Park · 9 min walk"],
+  ["Gracias Madre", "Restaurant · 12 min walk"],
+] as const;
+const mail = [
+  ["Ana", "Tickets for Friday are in your inbox"],
+  ["Studio", "Your export is ready to download"],
+  ["Leo", "Lunch tomorrow? The new place on 5th"],
+] as const;
+const toggles = [
+  ["Wi-Fi", true],
+  ["Bluetooth", false],
+  ["Airplane Mode", false],
+] as const;
+---
+
+<div class:list={["dx", `dx--${kind}`, { "dx--card": card }]} data-dx={kind} data-hints={card ? "" : undefined}>
+  <div class="bd bd-aurora"></div>
+
+  {
+    kind === "sheet" && (
+      <div class="dx__screen" data-dx-area>
+        <section class="dx__sheet lb" aria-label="Nearby" data-dx-sheet>
+          <span class="dx__grabber" aria-hidden="true" />
+          <h3 class="dx__title">Nearby</h3>
+          <ul class="dx__places">
+            {places.map(([name, meta]) => (
+              <li>
+                <b>{name}</b>
+                <span>{meta}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+    )
+  }
+
+  {
+    kind === "swipe" && (
+      <ul class="dx__list lb" aria-label="Inbox" data-dx-list>
+        {mail.map(([from, text], i) => (
+          <li class="dx__row" data-dx-row data-unread={i === 0 ? "" : undefined}>
+            <div class="dx__lead" aria-hidden="true">
+              <button type="button" class="dx__action dx__action--unread" tabindex="-1" data-dx-unread>
+                {i === 0 ? "Read" : "Unread"}
+              </button>
+            </div>
+            <div class="dx__trail" aria-hidden="true">
+              <button type="button" class="dx__action dx__action--flag" tabindex="-1" data-dx-flag>
+                Flag
+              </button>
+              <button type="button" class="dx__action dx__action--delete" tabindex="-1" data-dx-delete>
+                Delete
+              </button>
+            </div>
+            <div class="dx__face" data-dx-face>
+              <span class="dx__dot" aria-hidden="true" />
+              <span class="dx__avatar" aria-hidden="true">
+                {from[0]}
+              </span>
+              <span class="dx__mail">
+                <b>
+                  {from}
+                  <span class="dx__flag" aria-hidden="true" />
+                </b>
+                <span>{text}</span>
+              </span>
+            </div>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
+  {
+    kind === "switch" && (
+      <ul class="dx__settings lb" aria-label="Connections">
+        {toggles.map(([label, on]) => (
+          <li>
+            <span id={`dx-${label.replace(/\W/g, "")}`}>{label}</span>
+            <button
+              type="button"
+              class="dx__switch"
+              role="switch"
+              aria-checked={on ? "true" : "false"}
+              aria-labelledby={`dx-${label.replace(/\W/g, "")}`}
+              data-dx-switch
+            >
+              <span class="dx__thumb" data-dx-thumb />
+            </button>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
+  {
+    kind === "pip" && (
+      <div class="dx__room" data-dx-area>
+        <div class="dx__pip" role="img" aria-label="A video, playing" data-dx-pip>
+          <span class="dx__bar">
+            <span />
+          </span>
+        </div>
+      </div>
+    )
+  }
+  <slot />
+</div>
+
+<style>
+  .dx {
+    position: relative;
+    height: 340px;
+    display: grid;
+    place-items: center;
+    border-radius: 20px;
+    background: var(--wash);
+    isolation: isolate;
+  }
+  .dx--sheet { height: 460px; }
+  .dx--switch { height: 300px; }
+  .dx--pip { height: 380px; }
+  .dx--card {
+    height: var(--mdemo-height);
+    border-radius: var(--radius);
+  }
+
+  /* The sheet goes off the bottom and the picture to the edges: a layer that clips, in the shape.
+     Clips, not hides: hidden is still scrolled by focus or scrollIntoView, the sheet with it */
+  .dx__screen,
+  .dx__room {
+    position: absolute;
+    inset: 0;
+    overflow: clip;
+    border-radius: inherit;
+  }
+
+  /* Laid out fully open; the drag moves it down to its detents. Taller than the screen, so pulled
+     past the top it doesn't show its bottom edge */
+  .dx__sheet {
+    position: absolute;
+    top: 12px;
+    left: 10px;
+    right: 10px;
+    height: calc(100% + 160px);
+    padding: 8px 20px 0;
+    border-radius: 28px;
+    color: var(--ink);
+    cursor: grab;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .dx__sheet[data-dragging] { cursor: grabbing; }
+  .dx__grabber {
+    display: block;
+    width: 36px;
+    height: 5px;
+    margin: 0 auto 14px;
+    border-radius: 99px;
+    background: currentColor;
+    opacity: 0.25;
+  }
+  .dx__title { margin: 0 0 12px; font-size: 20px; font-weight: 650; }
+  .dx__places { display: grid; margin: 0; padding: 0; list-style: none; }
+  .dx__places li {
+    display: grid;
+    gap: 2px;
+    padding: 12px 0;
+    border-top: 1px solid rgb(127 127 127 / 0.2);
+    font-size: 15px;
+  }
+  .dx__places span { color: var(--ink-2); font-size: 13px; }
+
+  .dx__list,
+  .dx__settings {
+    width: min(360px, calc(100% - 32px));
+    margin: 0;
+    padding: 6px 0;
+    border-radius: 26px;
+    color: var(--ink);
+    list-style: none;
+  }
+
+  /* A row: the face slides out under the row's edge, its actions grow into the room it leaves
+     (`--x`, its offset, set as it moves). The separator is the row's, so it stays put; a row after
+     only deleted ones has none */
+  .dx__row { position: relative; overflow: clip; }
+  .dx__row:not([hidden], [data-gone]) ~ .dx__row::before {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    left: 16px;
+    right: 16px;
+    border-top: 1px solid rgb(127 127 127 / 0.18);
+    pointer-events: none;
+  }
+  /* Deleted: it folds away */
+  .dx__row[data-gone] {
+    opacity: 0;
+    transition: height 0.3s var(--glide), opacity 0.2s;
+  }
+  .dx__lead,
+  .dx__trail {
+    position: absolute;
+    top: 6px;
+    bottom: 6px;
+    display: flex;
+    gap: 6px;
+    overflow: hidden;
+  }
+  .dx__lead { left: 10px; width: max(0px, calc(var(--x, 0) * 1px - 16px)); }
+  .dx__trail { right: 10px; width: max(0px, calc(var(--x, 0) * -1px - 16px)); }
+  .dx__action {
+    flex: 1 0 0;
+    min-width: 0;
+    padding: 0;
+    border-radius: 999px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: flex-grow 0.25s var(--settle), opacity 0.2s;
+  }
+  .dx__action--unread { background: #007aff; }
+  .dx__action--flag { background: #ff9500; }
+  .dx__action--delete { background: #ff3b30; }
+  /* Past the actions, all the way: the last one takes the room, and is done when let go */
+  .dx__row[data-full] .dx__action--flag {
+    flex-grow: 0;
+    opacity: 0;
+  }
+  .dx__face {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 16px;
+    padding: 12px 0;
+    cursor: grab;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .dx__face[data-dragging] { cursor: grabbing; }
+  .dx__dot {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    margin-right: -4px;
+    border-radius: 50%;
+    background: #007aff;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .dx__row[data-unread] .dx__dot { opacity: 1; }
+  .dx__avatar {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: color-mix(in srgb, currentColor 12%, transparent);
+    font-weight: 600;
+  }
+  .dx__mail { display: grid; min-width: 0; font-size: 15px; }
+  .dx__mail b { display: flex; align-items: center; gap: 6px; font-weight: 500; }
+  .dx__row[data-unread] .dx__mail b { font-weight: 700; }
+  .dx__mail > span {
+    overflow: hidden;
+    color: var(--ink-2);
+    font-size: 13px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .dx__flag {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ff9500;
+    scale: 0;
+    transition: scale 0.25s var(--settle);
+  }
+  .dx__row[data-flagged] .dx__flag { scale: 1; }
+
+  .dx__settings li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 52px;
+    margin: 0 18px;
+    font-size: 15px;
+  }
+  .dx__settings li + li { border-top: 1px solid rgb(127 127 127 / 0.18); }
+  /* iOS's switch: green as far as the thumb has gone (`--on`, 0 to 1, set as it moves) */
+  .dx__switch {
+    position: relative;
+    flex: none;
+    width: 64px;
+    height: 30px;
+    padding: 0;
+    border-radius: 999px;
+    background: color-mix(in srgb, #34c759 calc(var(--on, 0) * 100%), rgb(120 120 128 / 0.32));
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .dx__switch:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+  .dx__thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 38px;
+    height: 26px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.16), 0 0 0 0.5px rgb(0 0 0 / 0.04);
+    transition: scale 0.2s var(--settle);
+  }
+  /* Held, it swells a little, as iOS 26's does */
+  .dx__switch:active .dx__thumb,
+  .dx__thumb[data-dragging] { scale: 1.12 1.08; }
+
+  /* A video, laid out in the top-left corner; the drag throws it into the others. Two sizes,
+     double-tapped between or pinched; its corners follow its size */
+  .dx__pip {
+    --w: 160px;
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    width: var(--w);
+    aspect-ratio: 16 / 10;
+    border-radius: 16px;
+    /* A still of smooth color, as the backdrop is, in greens and gold */
+    background:
+      radial-gradient(at 12% 18%, #c6f36d, transparent 55%),
+      radial-gradient(at 88% 12%, #35d8b8, transparent 50%),
+      radial-gradient(at 78% 88%, #0f5f6e, transparent 60%),
+      radial-gradient(at 18% 92%, #ffd451, transparent 55%),
+      #23a184;
+    box-shadow: 0 14px 34px rgb(0 0 0 / 0.26), 0 0 0 0.5px rgb(0 0 0 / 0.1);
+    cursor: grab;
+    -webkit-user-select: none;
+    user-select: none;
+    transition: width 0.4s var(--settle), scale 0.25s var(--settle), box-shadow 0.25s;
+  }
+  .dx__pip[data-big] { --w: 264px; }
+  .dx__pip[data-pinching] { transition: none; }
+  /* Picked up: a little closer */
+  .dx__pip[data-dragging] {
+    cursor: grabbing;
+    scale: 1.04;
+    box-shadow: 0 22px 48px rgb(0 0 0 / 0.3), 0 0 0 0.5px rgb(0 0 0 / 0.1);
+  }
+  .dx__bar {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 9px;
+    height: 3px;
+    overflow: clip;
+    border-radius: 2px;
+    background: rgb(255 255 255 / 0.35);
+  }
+  .dx__bar > span {
+    display: block;
+    width: 34%;
+    height: 100%;
+    background: #fff;
+  }
+</style>
+
+<script>
+  import { createDrag, type Drag } from "@fluidkit/drag";
+
+  for (const scene of document.querySelectorAll<HTMLElement>("[data-dx]:not([data-dx-ready])")) {
+    scene.dataset.dxReady = "";
+    const area = scene.querySelector<HTMLElement>("[data-dx-area]");
+
+    if (scene.dataset.dx === "sheet") {
+      // Laid out open; down to half the screen, and to just its title
+      const sheet = scene.querySelector<HTMLElement>("[data-dx-sheet]")!;
+      createDrag({
+        element: sheet,
+        axis: "y",
+        snaps: () => {
+          const h = area!.clientHeight;
+          return [0, h / 2 - 12, h - 12 - 76];
+        },
+        initial: 1,
+      });
+      continue;
+    }
+
+    if (scene.dataset.dx === "swipe") {
+      swipe(scene);
+      continue;
+    }
+
+    if (scene.dataset.dx === "switch") {
+      // The thumb goes from off to on, the track greener as it goes; a tap flips it. It stays in
+      // its track: no rubber, and its spring stops at the ends
+      for (const toggle of scene.querySelectorAll<HTMLElement>("[data-dx-switch]")) {
+        const thumb = toggle.querySelector<HTMLElement>("[data-dx-thumb]")!;
+        const travel = () => toggle.clientWidth - thumb.offsetWidth - 4;
+        const set = (on: boolean) => toggle.setAttribute("aria-checked", String(on));
+        const drag = createDrag({
+          element: thumb,
+          handle: toggle,
+          axis: "x",
+          snaps: () => [0, travel()],
+          initial: toggle.getAttribute("aria-checked") === "true" ? 1 : 0,
+          rubberband: 0,
+          spring: { duration: 0.3, bounce: 0 },
+          onMove: ({ x }) => toggle.style.setProperty("--on", String(x / travel())),
+          onEnd: (snap) => set(snap === 1),
+        });
+        toggle.addEventListener("click", () => {
+          const on = toggle.getAttribute("aria-checked") !== "true";
+          set(on);
+          drag.snap(on ? 1 : 0);
+        });
+      }
+      continue;
+    }
+
+    pip(scene, area!);
+  }
+
+  /**
+   * Mail's rows: swiped right to mark read or unread, left to flag or delete; past the actions, all
+   * the way, the outermost one is done as it's let go. Deleted rows fold away; the last one gone,
+   * they all come back
+   */
+  function swipe(scene: HTMLElement) {
+    const LEAD = 92;
+    const TRAIL = 168;
+    const rows = [...scene.querySelectorAll<HTMLElement>("[data-dx-row]")];
+    const drags = new Map<HTMLElement, Drag>();
+    /** Snap points: all the way right, the lead action, closed, the trail actions, all the way left */
+    const ALL_RIGHT = 0;
+    const CLOSED = 2;
+    const ALL_LEFT = 4;
+
+    const unread = (row: HTMLElement) => {
+      const on = !row.hasAttribute("data-unread");
+      row.toggleAttribute("data-unread", on);
+      row.querySelector("[data-dx-unread]")!.textContent = on ? "Read" : "Unread";
+    };
+    const remove = (row: HTMLElement) => {
+      row.style.height = `${row.offsetHeight}px`;
+      row.getBoundingClientRect();
+      row.toggleAttribute("data-gone", true);
+      row.style.height = "0px";
+      window.setTimeout(() => {
+        row.hidden = true;
+        if (rows.every((r) => r.hidden)) window.setTimeout(restore, 500);
+      }, 320);
+    };
+    const restore = () => {
+      for (const row of rows) {
+        row.hidden = false;
+        row.removeAttribute("data-gone");
+        row.style.height = "";
+        drags.get(row)!.snap(CLOSED, { instant: true });
+      }
+    };
+
+    for (const row of rows) {
+      const face = row.querySelector<HTMLElement>("[data-dx-face]")!;
+      const drag = createDrag({
+        element: face,
+        axis: "x",
+        snaps: () => [row.clientWidth, LEAD, 0, -TRAIL, -row.clientWidth],
+        initial: CLOSED,
+        // A flick reaches less far than a scroll's: all the way takes a pull, not a flick
+        deceleration: 0.99,
+        onStart: () => {
+          for (const [other, d] of drags) {
+            if (other !== row && !other.hasAttribute("data-gone") && d.current !== CLOSED) d.snap(CLOSED);
+          }
+        },
+        onMove: ({ x }) => {
+          row.style.setProperty("--x", String(x));
+          // Nearer all the way than the actions: let go here, it's done
+          const w = row.clientWidth;
+          row.toggleAttribute("data-full", x < -(TRAIL + w) / 2 || x > (LEAD + w) / 2);
+        },
+        // All the way is done as it's let go, not once it has come to rest
+        onEnd: (snap) => {
+          if (snap === ALL_LEFT) remove(row);
+          if (snap === ALL_RIGHT) {
+            unread(row);
+            // Back, with the speed it was let go at: after the drag has set off for its snap point
+            queueMicrotask(() => drag.snap(CLOSED));
+          }
+        },
+      });
+      drags.set(row, drag);
+      // A tap on an open row closes it; a click that ends a drag is dropped, so this is a tap
+      face.addEventListener("click", () => {
+        if (drag.current !== CLOSED) drag.snap(CLOSED);
+      });
+      row.querySelector("[data-dx-unread]")!.addEventListener("click", () => {
+        unread(row);
+        drag.snap(CLOSED);
+      });
+      row.querySelector("[data-dx-flag]")!.addEventListener("click", () => {
+        row.toggleAttribute("data-flagged");
+        drag.snap(CLOSED);
+      });
+      // Deleting slides it all the way out as it folds away
+      row.querySelector("[data-dx-delete]")!.addEventListener("click", () => {
+        drag.snap(ALL_LEFT);
+        remove(row);
+      });
+    }
+  }
+
+  /**
+   * Picture in picture: thrown into whichever corner its flight would reach. A double tap switches
+   * its size, and so does a pinch; its corners follow its size, so it stays in its corner
+   */
+  function pip(scene: HTMLElement, room: HTMLElement) {
+    const video = scene.querySelector<HTMLElement>("[data-dx-pip]")!;
+    const SMALL = 160;
+    const BIG = 264;
+    const drag = createDrag({
+      element: video,
+      snaps: () => {
+        const x = room.clientWidth - video.offsetWidth - 32;
+        const y = room.clientHeight - video.offsetHeight - 32;
+        return [
+          { x: 0, y: 0 },
+          { x, y: 0 },
+          { x: 0, y },
+          { x, y },
+        ];
+      },
+      // On the landing it waits in the top-left corner, over its hint
+      initial: scene.classList.contains("dx--card") ? 0 : 3,
+      spring: { duration: 0.45, bounce: 0.2 },
+    });
+    const fits = () => Math.min(BIG, room.clientWidth - 32);
+
+    let lastTap = 0;
+    video.addEventListener("click", (e) => {
+      if (e.timeStamp - lastTap > 320) {
+        lastTap = e.timeStamp;
+        return;
+      }
+      lastTap = 0;
+      video.toggleAttribute("data-big", !video.hasAttribute("data-big") && fits() >= BIG);
+    });
+
+    // Two fingers: the drag lets go, and the distance between them sizes it
+    const fingers = new Map<number, { x: number; y: number }>();
+    let pinch: { from: number; width: number } | null = null;
+    const apart = () => {
+      const [a, b] = [...fingers.values()];
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    };
+    video.addEventListener("pointerdown", (e) => {
+      if (e.pointerType !== "touch") return;
+      fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (fingers.size !== 2) return;
+      drag.disabled = true;
+      pinch = { from: apart(), width: video.offsetWidth };
+      video.toggleAttribute("data-pinching", true);
+    });
+    window.addEventListener("pointermove", (e) => {
+      if (!fingers.has(e.pointerId)) return;
+      fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (!pinch || fingers.size !== 2) return;
+      const width = Math.min(fits(), Math.max(SMALL * 0.8, (pinch.width * apart()) / pinch.from));
+      video.style.width = `${width}px`;
+    });
+    const lift = (e: PointerEvent) => {
+      if (!fingers.delete(e.pointerId) || !pinch) return;
+      // Let go: to whichever size it's nearer
+      const width = video.offsetWidth;
+      pinch = null;
+      video.removeAttribute("data-pinching");
+      video.toggleAttribute("data-big", width > (SMALL + BIG) / 2 && fits() >= BIG);
+      video.style.width = "";
+      drag.disabled = false;
+    };
+    window.addEventListener("pointerup", lift);
+    window.addEventListener("pointercancel", lift);
+  }
+</script>
