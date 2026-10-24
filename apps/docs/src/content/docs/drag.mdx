@@ -72,6 +72,8 @@ const sheet = createDrag({
 
 Three detents: open, half way, and down to its title. A slow drag settles on the nearest; a flick goes as far as it would have slid by itself, so a hard one goes from the bottom to the top. Past the top or the bottom it's rubber.
 
+Its list scrolls, and a finger hands one gesture between the two, as in iOS: pushed up half way open, the sheet opens first and the rest of the push scrolls the list; pulled down, the list scrolls back to its start before the sheet goes down. That's the `scroll` option, [below](#scroll).
+
 <Example>
 <DragExample kind="sheet" />
 
@@ -82,7 +84,7 @@ Three detents: open, half way, and down to its title. A slow drag settles on the
   <section class="sheet lb" aria-label="Nearby">
     <span class="sheet__grabber" aria-hidden="true"></span>
     <h3>Nearby</h3>
-    <ul>…</ul>
+    <ul class="sheet__list">…</ul>
   </section>
 </div>
 ```
@@ -95,10 +97,13 @@ import "@fluidkit/blur/style.css";
 import { createDrag } from "@fluidkit/drag";
 
 const screen = document.querySelector<HTMLElement>(".screen")!;
+const sheet = screen.querySelector<HTMLElement>(".sheet")!;
 
 createDrag({
-  element: screen.querySelector(".sheet")!,
+  element: sheet,
   axis: "y",
+  // One gesture between the list and the sheet
+  scroll: sheet.querySelector<HTMLElement>(".sheet__list")!,
   // Offsets from where it's laid out (12px from the top): open, half way, and just its title
   snaps: () => {
     const h = screen.clientHeight;
@@ -121,12 +126,17 @@ createDrag({
   left: 10px;
   right: 10px;
   height: calc(100% + 160px);
-  padding: 8px 20px 0;
+  display: flex;
+  flex-direction: column;
+  /* The list ends at the screen's bottom, laid out open */
+  padding: 8px 20px 172px;
   border-radius: 28px;
   cursor: grab;
   user-select: none;
 }
 .sheet[data-dragging] { cursor: grabbing; }
+/* Not past its ends to the page */
+.sheet__list { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 ```
 
 </Fragment>
@@ -388,6 +398,7 @@ The spring it settles on starts at the pointer's speed. The default has no bounc
 | `element: HTMLElement` | What moves. Its inline `translate` is the drag's |
 | `handle?: HTMLElement` | What's grabbed, such as a sheet's grabber or a whole switch; the element unless given |
 | `axis?: "x" \| "y" \| "both"` | Along which it moves; `both` by default |
+| `scroll?: HTMLElement` | An area inside that scrolls along its axis, such as a sheet's list: a finger hands one gesture between the two, [as iOS sheets do](#scroll). Along `x` or `y` |
 | `snaps?: DragSnaps \| () => DragSnaps` | Where it may come to rest: offsets along the axis, or `{ x, y }` points for `both`. A function is read again when the element, its parent or the window is resized |
 | `bounds?: DragBounds \| () => DragBounds` | `{ x?: [min, max], y?: [min, max] }`: how far it moves before it's rubber. The farthest snap points by default; unbounded with none |
 | `initial?: number` | The snap point it starts at; the first by default |
@@ -429,7 +440,7 @@ A drag starts once the pointer has moved 4px (8px for a finger), so a tap stays 
 </Cell>
 <Cell title="Touch">
 
-The handle's `touch-action` is set so the browser keeps what the drag doesn't take: `pan-y` for `x`, `pan-x` for `y`, and pinch-zoom; `none` for `both`. A gesture the browser takes all the same ends the drag, and it settles from where it is.
+The handle's `touch-action` is set so the browser keeps what the drag doesn't take: `pan-y` for `x`, `pan-x` for `y`, and pinch-zoom; `none` for `both`. A gesture the browser takes all the same ends the drag, and it settles from where it is. With a `scroll` area the handle's `touch-action` is left alone: fingers are followed by their touch events, which stop the browser's scroll when the drag takes them.
 
 </Cell>
 </Row>
@@ -451,6 +462,29 @@ Roles, labels and keys are yours: a sheet's `dialog`, a switch's `role="switch"`
 
 </Section>
 
+<Section id="scroll" title="A list inside">
+
+A sheet that holds a list that scrolls hands one gesture between them, as iOS sheets do. Give the list as `scroll`; then, for a finger:
+
+<Rows>
+<Row>
+<Cell title="Which one moves">
+
+As a finger in the list sets off, it's the sheet's when it pulls toward the later snap points (down, for a sheet from the bottom) with the list at its start, or when it pushes the other way while the sheet isn't at its first; else the list scrolls, with its own momentum. Out of the list, on the grabber or the title, it's the sheet's.
+
+</Cell>
+<Cell title="Within one gesture">
+
+A sheet pushed all the way hands the rest of the push to the list, which scrolls on; pulled back, the list scrolls back to its start before the sheet moves. A list scrolled to its start and still pulled hands the gesture to the sheet, where the browser lets a scroll under way be stopped; where it doesn't (Chrome), it finishes the scroll, and the next pull moves the sheet.
+
+</Cell>
+</Row>
+</Rows>
+
+That's touch: a mouse drags the sheet, a wheel or a trackpad scrolls the list. Give the list `overscroll-behavior: contain`, so a scroll at its ends doesn't go on to the page. The list's scroll runs along the drag's axis; with `both` there's no `scroll`.
+
+</Section>
+
 <Section id="glass" title="With Liquid Blur">
 
 The element can be glass, as the sheet and the picture above are: the drag writes `translate` alone, so press behaviors keep their `scale` and `transform`.
@@ -465,7 +499,6 @@ Any browser with ES2022, Pointer Events and `ResizeObserver`, and the individual
 
 <Section id="limitations" title="Limitations">
 
-- A sheet holding a list that scrolls doesn't yet take over from the list when it's scrolled to the top, as iOS sheets do. That's coming: keep a sheet's content short, or give it a handle of its own.
 - Rotated ancestors aren't supported; scaled ones are.
 - Snap points that move with something the drag doesn't see, other than its element, its parent or the window resizing, need `update()`.
 

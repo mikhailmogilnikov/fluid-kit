@@ -1,7 +1,7 @@
 ---
 /**
  * One of Drag's examples, live:
- *   - sheet: a glass sheet with three detents, flicked up and down
+ *   - sheet: a glass sheet with three detents and a list that scrolls in it, one gesture for both
  *   - swipe: rows of a list swiped either way to their actions, or all the way to do the last one
  *   - switch: iOS-style switches, dragged or tapped
  *   - pip: a video thrown into a corner, double-tapped or pinched to resize
@@ -18,6 +18,12 @@ const places = [
   ["Tartine Bakery", "Bakery · 7 min walk"],
   ["Dolores Park", "Park · 9 min walk"],
   ["Gracias Madre", "Restaurant · 12 min walk"],
+  ["Mission Dolores", "Landmark · 13 min walk"],
+  ["Bi-Rite Creamery", "Ice cream · 14 min walk"],
+  ["Ritual Coffee", "Café · 15 min walk"],
+  ["Alamo Square", "Park · 18 min walk"],
+  ["Golden Gate Park", "Park · 24 min walk"],
+  ["Twin Peaks", "Viewpoint · 31 min walk"],
 ] as const;
 const mail = [
   ["Ana", "Tickets for Friday are in your inbox"],
@@ -40,7 +46,7 @@ const toggles = [
         <section class="dx__sheet lb" aria-label="Nearby" data-dx-sheet>
           <span class="dx__grabber" aria-hidden="true" />
           <h3 class="dx__title">Nearby</h3>
-          <ul class="dx__places">
+          <ul class="dx__places" data-dx-scroll>
             {places.map(([name, meta]) => (
               <li>
                 <b>{name}</b>
@@ -162,7 +168,11 @@ const toggles = [
     left: 10px;
     right: 10px;
     height: calc(100% + 160px);
-    padding: 8px 20px 0;
+    display: flex;
+    flex-direction: column;
+    /* What's below the screen, laid out open, and the 12px it's laid out down: the list ends at the
+       screen's bottom */
+    padding: 8px 20px 172px;
     border-radius: 28px;
     color: var(--ink);
     cursor: grab;
@@ -180,9 +190,20 @@ const toggles = [
     opacity: 0.25;
   }
   .dx__title { margin: 0 0 12px; font-size: 20px; font-weight: 650; }
-  .dx__places { display: grid; margin: 0; padding: 0; list-style: none; }
+  /* Its list scrolls; a finger hands one gesture between the list and the sheet. Not past its ends
+     to the page */
+  .dx__places {
+    flex: 1;
+    min-height: 0;
+    margin: 0 -20px;
+    padding: 0 20px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    list-style: none;
+  }
   .dx__places li {
     display: grid;
+    flex: none;
     gap: 2px;
     padding: 12px 0;
     border-top: 1px solid rgb(127 127 127 / 0.2);
@@ -402,6 +423,7 @@ const toggles = [
       createDrag({
         element: sheet,
         axis: "y",
+        scroll: sheet.querySelector<HTMLElement>("[data-dx-scroll]")!,
         snaps: () => {
           const h = area!.clientHeight;
           return [0, h / 2 - 12, h - 12 - 76];
