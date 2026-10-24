@@ -461,6 +461,8 @@ const toggles = [
           initial: toggle.getAttribute("aria-checked") === "true" ? 1 : 0,
           rubberband: 0,
           spring: { duration: 0.3, bounce: 0 },
+          // Chases the pointer, so one flung back and forth is followed through, as iOS 27's is
+          follow: { duration: 0.18, bounce: 0 },
           onMove: ({ x }) => toggle.style.setProperty("--on", String(x / travel())),
           onEnd: (snap) => set(snap === 1),
         });

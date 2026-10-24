@@ -243,7 +243,7 @@ for (const row of document.querySelectorAll<HTMLElement>(".row")) {
 
 ### A switch
 
-The thumb is the element and the whole switch its `handle`. Dragged, it goes to the side its flick reaches and the track turns green as far as it has gone; a tap flips it, and two quick taps flip it back. It stays in its track: `rubberband: 0` stops it at the ends, dragged or on its spring. The thumb is glass, solid white at rest and [a lens](/blur#classes) while it's held or dragged: clear, unblurred and nearly as wide as the track, Liquid Blur's `--lb-lens` and `--lb-transparency`, set by `data-dragging`.
+The thumb is the element and the whole switch its `handle`. Dragged, it goes to the side its flick reaches and the track turns green as far as it has gone; a tap flips it, and two quick taps flip it back. It stays in its track: `rubberband: 0` stops it at the ends, dragged or on its spring. It chases the pointer on a quick `follow` spring, so a pointer flung back and forth is followed through, not jumped after. The thumb is glass, solid white at rest and [a lens](/blur#classes) while it's held or dragged: clear, unblurred and nearly as wide as the track, Liquid Blur's `--lb-lens` and `--lb-transparency`, set by `data-dragging`.
 
 <Example>
 <DragExample kind="switch" />
@@ -275,6 +275,8 @@ const drag = createDrag({
   initial: toggle.getAttribute("aria-checked") === "true" ? 1 : 0,
   rubberband: 0,
   spring: { duration: 0.3, bounce: 0 },
+  // Chases the pointer: flung back and forth, it's followed through
+  follow: { duration: 0.18, bounce: 0 },
   onMove: ({ x }) => toggle.style.setProperty("--on", String(x / travel())),
   onEnd: (snap) => set(snap === 1),
 });
@@ -406,6 +408,7 @@ The spring it settles on starts at the pointer's speed. The default has no bounc
 | `rubberband?: number` | How hard it pulls back past its bounds, dragged or swinging on its spring: `0.55` by default, iOS's; `0` stops it at them |
 | `deceleration?: number` | How quickly a flick would slow down by itself, per millisecond: `0.998` by default |
 | `spring?: SpringParams` | The spring it settles on: `defaultDragSpring`, `{ duration: 0.4, bounce: 0 }`, by default. As in [core](/core#spring) |
+| `follow?: SpringParams` | A spring it chases the pointer on while dragged, instead of sitting exactly under it: a pointer flung back and forth is followed through, as iOS 27's switches do. Where a flick goes is still judged from the pointer. Unset by default |
 | `onStart?: () => void` | A pointer starts dragging it, or catches it on its way |
 | `onMove?: (position, velocity) => void` | Whenever it moves (dragged, settling, put somewhere), with its offset and its speed in px/s, as copies: for whatever follows it, such as a backdrop's opacity |
 | `onEnd?: (snap) => void` | It's let go, heading for this snap point (`null` with none) |
