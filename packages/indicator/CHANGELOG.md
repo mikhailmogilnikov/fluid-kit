@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.1
+
+### Patch Changes
+
+- 73190c8: A release over another item drops only the browser's own click that follows it, through core's `swallowClick`, and no longer any other click in the next 400ms.
+- Updated dependencies [73190c8]
+  - @fluidkit/core@1.1.0
+
 ## 1.0.0
 
 First release.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0
+
+### Minor Changes
+
+- 73190c8: `swallowClick(document, except?, ms?)` drops the click a gesture's release would make on its own, as drag and indicator need: the next click in the document within 400ms, but for one on `except`.
+
 ## 1.0.0
 
 First release.
