@@ -8,9 +8,10 @@ import { SpringAnimator, px, swallowClick, type SpringParams } from "@fluidkit/c
  * it goes. Let go, it heads for one of its snap points on a spring that starts at the pointer's own
  * speed: the point nearest to where it would have come to rest by itself, slowing down as a scroll
  * does. So a flick reaches a far point and a slow drag settles on the near one. With no snap points
- * it comes to rest where it would have, within its bounds. Caught on its way, it stops under the
- * pointer and is dragged from there; let go without being moved, it goes on where it was going and
- * the tap is the page's click (a switch tapped twice quickly flips back).
+ * it comes to rest where it would have, within its bounds. With a `follow` spring it chases the
+ * pointer instead of sitting under it, and is let go at its own speed. Caught on its way, it stops
+ * under the pointer and is dragged from there; let go without being moved, it goes on where it was
+ * going and the tap is the page's click (a switch tapped twice quickly flips back).
  *
  * A drag starts once the pointer has moved a few pixels along its axis: moving across it first,
  * it's the page's (a finger scrolling a list past a row that swipes sideways). On touch the browser
@@ -69,6 +70,11 @@ export type DragOptions = {
   deceleration?: number;
   /** The spring it settles on; `defaultDragSpring` unless given */
   spring?: SpringParams;
+  /**
+   * A spring it follows the pointer on while dragged, as iOS 27's switches do: a pointer flung
+   * back and forth is followed through, not jumped after. Exactly under the pointer unless given
+   */
+  follow?: SpringParams;
   /** Called when a pointer starts dragging it, or catches it on its way */
   onStart?: () => void;
   /** Called with its offset and speed (px/s) whenever it moves: dragged, settling, put somewhere */
@@ -229,16 +235,21 @@ export function createDrag(options: DragOptions): Drag {
     onMove?.({ ...position }, { ...velocity });
   };
 
+  const settling = options.spring ?? defaultDragSpring;
+  const follow = options.follow ?? null;
+
   // A spring calls back once as it's made, before it's there; its first frame is written below
   let ready = false;
   const spring = new SpringAnimator(
     { x: position.x, y: position.y },
-    options.spring ?? defaultDragSpring,
+    settling,
     (p) => {
       // A spring that swings past the bounds is rubber there too
       if (ready) write(stretch(p), spring.velocities());
     },
     () => {
+      // Caught up with a pointer that's still dragging it, on `follow`: not at rest
+      if (dragging) return;
       moving = false;
       velocity = { ...ZERO };
       onRest?.();
@@ -261,7 +272,7 @@ export function createDrag(options: DragOptions): Drag {
       return;
     }
     moving = true;
-    spring.to(target, undefined, v);
+    spring.to(target, settling, v);
   };
 
   /** Where it comes to rest let go here at `v`: the snap point nearest to where it would stop */
@@ -347,7 +358,7 @@ export function createDrag(options: DragOptions): Drag {
    * The pointer is done: let go at `v`, or with `null` nothing else happens (`snap()`, `to()` and
    * `destroy()` take over)
    */
-  const finish = (v: DragPoint | null) => {
+  const finish = (v: DragPoint | null, from: DragPoint = position) => {
     const was = pointer;
     pointer = null;
     listen(false);
@@ -367,7 +378,7 @@ export function createDrag(options: DragOptions): Drag {
       settle(goal, ZERO);
       return;
     }
-    const { index, target } = aim(position, v);
+    const { index, target } = aim(from, v);
     current = index;
     onEnd?.(index);
     settle(target, v);
@@ -434,31 +445,46 @@ export function createDrag(options: DragOptions): Drag {
 
   const move = (input: Input) => {
     if (!pointer || input.id !== pointer.id) return;
-    const dx = (input.x - pointer.x0) / pointer.scale;
-    const dy = (input.y - pointer.y0) / pointer.scale;
+    let dx = (input.x - pointer.x0) / pointer.scale;
+    let dy = (input.y - pointer.y0) / pointer.scale;
     if (!pointer.moved) {
-      if (Math.hypot(dx, dy) < (pointer.touch ? TOUCH_SLOP : SLOP)) return;
+      const slop = pointer.touch ? TOUCH_SLOP : SLOP;
+      const far = Math.hypot(dx, dy);
+      if (far < slop) return;
+      const down = { x: pointer.x0, y: pointer.y0 };
       if (pointer.started) {
-        // Caught, and now dragged: from here
+        // Caught, and now dragged
         pointer.moved = true;
-        pointer.x0 = input.x;
-        pointer.y0 = input.y;
         pointer.samples = [{ t: input.t, x: position.x, y: position.y }];
-        return;
+      } else {
+        // Across its axis first: the page's, such as a list scrolled past a row that swipes
+        if ((axis === "x" && Math.abs(dy) > Math.abs(dx)) || (axis === "y" && Math.abs(dx) > Math.abs(dy))) {
+          finish(null);
+          return;
+        }
+        begin(input, true);
+        // Another drag has it
+        if (!pointer) return;
       }
-      // Across its axis first: the page's, such as a list scrolled past a row that swipes
-      if ((axis === "x" && Math.abs(dy) > Math.abs(dx)) || (axis === "y" && Math.abs(dx) > Math.abs(dy))) {
-        finish(null);
-        return;
-      }
-      begin(input, true);
-      return;
+      // Dragged from the edge of the slop: only the slop is lost, not the rest of a first move that
+      // went far at once (a pointer flung)
+      const past = slop / far;
+      pointer.x0 = down.x + (input.x - down.x) * past;
+      pointer.y0 = down.y + (input.y - down.y) * past;
+      dx = (input.x - pointer.x0) / pointer.scale;
+      dy = (input.y - pointer.y0) / pointer.scale;
     }
     const raw = handOver({ x: pointer.from.x + (onX ? dx : 0), y: pointer.from.y + (onY ? dy : 0) });
     const shown = stretch(raw);
     const samples = pointer.samples;
     samples.push({ t: input.t, x: shown.x, y: shown.y });
     while (samples.length > 2 && samples[0].t < input.t - VELOCITY_WINDOW) samples.shift();
+    // Chasing the pointer on its own spring, which writes it: where it shows, within its bounds, so
+    // a pointer flung far past an end doesn't fling it across in a frame
+    if (follow) {
+      spring.to(shown, follow);
+      return;
+    }
     // The spring holds the pull, as it shows it stretched: let go past the bounds, it sets off from there
     spring.jump(raw);
     write(shown, speed(samples));
@@ -473,9 +499,11 @@ export function createDrag(options: DragOptions): Drag {
       unswallow();
       unswallow = swallowClick(doc, null, CLICK_WINDOW);
     }
-    // Its speed as it was let go: a pointer that stopped a while before has none
+    // Its speed as it was let go: a pointer that stopped a while before has none. Where it's
+    // thrown is judged from the pointer, so following on a spring, a quick flick still flips it
     const v = pointer.started ? speed(pointer.samples.filter((s) => s.t >= input.t - VELOCITY_WINDOW)) : null;
-    finish(v);
+    const last = pointer.samples[pointer.samples.length - 1];
+    finish(v, follow && pointer.moved && last ? { x: last.x, y: last.y } : position);
   };
 
   /** Taken by the browser (a scroll, a gesture of its own): it settles from where it is */
