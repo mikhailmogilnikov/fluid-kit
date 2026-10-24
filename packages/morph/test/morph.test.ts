@@ -316,6 +316,44 @@ describe("createMorph", () => {
     morph.destroy();
   });
 
+  it("doesn't bring back what has faded when started over again", async () => {
+    const { button, panel } = scene();
+    const sheet = document.createElement("div");
+    sheet.getBoundingClientRect = () => new DOMRect(0, 200, 400, 200);
+    document.body.append(sheet);
+    const morph = createMorph({ states: [button, panel, sheet], spring: { grow: slow, shrink: slow } });
+    void morph.to(panel);
+    await wait(60);
+    // Started over: what was on its way fades where it is
+    void morph.to(sheet);
+    await wait(120);
+    const shape = button.nextElementSibling as HTMLElement;
+    const opacity = (el: Element) => Number((el as HTMLElement).style.opacity || "1");
+    const before = new Map([...shape.children].map((el) => [el, opacity(el)]));
+    // Started over again before it's gone: none of it shows more than it did
+    void morph.to(button);
+    await frame();
+    await frame();
+    for (const el of shape.children) {
+      if (before.has(el)) expect(opacity(el)).toBeLessThanOrEqual(before.get(el)! + 0.05);
+    }
+    morph.destroy();
+  });
+
+  it("keeps a popover's surface on the way: no copy of a state is a popover", () => {
+    const { button, panel } = scene();
+    // A popover that isn't open is `display: none`: a fill or a copy dressed as one would be hidden
+    panel.setAttribute("popover", "manual");
+    button.setAttribute("popover", "manual");
+    const morph = createMorph({ states: [button, panel], spring: fast });
+    void morph.to(panel);
+    const shape = button.nextElementSibling as HTMLElement;
+    expect(shape.querySelector("button")).not.toBeNull();
+    expect(shape.hasAttribute("popover")).toBe(false);
+    expect(shape.querySelectorAll("[popover]")).toHaveLength(0);
+    morph.destroy();
+  });
+
   it("lands on the control where it is now, after the page scrolled on the way", async () => {
     const { button, panel } = scene();
     const ys: number[] = [];
