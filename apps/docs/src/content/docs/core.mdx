@@ -1,7 +1,7 @@
 ---
 package: "@fluidkit/core"
 name: Core
-order: 4
+order: 5
 description: "What the Fluid Kit packages share: an interruptible, velocity-keeping spring, boxes read as the browser draws them, and the DOM contract they meet by."
 intro: "The spring every moving part runs on, boxes read as the browser draws them, and the attributes the packages recognize each other by."
 ---
@@ -81,6 +81,16 @@ other.style.borderRadius = radiiCss(box.radii);
 | `radiiCss(radii, scale?)` | Radii as CSS, one value when they're all the same |
 | `still(el, read, to?)` | Reads with the element's inline transforms off, put back in the same task, so nothing in between is painted |
 | `px(value)` | A length to a hundredth of a pixel |
+
+</Section>
+
+<Section id="clicks" title="Clicks">
+
+A gesture that ends where it started a click makes one the page didn't mean: a drag let go over the button it began on, a press that already clicked the item it was released over. Drag and indicator drop it.
+
+| Export | Meaning |
+| --- | --- |
+| `swallowClick(document, except?, ms?)` | Drops the next click in the document within `ms` (400 by default), but for one on `except`, which passes. Returns a function that stops waiting: call it before waiting again, and on destroy |
 
 </Section>
 

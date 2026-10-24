@@ -9,6 +9,7 @@ import {
   radiiCss,
   radiiOf,
   still,
+  swallowClick,
   type Radii,
   type SpringParams,
 } from "@fluidkit/core";
@@ -360,8 +361,8 @@ export function createIndicator({
   let press: { id: number; down: HTMLElement | null | undefined; x: number; y: number; shown: boolean } | null = null;
   let showTimer = 0;
   let backTimer = 0;
-  let swallow: ((e: MouseEvent) => void) | null = null;
-  let swallowTimer = 0;
+  /** Stops dropping the browser's click after a release that clicked an item itself */
+  let unswallow = () => {};
 
   /** Whether a pointer moves it by hovering or by pressing */
   const kindOf = (e: PointerEvent): "hover" | "press" | null =>
@@ -468,22 +469,6 @@ export function createIndicator({
     back();
   };
 
-  /** The click a release made on its own, after ours: gone */
-  const swallowNext = (except: HTMLElement) => {
-    win.clearTimeout(swallowTimer);
-    if (swallow) doc.removeEventListener("click", swallow, true);
-    swallow = (e: MouseEvent) => {
-      if (e.composedPath().includes(except)) return;
-      e.preventDefault();
-      e.stopImmediatePropagation();
-    };
-    doc.addEventListener("click", swallow, true);
-    swallowTimer = win.setTimeout(() => {
-      if (swallow) doc.removeEventListener("click", swallow, true);
-      swallow = null;
-    }, CLICK_WINDOW);
-  };
-
   const onUp = (e: PointerEvent) => {
     if (!press || e.pointerId !== press.id) return;
     if (e.type === "pointercancel") return cancel();
@@ -493,7 +478,8 @@ export function createIndicator({
     // Released over another item: it's that one's click. The browser's own, if any, goes to an
     // ancestor of both and is dropped
     if (click && item && item !== down) {
-      swallowNext(item);
+      unswallow();
+      unswallow = swallowClick(doc, item, CLICK_WINDOW);
       item.click();
     }
     // After the click, which may choose another rest
@@ -579,8 +565,7 @@ export function createIndicator({
       motion = null;
       win.clearTimeout(showTimer);
       win.clearTimeout(backTimer);
-      win.clearTimeout(swallowTimer);
-      if (swallow) doc.removeEventListener("click", swallow, true);
+      unswallow();
       resized.disconnect();
       changed.disconnect();
       container.removeEventListener("pointermove", onMove);
