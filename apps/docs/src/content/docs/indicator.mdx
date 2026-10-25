@@ -357,7 +357,7 @@ Any browser with ES2022, `ResizeObserver` and `MutationObserver`. Corner shapes 
 <Section id="limitations" title="Limitations">
 
 - Rotated ancestors aren't supported; scaled ones are.
-- For a press to drag across items, give the container `touch-action: none` (a finger doesn't scroll the page) and `user-select: none` (a mouse doesn't select text). A press the browser takes over all the same, such as a drag of something selected, ends without a choice.
+- For a press to drag across items, give the container `touch-action: none`, so a finger doesn't scroll the page. While a press goes across them no text on the page is selected. A press the browser takes over all the same ends without a choice.
 - An item moved by something the container doesn't see, such as a transform animated on an ancestor, needs `update()`.
 
 </Section>

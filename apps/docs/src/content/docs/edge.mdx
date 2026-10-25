@@ -1,0 +1,124 @@
+---
+package: "@fluidkit/blur"
+name: Scroll Edge
+order: 5
+description: "Content that scrolls fades out toward the edges, as under the bars in iOS. An edge shows only while there's content past it. Pure CSS, on any element that scrolls."
+intro: "Content that scrolls fades out toward its edges, as it does under the bars in iOS, instead of stopping at a hard line. An edge shows only while there's content past it. Pure CSS, on any element that scrolls; part of <a href=\"/blur\">Liquid Blur</a>."
+---
+
+import Section from "../../components/docs/Section.astro";
+import Rows from "../../components/docs/Rows.astro";
+import Row from "../../components/docs/Row.astro";
+import Cell from "../../components/docs/Cell.astro";
+import Steps from "../../components/docs/Steps.astro";
+import Step from "../../components/docs/Step.astro";
+import Install from "../../components/docs/Install.astro";
+import EdgeExample from "../../components/EdgeExample.astro";
+
+<Section id="start" title="Get started">
+
+Scroll Edge comes with [Liquid Blur](/blur): it's in its stylesheet, so there's nothing else to install. It doesn't need glass: it works on any element that scrolls, with or without `.lb` around it.
+
+<Steps>
+<Step>
+
+**Install Liquid Blur.**
+
+<Install pkg="@fluidkit/blur" />
+
+</Step>
+<Step>
+
+**Import its stylesheet**, once, before your own styles.
+
+```ts
+import "@fluidkit/blur/style.css";
+```
+
+</Step>
+<Step>
+
+**Add `lb-edge` to the element that scrolls.** No script and no extra markup.
+
+```html
+<ol class="songs lb-edge">…</ol>
+
+<style>
+  .songs { overflow-y: auto; }
+</style>
+```
+
+</Step>
+</Steps>
+
+</Section>
+
+<Section id="examples" title="Examples">
+
+### A list and a row of chips
+
+The list fades out toward its top and bottom, the chips toward their sides. Scroll either: at the start there's no edge on that side, and it comes in as the content goes under it; at the end, the last edge goes, so the last row is never covered.
+
+<EdgeExample />
+
+```html
+<div class="lb card">
+  <div class="chips lb-edge-x">…</div>
+  <ol class="songs lb-edge">…</ol>
+</div>
+```
+
+```css
+.songs { overflow-y: auto; overscroll-behavior: contain; }
+.chips { overflow-x: auto; --lb-edge-size: 20px; }
+```
+
+### Under a sheet's title
+
+The list in [Drag's sheet](/drag#examples) has `lb-edge`: its places fade out under the title as they scroll, and the first one, at the top, isn't faded.
+
+</Section>
+
+<Section id="options" title="Options">
+
+| Class or variable | Meaning |
+| --- | --- |
+| `lb-edge` | The content fades out toward the top and bottom, for an element that scrolls up and down |
+| `lb-edge-x` | The same toward the left and right, for an element that scrolls sideways |
+| `--lb-edge-size` | How far the fade reaches, and how much scroll an edge comes in over: `28px` by default. Inherited, so it can be set on any ancestor |
+
+</Section>
+
+<Section id="how" title="How it works">
+
+<Rows>
+<Row>
+<Cell title="A mask">
+
+The fade is a `mask` on the element that scrolls: the content goes from opaque to transparent at the edge itself, on a smooth curve, so where it's cut off it's never seen. It fades rather than paints, so it works over glass, a photo or a plain background alike.
+
+</Cell>
+<Cell title="Driven by the scroll">
+
+Each fade is as long as the content past its edge, up to `--lb-edge-size`: it grows as the content goes under the edge and shrinks to nothing at the end. Scroll-driven animations do it as it scrolls, momentum included, with no script. With nothing to scroll there are no edges.
+
+</Cell>
+</Row>
+</Rows>
+
+Put it on what scrolls, not on glass itself, which it would fade too: on a list inside the glass. It uses the element's `mask` and `animation`; your own would replace it.
+
+</Section>
+
+<Section id="support" title="Browser support">
+
+Any browser with scroll-driven animations and `@property`: Chrome and Edge 115, Safari 26. Elsewhere (Firefox) there are no edges, and nothing is faded.
+
+</Section>
+
+<Section id="limitations" title="Limitations">
+
+- The element that scrolls loses its own `mask` and `animation` to the edges.
+- Both edges of an axis are the same size.
+
+</Section>

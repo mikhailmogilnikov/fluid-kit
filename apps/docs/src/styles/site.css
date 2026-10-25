@@ -1481,6 +1481,8 @@ code {
   gap: 20px;
   margin-top: 40px;
 }
+/* The fifth, under the four: across both */
+.lib--wide { grid-column: 1 / -1; }
 .lib {
   display: grid;
   align-content: start;
@@ -1537,6 +1539,8 @@ code {
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+/* Handwriting overhangs its box (a final "t"), and a filter clips to the box in Safari: room for it */
+.hint__text { padding: 0 6px; }
 .hint--light {
   color: #fff;
   filter: drop-shadow(0 1px 6px rgb(0 0 0 / 0.3));

@@ -6,6 +6,7 @@ import GroupDock from "../components/GroupDock.astro";
 import MorphPreview from "../components/MorphPreview.astro";
 import IndicatorExample from "../components/IndicatorExample.astro";
 import DragExample from "../components/DragExample.astro";
+import EdgeExample from "../components/EdgeExample.astro";
 import Footer from "../components/Footer.astro";
 import Icon from "../components/Icon.astro";
 import Hint from "../components/Hint.astro";
@@ -84,6 +85,18 @@ const REPO = "https://github.com/mikhailmogilnikov/fluid-kit";
               <b>Drag</b><code>@fluidkit/drag</code><Icon name="arrow" size={16} />
             </a>
             <p>Drag with rubber-band edges, and let go onto the snap point a flick reaches: sheets, swipes, switches.</p>
+          </div>
+        </article>
+
+        <article class="lib lib--wide reveal" style="--d: 320ms">
+          <EdgeExample card>
+            <Hint text="scroll it" light style="top: 266px; left: 50%" />
+          </EdgeExample>
+          <div class="lib__body">
+            <a class="lib__head" href="/edge">
+              <b>Scroll Edge</b><code>@fluidkit/blur</code><Icon name="arrow" size={16} />
+            </a>
+            <p>Content that scrolls fades out toward its edges, as under iOS bars, and only where there's more past them.</p>
           </div>
         </article>
       </div>

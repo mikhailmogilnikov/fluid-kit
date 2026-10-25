@@ -1,7 +1,7 @@
 ---
 package: "@fluidkit/core"
 name: Core
-order: 5
+order: 6
 description: "What the Fluid Kit packages share: an interruptible, velocity-keeping spring, boxes read as the browser draws them, and the DOM contract they meet by."
 intro: "The spring every moving part runs on, boxes read as the browser draws them, and the attributes the packages recognize each other by."
 ---
@@ -84,13 +84,14 @@ other.style.borderRadius = radiiCss(box.radii);
 
 </Section>
 
-<Section id="clicks" title="Clicks">
+<Section id="clicks" title="Clicks and selection">
 
-A gesture that ends where it started a click makes one the page didn't mean: a drag let go over the button it began on, a press that already clicked the item it was released over. Drag and indicator drop it.
+A gesture that ends where it started a click makes one the page didn't mean: a drag let go over the button it began on, a press that already clicked the item it was released over. Drag and indicator drop it. And a pointer pulling something around would select the page's text on its way: drag, a stretch and a press across items hold the selection off while they're held.
 
 | Export | Meaning |
 | --- | --- |
 | `swallowClick(document, except?, ms?)` | Drops the next click in the document within `ms` (400 by default), but for one on `except`, which passes. Returns a function that stops waiting: call it before waiting again, and on destroy |
+| `holdSelection(document)` | No text is selected on the page until it's let go: the root's `user-select` is `none` (and iOS's touch callout off), and a selection already there is dropped. Holds count, so overlapping gestures share one. Returns a function that lets go; the root's own styles come back with the last |
 
 </Section>
 

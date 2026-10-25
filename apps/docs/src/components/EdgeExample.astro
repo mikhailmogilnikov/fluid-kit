@@ -1,0 +1,113 @@
+---
+/**
+ * Scroll edges, live: a glass card whose list fades out toward its top and bottom (lb-edge), and a
+ * row of chips that fades out toward its sides (lb-edge-x). Each edge shows only with content past it.
+ */
+interface Props {
+  /** As a library's card on the landing: the card's size and corners, and room for a hint (the slot) */
+  card?: boolean;
+}
+
+const { card = false } = Astro.props;
+const songs = [
+  ["Midnight City", "M83"],
+  ["Holocene", "Bon Iver"],
+  ["Retrograde", "James Blake"],
+  ["Breathe", "Télépopmusik"],
+  ["Myth", "Beach House"],
+  ["Nights", "Frank Ocean"],
+  ["Teardrop", "Massive Attack"],
+  ["Pink + White", "Frank Ocean"],
+  ["Svefn-g-englar", "Sigur Rós"],
+  ["Motion Picture Soundtrack", "Radiohead"],
+] as const;
+const genres = ["All", "Ambient", "Electronic", "Indie", "Jazz", "R&B", "Soul", "Classical", "Folk", "Rock"];
+---
+
+<div class:list={["ex-edge", { "ex-edge--card": card }]} data-hints={card ? "" : undefined}>
+  <div class="bd bd-aurora"></div>
+  <div class="ex-edge__card lb">
+    <div class="ex-edge__chips lb-edge-x" role="group" aria-label="Genres">
+      {genres.map((g, i) => <span class:list={["ex-edge__chip", { "is-on": i === 0 }]}>{g}</span>)}
+    </div>
+    <ol class="ex-edge__list lb-edge" aria-label="Songs">
+      {
+        songs.map(([title, artist]) => (
+          <li>
+            <b>{title}</b>
+            <span>{artist}</span>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+  <slot />
+</div>
+
+<style>
+  .ex-edge {
+    position: relative;
+    height: 380px;
+    display: grid;
+    /* No wider than the page: the chips don't wrap, and would widen it */
+    grid-template-columns: minmax(0, 1fr);
+    place-items: center;
+    border-radius: 20px;
+    isolation: isolate;
+  }
+  /* On the landing: the card's height and corners, the glass a little higher, its hint under it */
+  .ex-edge--card {
+    height: var(--mdemo-height);
+    place-items: start center;
+    padding-top: 28px;
+    border-radius: var(--radius);
+  }
+  .ex-edge--card .ex-edge__card { height: 230px; }
+  .ex-edge__card {
+    width: min(340px, calc(100% - 32px));
+    height: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 0 0;
+    border-radius: 26px;
+    color: var(--ink);
+  }
+  /* Scrolls sideways; its sides fade out with chips past them */
+  .ex-edge__chips {
+    flex: none;
+    display: flex;
+    gap: 6px;
+    padding: 0 14px 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    --lb-edge-size: 20px;
+  }
+  .ex-edge__chip {
+    flex: none;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: color-mix(in srgb, currentColor 9%, transparent);
+    font-size: 13px;
+  }
+  .ex-edge__chip.is-on { background: var(--ink); color: var(--on-ink); }
+  /* Scrolls; its top and bottom fade out with songs past them */
+  .ex-edge__list {
+    flex: 1;
+    min-height: 0;
+    margin: 0;
+    padding: 0 18px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    list-style: none;
+  }
+  .ex-edge__list li {
+    display: grid;
+    gap: 1px;
+    padding: 10px 0;
+    border-top: 1px solid rgb(127 127 127 / 0.18);
+    font-size: 15px;
+  }
+  .ex-edge__list li:first-child { border-top: 0; }
+  .ex-edge__list span { color: var(--ink-2); font-size: 13px; }
+</style>

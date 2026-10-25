@@ -109,7 +109,7 @@ To flow a control into a panel of the same glass, use [Morph](/morph). It works 
 
 <Section id="classes" title="Classes">
 
-`lb` is the material. `lb-clear`, `lb-tinted` and `lb-lens` change its look. `lb-highlight`, `lb-swell` and `lb-stretch` react to presses, and `lb-interactive` turns on all three. Combine them freely.
+`lb` is the material. `lb-clear`, `lb-tinted` and `lb-lens` change its look. `lb-edge` and `lb-edge-x` fade the edges of what scrolls: see [Scroll Edge](/edge). `lb-highlight`, `lb-swell` and `lb-stretch` react to presses, and `lb-interactive` turns on all three. Combine them freely.
 
 <ClassTiles />
 
@@ -296,7 +296,7 @@ Larger glass swells and stretches less, moves slower and bounces less. `--lb-swe
 <Row>
 <Cell title="Stretch">
 
-Writes only `transform`, once per frame, without reading layout. Your own transform is kept and the stretch is added after it; your inline `transform` and `will-change` are restored at rest. Stretch sets `touch-action: none` and disables text selection on the element.
+Writes only `transform`, once per frame, without reading layout. Your own transform is kept and the stretch is added after it; your inline `transform` and `will-change` are restored at rest. Stretch sets `touch-action: none` and disables text selection on the element, and while it's pulled no text on the page is selected either.
 
 </Cell>
 <Cell title="Release outside">
@@ -380,6 +380,12 @@ export function Toolbar() {
 
 </Section>
 
+<Section id="edges" title="Scroll edges">
+
+Content that scrolls can fade out toward its edges, as under the bars in iOS: `lb-edge` and `lb-edge-x` on the element that scrolls. They come with this stylesheet and don't need glass; they have [a page of their own](/edge).
+
+</Section>
+
 <Section id="api" title="API">
 
 The functions behind press and melt. What each entry exports is listed under [Entries](#entries).
@@ -419,7 +425,7 @@ group.destroy();
 
 <Section id="support" title="Browser support">
 
-Any browser with `backdrop-filter`, `color-mix()` and CSS `pow()`. Without `@property` (Firefox before 128) the glass still renders, but some settings inherit into nested glass and the press highlight doesn't fade. Groups also need `clip-path: path()`, `mask` with an inline SVG, and Canvas 2D. The JavaScript is ESM targeting ES2022.
+Any browser with `backdrop-filter`, `color-mix()` and CSS `pow()`. Without `@property` (Firefox before 128) the glass still renders, but some settings inherit into nested glass and the press highlight doesn't fade. Groups also need `clip-path: path()`, `mask` with an inline SVG, and Canvas 2D. The JavaScript is ESM targeting ES2022. [Scroll edges](/edge) need scroll-driven animations (Chrome 115, Safari 26); elsewhere there are none.
 
 </Section>
 
