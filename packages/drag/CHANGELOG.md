@@ -1,5 +1,12 @@
 # @fluidkit/drag
 
+## 1.2.1
+
+### Patch Changes
+
+- 4bfcfcc: A pointer catches the element on its way only while it visibly moves (more than 2px from where it's headed, or faster than 40px/s). In the last of a spring's tail it's put in place instead: a finger on a sheet that has as good as stopped scrolls its list with the list's own momentum, where it used to be caught and scroll the list without any.
+- 4bfcfcc: A finger dragging along one axis keeps the drag when it strays across: the page no longer starts scrolling mid-drag (Safari did, and took the pointer). A gesture that sets off across the axis still scrolls the page.
+
 ## 1.2.0
 
 ### Minor Changes
