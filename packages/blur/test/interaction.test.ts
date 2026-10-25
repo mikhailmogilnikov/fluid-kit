@@ -302,6 +302,20 @@ describe("installPress", () => {
     pointer(el, "pointerup", 125, 10);
   });
 
+  it("holds the page's text selection while it's pressed to stretch, not while it only lights", () => {
+    const root = document.documentElement.style;
+    const stretchy = glass("lb-stretch");
+    stretchy.style.setProperty("--lb-stretch", "2");
+    pointer(stretchy, "pointerdown", 50, 20);
+    expect(root.userSelect).toBe("none");
+    pointer(stretchy, "pointerup", 50, 20);
+    expect(root.userSelect).toBe("");
+    const light = glass("lb-highlight");
+    pointer(light, "pointerdown", 50, 20);
+    expect(root.userSelect).toBe("");
+    pointer(light, "pointerup", 50, 20);
+  });
+
   it("stretches toward the drag and restores the transform", () => {
     const el = glass("lb-stretch");
     el.style.setProperty("--lb-stretch", "2");

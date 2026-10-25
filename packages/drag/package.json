@@ -44,7 +44,7 @@
     "build": "vp pack",
     "dev": "vp pack --watch",
     "check-types": "tsc --noEmit",
-    "test": "vp test run --passWithNoTests",
+    "test": "vp test run",
     "prepack": "pnpm build",
     "prepublishOnly": "pnpm check-types && pnpm test"
   },

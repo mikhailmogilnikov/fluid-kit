@@ -247,6 +247,16 @@ describe("createIndicator", () => {
       expect(indicator.current).toBeNull();
     });
 
+    it("holds the page's text selection while a press goes across the items", () => {
+      const scene = menu();
+      create(scene, { trigger: "press" });
+      const root = document.documentElement.style;
+      pointer(scene.items[0], "pointerdown", 100, 20);
+      expect(root.userSelect).toBe("none");
+      pointer(document.body, "pointerup", 100, 20);
+      expect(root.userSelect).toBe("");
+    });
+
     it("follows a mouse press out of the container and back", () => {
       const scene = menu();
       const indicator = create(scene, { trigger: "press" });
