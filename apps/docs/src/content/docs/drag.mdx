@@ -439,12 +439,12 @@ The spring it settles on starts at the pointer's speed. The default has no bounc
 <Row>
 <Cell title="Starting">
 
-A drag starts once the pointer has moved 4px (8px for a finger), so a tap stays a tap. Along one axis, a pointer that moves across it first isn't the drag's: a finger scrolling a list past a row that swipes sideways scrolls. Caught on its way, it stops under the pointer and is dragged from there; let go without being moved, it goes on where it was going and the tap is a click, so a switch tapped twice quickly flips back. In nested handles, such as rows that swipe inside a sheet, the innermost drag that starts has the pointer, alone.
+A drag starts once the pointer has moved 4px (8px for a finger), so a tap stays a tap. Along one axis, a pointer that moves across it first isn't the drag's: a finger scrolling a list past a row that swipes sideways scrolls. Caught on its way, it stops under the pointer and is dragged from there; let go without being moved, it goes on where it was going and the tap is a click, so a switch tapped twice quickly flips back. Only while it visibly moves: in the last of its settling it's put in place, so a finger on a sheet that has as good as stopped scrolls its list, with the list's momentum. In nested handles, such as rows that swipe inside a sheet, the innermost drag that starts has the pointer, alone.
 
 </Cell>
 <Cell title="Touch">
 
-The handle's `touch-action` is set so the browser keeps what the drag doesn't take: `pan-y` for `x`, `pan-x` for `y`, and pinch-zoom; `none` for `both`. A gesture the browser takes all the same ends the drag, and it settles from where it is. With a `scroll` area the handle's `touch-action` is left alone: fingers are followed by their touch events, which stop the browser's scroll when the drag takes them.
+The handle's `touch-action` is set so the browser keeps what the drag doesn't take: `pan-y` for `x`, `pan-x` for `y`, and pinch-zoom; `none` for `both`. Once a drag has a finger, the page doesn't scroll under it, even when the finger strays across the axis. A gesture the browser takes all the same ends the drag, and it settles from where it is. With a `scroll` area the handle's `touch-action` is left alone: fingers are followed by their touch events, which stop the browser's scroll when the drag takes them.
 
 </Cell>
 </Row>

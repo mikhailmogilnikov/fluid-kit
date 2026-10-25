@@ -136,6 +136,13 @@ const NO_DRAG = "input, textarea, select, [contenteditable]:not([contenteditable
 const DRAGGING = "data-dragging";
 /** Where it's done: a quarter of a pixel */
 const PRECISION = 0.25;
+/**
+ * A pointer catches it on its way only while it visibly moves: farther than this from where it's
+ * headed, px, or faster than this, px/s. In the last of a spring's tail it's put there instead, so
+ * a finger on a sheet that has as good as stopped scrolls its list, with the list's own momentum
+ */
+const CATCH_DISTANCE = 2;
+const CATCH_SPEED = 40;
 const ZERO: Readonly<DragPoint> = Object.freeze({ x: 0, y: 0 });
 
 /** How far a pull of `over` px past an edge shows, for an element `size` px long (iOS's curve) */
@@ -424,6 +431,18 @@ export function createDrag(options: DragOptions): Drag {
     return dt > 0 ? { x: (b.x - a.x) / dt, y: (b.y - a.y) / dt } : { ...ZERO };
   };
 
+  /**
+   * Whether it's on its way, to be caught: moving visibly. Moving still, but as good as there, it's
+   * put there now, and a pointer down finds it at rest
+   */
+  const inFlight = () => {
+    if (!moving || dragging) return moving;
+    const far = Math.hypot(goal.x - position.x, goal.y - position.y);
+    if (far > CATCH_DISTANCE || Math.hypot(velocity.x, velocity.y) > CATCH_SPEED) return true;
+    settle(goal, ZERO, true);
+    return false;
+  };
+
   /** A pointer goes down on the handle: followed from here */
   const press = (input: Input, viaTouch: boolean) => {
     pointer = {
@@ -440,7 +459,7 @@ export function createDrag(options: DragOptions): Drag {
     };
     if (!viaTouch) listen(true);
     // Caught on its way: it stops under the pointer
-    if (moving) begin(input, false);
+    if (inFlight()) begin(input, false);
   };
 
   const move = (input: Input) => {
@@ -603,7 +622,7 @@ export function createDrag(options: DragOptions): Drag {
     const inArea = !!area?.contains(t.target as Node);
     touch = { id: t.identifier, inArea, mode: "undecided", x0: t.clientX, y0: t.clientY, last: along };
     // Caught on its way: held, as any pointer catches it
-    if (moving) {
+    if (inFlight()) {
       touch.mode = "drag";
       press(touchInput(t, e.timeStamp), true);
     }
@@ -669,7 +688,17 @@ export function createDrag(options: DragOptions): Drag {
     if (pointer) e.preventDefault();
   };
 
+  /**
+   * A finger the drag has: the page doesn't scroll under it. `touch-action` leaves the other axis to
+   * the browser for a gesture that sets off that way, but Safari starts a scroll mid-drag too, as
+   * soon as the finger strays across, and takes the pointer
+   */
+  const holdScroll = (e: TouchEvent) => {
+    if (pointer?.started && !pointer.viaTouch && e.cancelable) e.preventDefault();
+  };
+
   handle.addEventListener("pointerdown", down);
+  handle.addEventListener("touchmove", holdScroll, { passive: false });
   handle.addEventListener("dragstart", nativeDrag);
 
   /** Its snap points or bounds moved: it follows, to the same point, or within them */
@@ -737,6 +766,7 @@ export function createDrag(options: DragOptions): Drag {
       resized.disconnect();
       win.removeEventListener("resize", relayout);
       handle.removeEventListener("pointerdown", down);
+      handle.removeEventListener("touchmove", holdScroll);
       handle.removeEventListener("dragstart", nativeDrag);
       for (const el of touched) {
         el.removeEventListener("touchstart", touchStart);
