@@ -1,0 +1,259 @@
+---
+package: "@fluidkit/lift"
+name: Lift
+order: 5
+description: "A long press lifts any element above everything, the page dimmed and blurred behind it, and opens your menu beside it: iOS's context menu, for the web."
+intro: "Held for a moment, any element lifts above everything, the page dimmed and blurred behind it, and your menu opens beside it; the same finger slides onto an item to choose it. iOS's context menu, for the web; with <a href=\"/blur\">Liquid Blur</a>, a glass menu."
+---
+
+import Section from "../../components/docs/Section.astro";
+import Rows from "../../components/docs/Rows.astro";
+import Row from "../../components/docs/Row.astro";
+import Cell from "../../components/docs/Cell.astro";
+import Steps from "../../components/docs/Steps.astro";
+import Step from "../../components/docs/Step.astro";
+import Install from "../../components/docs/Install.astro";
+import Example from "../../components/docs/Example.astro";
+import LiftExample from "../../components/LiftExample.astro";
+
+<Section id="start" title="Get started">
+
+A lift takes an element of yours and a menu of yours. Held for half a second, or right clicked, the element rises above everything in a modal layer, the rest of the page dimmed and blurred, and the menu opens under it, or over it with no room under. The menu is yours from the markup up: Lift places it, opens it and closes it.
+
+<Steps>
+<Step>
+
+**Install.**
+
+<Install pkg="@fluidkit/lift" />
+
+</Step>
+<Step>
+
+**Have a menu, hidden**, anywhere in the page. Its items are its buttons, links and `role="menuitem"` elements.
+
+```html
+<img class="photo" src="…" alt="…" tabindex="0" />
+
+<div class="menu" role="menu" aria-label="Photo" hidden>
+  <button role="menuitem">Copy</button>
+  <button role="menuitem">Share</button>
+  <button role="menuitem">Delete</button>
+</div>
+```
+
+</Step>
+<Step>
+
+**Create the lift** after the elements are in the DOM.
+
+```ts
+import { createLift } from "@fluidkit/lift";
+
+const lift = createLift({
+  element: document.querySelector(".photo")!,
+  menu: document.querySelector(".menu")!,
+  onSelect: (item) => console.log(item.textContent),
+});
+
+// On unmount:
+// lift.destroy();
+```
+
+</Step>
+</Steps>
+
+</Section>
+
+<Section id="examples" title="Examples">
+
+### Photos
+
+Hold a photo, or right click it. It gives a little while it's held (`data-lifting`), then lifts, and the menu opens under it, or over it near the bottom. Keep the finger down and slide onto an item to choose it as you let go; the highlight is an [Indicator](/indicator), moved by `onHighlight`. Six photos share one menu.
+
+<Example>
+<LiftExample kind="photos" />
+
+<Fragment slot="js">
+
+```ts
+import "@fluidkit/blur/style.css";
+import { createIndicator } from "@fluidkit/indicator";
+import { createLift } from "@fluidkit/lift";
+
+const menu = document.querySelector<HTMLElement>(".menu")!;
+const highlight = createIndicator({ container: menu, indicator: menu.querySelector(".menu__highlight")! });
+
+for (const photo of document.querySelectorAll<HTMLElement>(".photo")) {
+  createLift({
+    element: photo,
+    menu,
+    // The finger that lifted it slides over the items: the highlight follows
+    onHighlight: (item) => highlight.to(item),
+    onClose: () => highlight.to(null, { instant: true }),
+  });
+}
+```
+
+</Fragment>
+<Fragment slot="css">
+
+```css
+.photo { border-radius: 14px; user-select: none; transition: scale 0.4s; }
+/* Held: it gives a little before it lifts */
+.photo[data-lifting] { scale: 0.96; }
+
+/* `hidden` keeps it hidden until it's lifted: a display of its own would undo it */
+.menu[hidden] { display: none; }
+.menu { width: 230px; display: grid; padding: 6px; border-radius: 24px; }
+```
+
+</Fragment>
+</Example>
+
+### A message
+
+A chat bubble lifts with a row of reactions over its actions: the menu is one element, so it can hold any layout. A reaction chosen lands on the bubble, from `onSelect`.
+
+<Example>
+<LiftExample kind="message" />
+
+<Fragment slot="html">
+
+```html
+<div class="bubble" tabindex="0">Yes! 8pm at the usual place</div>
+
+<div class="stack" role="menu" aria-label="Message" hidden>
+  <div class="reactions lb">
+    <button role="menuitem" data-reaction="❤️">❤️</button>
+    …
+  </div>
+  <div class="menu lb">
+    <button role="menuitem">Reply</button>
+    …
+  </div>
+</div>
+```
+
+</Fragment>
+<Fragment slot="js">
+
+```ts
+createLift({
+  element: bubble,
+  menu: stack,
+  onSelect: (item) => {
+    if (item.dataset.reaction) bubble.dataset.reaction = item.dataset.reaction;
+  },
+});
+```
+
+</Fragment>
+</Example>
+
+### An app icon
+
+Icons on a home screen, each with quick actions. A copy of the icon is what lifts, dressed as it's drawn, so it looks the same out of its place.
+
+<Example>
+<LiftExample kind="icon" />
+</Example>
+
+</Section>
+
+<Section id="options" title="Options">
+
+`createLift(options: LiftOptions): Lift`
+
+| Option | Meaning |
+| --- | --- |
+| `element: HTMLElement` | What's held and lifted |
+| `menu?: HTMLElement` | Your menu, opened beside it; hidden otherwise (`hidden`). Without one, only the element is lifted |
+| `items?: string` | Its items, as a selector in the menu: `[role="menuitem"], button, a[href]` by default |
+| `preview?: HTMLElement \| (element) => HTMLElement` | What's lifted instead of a copy: something live, or a bigger preview, as iOS shows |
+| `delay?: number` | How long a press is held, ms: `500` by default |
+| `scale?: number` | How much bigger it's lifted: `1.04` by default |
+| `dim?: number` | How dark the page goes behind it, 0 to 1: `0.2` by default |
+| `blur?: number` | How blurred the page goes behind it, px: `12` by default |
+| `placement?: "auto" \| "below" \| "above"` | Where the menu goes: by the room there, `auto` by default |
+| `spring?: SpringParams` | The spring it rises on: `defaultLiftSpring` by default. As in [core](/core#spring) |
+| `onOpen?: () => void` | It's lifting |
+| `onClose?: () => void` | It's closed and back in place |
+| `onHighlight?: (item) => void` | The finger that lifted it is over this item, or `null` off them |
+| `onSelect?: (item) => void` | This item was chosen, by a click, a key or a finger let go on it; the menu closes after |
+
+</Section>
+
+<Section id="api" title="API">
+
+| Member | Meaning |
+| --- | --- |
+| `opened` | Lifted, its menu open |
+| `open()` | Lifts it and opens the menu, its first item focused: for a button that opens it, say |
+| `close()` | Settles it back and closes the menu |
+| `destroy()` | Closes it at once and removes its listeners. Later calls do nothing |
+
+</Section>
+
+<Section id="how" title="How it works">
+
+<Rows>
+<Row>
+<Cell title="The press">
+
+Held still for `delay`, it lifts; moved more than 8px, or taken by a scroll, it doesn't. While it's held the element is marked `data-lifting` and no text on the page is selected; iOS shows no callout. A right click, or the menu key on a focused element, opens it at once. The click a long press would end in is dropped.
+
+</Cell>
+<Cell title="A copy, lifted">
+
+What lifts is a copy of the element, every computed style written on it, so it looks the same out of its place; the element itself is hidden where it is and keeps its room. Moving it would reload a frame and stop a video. For something live, give `preview` an element of your own.
+
+</Cell>
+</Row>
+<Row>
+<Cell title="A modal layer">
+
+They sit in a modal `<dialog>`, in the top layer, over any `overflow`, `z-index` and transform of the page's: the rest is inert, the page doesn't scroll under it, Escape closes it and focus goes back. The dialog is the dim and the blur; the menu is moved into it while it's open and put back after, its listeners kept.
+
+</Cell>
+<Cell title="The same finger">
+
+The finger that lifted it can stay down and slide onto an item: each item it's over is marked `data-highlighted` and given to `onHighlight`; let go there, the item is clicked. Let go without moving, the menu stays open for a tap. Opened by a key, its first item is focused.
+
+</Cell>
+</Row>
+<Row>
+<Cell title="Placement">
+
+Under the element, or over it with no room under; on the element's side of the screen, kept 12px in from the edges. With room neither way, the element moves up for the menu, as in iOS.
+
+</Cell>
+<Cell title="Springs">
+
+The copy rises from where the element is drawn (given a little under the press, say) to a little bigger, the dim and the menu coming in with it. Closing, it settles exactly back on the element before the element is shown. With reduced motion it's all at once.
+
+</Cell>
+</Row>
+</Rows>
+
+</Section>
+
+<Section id="glass" title="With Liquid Blur">
+
+The menu can be glass (`lb`): in the dialog it blurs the dimmed page under it. A menu's highlight can be an [Indicator](/indicator): under a mouse it follows by itself, and `onHighlight` moves it for the finger that lifted the menu.
+
+</Section>
+
+<Section id="support" title="Browser support">
+
+Any browser with `<dialog>` and its `showModal()`, Pointer Events and `backdrop-filter`.
+
+</Section>
+
+<Section id="limitations" title="Limitations">
+
+- A copy is a picture of the element as it was: a video in it shows a frame, a form shows its values as they were. Use `preview` for something live.
+- A copy's pseudo-elements are dressed only if the page's rules for them still match it out of its place.
+- One lift is open at a time: the dialog is modal.
+
+</Section>

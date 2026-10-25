@@ -7,6 +7,7 @@ import MorphPreview from "../components/MorphPreview.astro";
 import IndicatorExample from "../components/IndicatorExample.astro";
 import DragExample from "../components/DragExample.astro";
 import EdgeExample from "../components/EdgeExample.astro";
+import LiftExample from "../components/LiftExample.astro";
 import Footer from "../components/Footer.astro";
 import Icon from "../components/Icon.astro";
 import Hint from "../components/Hint.astro";
@@ -88,7 +89,19 @@ const REPO = "https://github.com/mikhailmogilnikov/fluid-kit";
           </div>
         </article>
 
-        <article class="lib lib--wide reveal" style="--d: 320ms">
+        <article class="lib reveal" style="--d: 320ms">
+          <LiftExample kind="photos" card>
+            <Hint text="hold it" light style="top: 276px; left: 50%" />
+          </LiftExample>
+          <div class="lib__body">
+            <a class="lib__head" href="/lift">
+              <b>Lift</b><code>@fluidkit/lift</code><Icon name="arrow" size={16} />
+            </a>
+            <p>A long press lifts anything above the page, blurred behind it, and opens your menu beside it.</p>
+          </div>
+        </article>
+
+        <article class="lib reveal" style="--d: 400ms">
           <EdgeExample card>
             <Hint text="scroll it" light style="top: 266px; left: 50%" />
           </EdgeExample>

@@ -1486,8 +1486,6 @@ code {
   gap: 20px;
   margin-top: 40px;
 }
-/* The fifth, under the four: across both */
-.lib--wide { grid-column: 1 / -1; }
 .lib {
   display: grid;
   align-content: start;
