@@ -68,6 +68,10 @@
  *   --lb-stretch-axis   which way it stretches: x, y or both (the default), e.g. x for a
  *                       switch's thumb that stays in its track.
  *   --lb-edge-size      how far a scroll edge fades: 28px by default.
+ *   --lb-edge-start, --lb-edge-end
+ *                       the same for one side (top or left, bottom or right); --lb-edge-size
+ *                       unless set. 0px: no edge on that side.
+ *   --lb-edge-strength  how transparent the content gets at the edge: 1 (all) by default.
  * Everything resolves on the glass itself, so it can be set on any ancestor.
  * data-lb-material="solid" on any ancestor makes glass opaque.
  *
@@ -494,26 +498,30 @@
   /* ── Scroll edges ── */
 
   /*
-   * The content fades toward the edges, on a smooth curve, transparent at the edge itself, so where
-   * it's cut off it's never seen. Each fade is as long as the content past its edge, up to
-   * --lb-edge-size: none at either end of the scroll, so it covers nothing there.
+   * The content fades toward the edges, on a smooth curve, transparent at the edge itself (as much
+   * as --lb-edge-strength), so where it's cut off it's never seen. Each fade is as long as the
+   * content past its edge, up to its side's size: none at either end of the scroll, so it covers
+   * nothing there. A side at 0px has none at all.
    */
   :is(.lb-edge, .lb-edge-x) {
     --_lb-edge-to: to bottom;
-    --_lb-edge-a: calc(var(--lb-edge-size) * var(--_lb-edge-start, 0));
-    --_lb-edge-b: calc(var(--lb-edge-size) * var(--_lb-edge-end, 0));
+    --_lb-edge-s1: var(--lb-edge-start, var(--lb-edge-size));
+    --_lb-edge-s2: var(--lb-edge-end, var(--lb-edge-size));
+    --_lb-edge-a: calc(var(--_lb-edge-s1) * var(--_lb-edge-start, 0));
+    --_lb-edge-b: calc(var(--_lb-edge-s2) * var(--_lb-edge-end, 0));
+    --_lb-edge-k: var(--lb-edge-strength, 1);
     --_lb-edge-mask: linear-gradient(
       var(--_lb-edge-to),
-      transparent 0,
-      rgb(0 0 0 / 0.4375) calc(var(--_lb-edge-a) * 0.25),
-      rgb(0 0 0 / 0.75) calc(var(--_lb-edge-a) * 0.5),
-      rgb(0 0 0 / 0.9375) calc(var(--_lb-edge-a) * 0.75),
+      rgb(0 0 0 / calc(1 - var(--_lb-edge-k))) 0,
+      rgb(0 0 0 / calc(1 - var(--_lb-edge-k) * 0.5625)) calc(var(--_lb-edge-a) * 0.25),
+      rgb(0 0 0 / calc(1 - var(--_lb-edge-k) * 0.25)) calc(var(--_lb-edge-a) * 0.5),
+      rgb(0 0 0 / calc(1 - var(--_lb-edge-k) * 0.0625)) calc(var(--_lb-edge-a) * 0.75),
       #000 var(--_lb-edge-a),
       #000 calc(100% - var(--_lb-edge-b)),
-      rgb(0 0 0 / 0.9375) calc(100% - var(--_lb-edge-b) * 0.75),
-      rgb(0 0 0 / 0.75) calc(100% - var(--_lb-edge-b) * 0.5),
-      rgb(0 0 0 / 0.4375) calc(100% - var(--_lb-edge-b) * 0.25),
-      transparent 100%
+      rgb(0 0 0 / calc(1 - var(--_lb-edge-k) * 0.0625)) calc(100% - var(--_lb-edge-b) * 0.75),
+      rgb(0 0 0 / calc(1 - var(--_lb-edge-k) * 0.25)) calc(100% - var(--_lb-edge-b) * 0.5),
+      rgb(0 0 0 / calc(1 - var(--_lb-edge-k) * 0.5625)) calc(100% - var(--_lb-edge-b) * 0.25),
+      rgb(0 0 0 / calc(1 - var(--_lb-edge-k))) 100%
     );
     -webkit-mask-image: var(--_lb-edge-mask);
     mask-image: var(--_lb-edge-mask);
@@ -527,8 +535,8 @@
         lb-edge-end linear both;
       animation-timeline: scroll(self block), scroll(self block);
       animation-range:
-        0 var(--lb-edge-size),
-        calc(100% - var(--lb-edge-size)) 100%;
+        0 var(--_lb-edge-s1),
+        calc(100% - var(--_lb-edge-s2)) 100%;
     }
     .lb-edge-x { animation-timeline: scroll(self inline), scroll(self inline); }
   }
