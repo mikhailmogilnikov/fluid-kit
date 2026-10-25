@@ -1,6 +1,6 @@
 {
   "name": "@fluidkit/drag",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Drag one element with rubber-band edges and snap points, let go on a spring that keeps the finger's speed: sheets, swipe actions, switches.",
   "keywords": [
     "drag",

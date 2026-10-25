@@ -1,5 +1,13 @@
 # @fluidkit/drag
 
+## 1.2.2
+
+### Patch Changes
+
+- e5f6f44: No text on the page is selected while a gesture holds a pointer: a drag (from the pointer going down on the handle until it's let go, given up or not), glass pressed to stretch, and a press dragged across an indicator's items.
+- Updated dependencies [835066d]
+  - @fluidkit/core@1.2.0
+
 ## 1.2.1
 
 ### Patch Changes

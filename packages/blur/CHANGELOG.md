@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.2.0
+
+### Minor Changes
+
+- 3e6e815: Scroll edges: `lb-edge` on an element that scrolls fades its content out toward its top and bottom, as under the bars in iOS; `lb-edge-x`, toward its sides. An edge shows only while there's content past it, so at either end of the scroll its edge is gone and covers nothing. Pure CSS, a `mask` driven by scroll-driven animations; `--lb-edge-size` (28px) sets how far it reaches. Without scroll-driven animations there are no edges.
+
+### Patch Changes
+
+- e5f6f44: No text on the page is selected while a gesture holds a pointer: a drag (from the pointer going down on the handle until it's let go, given up or not), glass pressed to stretch, and a press dragged across an indicator's items.
+- Updated dependencies [835066d]
+  - @fluidkit/core@1.2.0
+
 ## 1.1.0
 
 ### Minor Changes

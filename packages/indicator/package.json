@@ -1,6 +1,6 @@
 {
   "name": "@fluidkit/indicator",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "One element that flies onto whatever is hovered, pressed or chosen: menus, tabs, segmented controls. On interruptible springs, blurred by its own speed.",
   "keywords": [
     "fluidkit",
