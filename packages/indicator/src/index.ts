@@ -10,6 +10,7 @@ import {
   radiiOf,
   still,
   swallowClick,
+  holdSelection,
   type Radii,
   type SpringParams,
 } from "@fluidkit/core";
@@ -438,6 +439,9 @@ export function createIndicator({
     win.clearTimeout(showTimer);
     win.clearTimeout(backTimer);
     press = { id: e.pointerId, down: hit(e.clientX, e.clientY), x: e.clientX, y: e.clientY, shown: false };
+    // Dragged across the items, it doesn't select the page's text on the way
+    unhold?.();
+    unhold = holdSelection(doc);
     session = "press";
     const show = () => {
       if (!press) return;
@@ -452,8 +456,13 @@ export function createIndicator({
     doc.addEventListener("pointercancel", onUp, true);
     doc.addEventListener("dragstart", cancel, true);
   };
+  /** Lets go of the page's text selection, held while a press goes across the items */
+  let unhold: (() => void) | null = null;
+
   /** The press is over: listeners off, its pending show too */
   const stop = () => {
+    unhold?.();
+    unhold = null;
     doc.removeEventListener("pointermove", onPressMove, true);
     doc.removeEventListener("pointerup", onUp, true);
     doc.removeEventListener("pointercancel", onUp, true);

@@ -1,4 +1,4 @@
-import { SpringAnimator, px, swallowClick, type SpringParams } from "@fluidkit/core";
+import { SpringAnimator, holdSelection, px, swallowClick, type SpringParams } from "@fluidkit/core";
 
 /**
  * Drag: one element moved by a pointer, along one axis or both, as iOS moves its sheets, the rows
@@ -348,17 +348,29 @@ export function createDrag(options: DragOptions): Drag {
       win.addEventListener("pointermove", movedPointer, true);
       win.addEventListener("pointerup", upPointer, true);
       win.addEventListener("pointercancel", cancelledPointer, true);
-      doc.addEventListener("selectstart", unselect, true);
       return;
     }
     win.removeEventListener("pointermove", movedPointer, true);
     win.removeEventListener("pointerup", upPointer, true);
     win.removeEventListener("pointercancel", cancelledPointer, true);
-    doc.removeEventListener("selectstart", unselect, true);
   };
 
-  const unselect = (e: Event) => {
-    if (pointer?.started) e.preventDefault();
+  /**
+   * No text is selected on the page while a pointer is down on the handle, dragging or not: given up
+   * across its axis too, it's held until the pointer is let go
+   */
+  let unhold: (() => void) | null = null;
+  const hold = () => {
+    if (unhold) return;
+    unhold = holdSelection(doc);
+    win.addEventListener("pointerup", letGo, true);
+    win.addEventListener("pointercancel", letGo, true);
+  };
+  const letGo = () => {
+    win.removeEventListener("pointerup", letGo, true);
+    win.removeEventListener("pointercancel", letGo, true);
+    unhold?.();
+    unhold = null;
   };
 
   /**
@@ -418,7 +430,6 @@ export function createDrag(options: DragOptions): Drag {
       }
     }
     element.setAttribute(DRAGGING, "");
-    doc.getSelection()?.removeAllRanges();
     onStart?.();
   };
 
@@ -445,6 +456,7 @@ export function createDrag(options: DragOptions): Drag {
 
   /** A pointer goes down on the handle: followed from here */
   const press = (input: Input, viaTouch: boolean) => {
+    hold();
     pointer = {
       id: input.id,
       touch: input.touch,
@@ -613,6 +625,7 @@ export function createDrag(options: DragOptions): Drag {
     if (e.touches.length > 1) {
       if (pointer?.viaTouch) cancel(pointer.id);
       touch = null;
+      letGo();
       return;
     }
     if (disabled || destroyed || pointer) return;
@@ -621,6 +634,8 @@ export function createDrag(options: DragOptions): Drag {
     const along = k === "y" ? t.clientY : t.clientX;
     const inArea = !!area?.contains(t.target as Node);
     touch = { id: t.identifier, inArea, mode: "undecided", x0: t.clientX, y0: t.clientY, last: along };
+    // Before it's decided too: a finger held still doesn't select text either
+    hold();
     // Caught on its way: held, as any pointer catches it
     if (inFlight()) {
       touch.mode = "drag";
@@ -672,6 +687,7 @@ export function createDrag(options: DragOptions): Drag {
       else release(touchInput(t, e.timeStamp));
     }
     touch = null;
+    letGo();
   };
 
   /** Where fingers are followed: the handle, and the area too if it isn't in the handle */
@@ -761,6 +777,8 @@ export function createDrag(options: DragOptions): Drag {
       if (destroyed) return;
       destroyed = true;
       if (pointer) finish(null);
+      touch = null;
+      letGo();
       spring.stop();
       unswallow();
       resized.disconnect();

@@ -1,4 +1,4 @@
-import { PART, SpringAnimator, type SpringParams } from "@fluidkit/core";
+import { PART, SpringAnimator, holdSelection, type SpringParams } from "@fluidkit/core";
 
 /**
  * Press behaviors for glass: `.lb-highlight`, `.lb-swell`, `.lb-stretch`, in any combination, or
@@ -387,7 +387,12 @@ export function installPress(root?: Document): () => void {
     return { spring, base, inlineTransform, inlineWillChange };
   };
 
+  /** Lets go of the page's text selection, held while glass is pressed to stretch */
+  let unhold: (() => void) | null = null;
+
   const release = (cancelled: boolean) => {
+    unhold?.();
+    unhold = null;
     win.clearTimeout(timer);
     win.cancelAnimationFrame(lightFrame);
     lightFrame = 0;
@@ -431,6 +436,8 @@ export function installPress(root?: Document): () => void {
     const along = win.getComputedStyle(el).getPropertyValue("--lb-stretch-axis").trim();
     const box = measure(el, stretch ? stretch.spring.values() : ZERO, scaleOf(el, stretch));
     if (!box.width || !box.height) return;
+    // Pulled around by the pointer, it doesn't select the page's text on the way
+    if (stretch) unhold = holdSelection(doc);
     const give = giveOf(box);
 
     press = {
