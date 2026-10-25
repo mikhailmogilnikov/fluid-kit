@@ -1,13 +1,16 @@
 ---
+import Icon from "./Icon.astro";
+
 /**
  * One of Drag's examples, live:
  *   - sheet: a glass sheet with three detents and a list that scrolls in it, one gesture for both
  *   - swipe: rows of a list swiped either way to their actions, or all the way to do the last one
  *   - switch: iOS-style switches, dragged or tapped
+ *   - slider: iOS-style sliders, a lens of a thumb that follows the pointer on a spring
  *   - pip: a video thrown into a corner, double-tapped or pinched to resize
  */
 interface Props {
-  kind: "sheet" | "swipe" | "switch" | "pip";
+  kind: "sheet" | "swipe" | "switch" | "slider" | "pip";
   /** As a library's card on the landing: the card's size and corners, and room for a hint (the slot) */
   card?: boolean;
 }
@@ -34,6 +37,10 @@ const toggles = [
   ["Wi-Fi", true],
   ["Bluetooth", false],
   ["Airplane Mode", false],
+] as const;
+const sliders = [
+  ["Volume", 0.6, "speaker", "volume"],
+  ["Brightness", 0.35, "sun-small", "sun"],
 ] as const;
 ---
 
@@ -119,6 +126,35 @@ const toggles = [
   }
 
   {
+    kind === "slider" && (
+      <div class="dx__sliders lb">
+        {sliders.map(([label, value, from, to]) => (
+          <div class="dx__slider-row">
+            <Icon name={from} size={18} />
+            <div
+              class="dx__slider"
+              role="slider"
+              tabindex="0"
+              aria-label={label}
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow={String(Math.round(value * 100))}
+              data-dx-slider
+              data-value={value}
+            >
+              <span class="dx__track" aria-hidden="true">
+                <span class="dx__fill" />
+              </span>
+              <span class="dx__knob lb lb-stretch" data-dx-knob />
+            </div>
+            <Icon name={to} size={20} />
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  {
     kind === "pip" && (
       <div class="dx__room" data-dx-area>
         <div class="dx__pip" role="img" aria-label="A video, playing" data-dx-pip>
@@ -144,6 +180,7 @@ const toggles = [
   }
   .dx--sheet { height: 460px; }
   .dx--switch { height: 300px; }
+  .dx--slider { height: 260px; }
   .dx--pip { height: 380px; }
   .dx--card {
     height: var(--mdemo-height);
@@ -369,6 +406,73 @@ const toggles = [
     scale: 1.45 1.5;
   }
 
+  /* iOS's slider: a thin track filled by its value (`--v`, 0 to 1, set as it moves), the thumb
+     in a taller box that's all grabbed */
+  .dx__sliders {
+    width: min(360px, calc(100% - 32px));
+    display: grid;
+    gap: 18px;
+    padding: 20px 18px;
+    border-radius: 26px;
+    color: var(--ink-2);
+  }
+  .dx__slider-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .dx__slider {
+    --knob: 34px;
+    position: relative;
+    flex: 1;
+    height: 28px;
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .dx__slider:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; border-radius: 999px; }
+  .dx__track {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 6px;
+    translate: 0 -50%;
+    overflow: clip;
+    border-radius: 999px;
+    background: rgb(120 120 128 / 0.32);
+  }
+  .dx__fill {
+    display: block;
+    /* By the value, from none at the minimum: its end is always under the thumb, which is clear
+       while it's held */
+    width: calc(var(--v, 0) * 100%);
+    height: 100%;
+    background: #007aff;
+  }
+  /* White glass at rest; held or dragged, a clear lens over the track that stretches along it only */
+  .dx__knob {
+    --lb-transparency: 0;
+    --lb-fill: #fff;
+    --lb-stretch: 0.5;
+    --lb-stretch-axis: x;
+    position: absolute;
+    top: 3px;
+    left: 0;
+    width: var(--knob);
+    height: 22px;
+    transition:
+      scale 0.35s var(--settle),
+      --lb-lens 0.3s var(--glide),
+      --lb-transparency 0.3s var(--glide);
+  }
+  .dx__slider:active .dx__knob,
+  .dx__knob[data-dragging] {
+    --lb-lens: 1;
+    --lb-transparency: 1;
+    scale: 1.4 1.45;
+  }
+
   /* A video, laid out in the top-left corner; the drag throws it into the others. Two sizes,
      double-tapped between or pinched; its corners follow its size */
   .dx__pip {
@@ -475,7 +579,61 @@ const toggles = [
       continue;
     }
 
+    if (scene.dataset.dx === "slider") {
+      for (const slider of scene.querySelectorAll<HTMLElement>("[data-dx-slider]")) sliderOf(slider);
+      continue;
+    }
+
     pip(scene, area!);
+  }
+
+  /**
+   * A slider: the thumb dragged along the track, its value where it is. It chases the pointer on a
+   * quick spring and stays where it's let go, no flick throwing it on; a tap on the track puts it
+   * there, the arrow keys step it
+   */
+  function sliderOf(slider: HTMLElement) {
+    const knob = slider.querySelector<HTMLElement>("[data-dx-knob]")!;
+    const travel = () => slider.clientWidth - knob.offsetWidth;
+    const show = (x: number) => {
+      const v = Math.min(1, Math.max(0, x / (travel() || 1)));
+      slider.style.setProperty("--v", String(v));
+      slider.setAttribute("aria-valuenow", String(Math.round(v * 100)));
+    };
+    const drag = createDrag({
+      element: knob,
+      handle: slider,
+      axis: "x",
+      bounds: () => ({ x: [0, travel()] }),
+      rubberband: 0.2,
+      // Where it's let go: a flick doesn't carry it on
+      deceleration: 0,
+      spring: { duration: 0.25, bounce: 0 },
+      follow: { duration: 0.12, bounce: 0 },
+      onMove: ({ x }) => show(x),
+      // Dragged: keys step from where it's let go
+      onStart: () => (sent = null),
+    });
+    /** Where a tap or a key sent it, so keys pressed quickly step on from there */
+    let sent: number | null = null;
+    const send = (x: number) => {
+      sent = Math.min(travel(), Math.max(0, x));
+      drag.to(sent);
+    };
+    drag.to(travel() * Number(slider.dataset.value), { instant: true });
+    // A tap on the track: there. A click that ends a drag is dropped
+    slider.addEventListener("click", (e) => {
+      const r = slider.getBoundingClientRect();
+      send(e.clientX - r.left - knob.offsetWidth / 2);
+    });
+    slider.addEventListener("keydown", (e) => {
+      const step = travel() / 20;
+      const at = sent ?? drag.position.x;
+      const to = { ArrowRight: at + step, ArrowUp: at + step, ArrowLeft: at - step, ArrowDown: at - step, Home: 0, End: travel() }[e.key];
+      if (to === undefined) return;
+      e.preventDefault();
+      send(to);
+    });
   }
 
   /**

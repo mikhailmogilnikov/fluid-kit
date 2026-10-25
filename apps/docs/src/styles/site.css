@@ -178,7 +178,12 @@ code {
 }
 .nav__links a {
   color: var(--ink-3);
+  white-space: nowrap;
   transition: color 0.15s;
+}
+/* Short of room for the links, the byline goes first */
+@media (max-width: 1000px) {
+  .brand__by { display: none; }
 }
 .nav__links a:hover { color: var(--ink); }
 

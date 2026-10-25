@@ -86,6 +86,16 @@ The list in [Drag's sheet](/drag#examples) has `lb-edge`: its places fade out un
 | `lb-edge` | The content fades out toward the top and bottom, for an element that scrolls up and down |
 | `lb-edge-x` | The same toward the left and right, for an element that scrolls sideways |
 | `--lb-edge-size` | How far the fade reaches, and how much scroll an edge comes in over: `28px` by default. Inherited, so it can be set on any ancestor |
+| `--lb-edge-start`, `--lb-edge-end` | The same for one side: the top (or left) and the bottom (or right). `--lb-edge-size` unless set; `0px` turns that side's edge off |
+| `--lb-edge-strength` | How transparent the content gets at the edge: `1`, all the way, by default; `0.5`, half |
+
+```css
+/* A chat: newest at the bottom, so only the top fades, and further */
+.messages { --lb-edge-start: 48px; --lb-edge-end: 0px; }
+
+/* Text that should stay a little readable under the edge */
+.notes { --lb-edge-strength: 0.6; }
+```
 
 </Section>
 
@@ -119,6 +129,5 @@ Any browser with scroll-driven animations and `@property`: Chrome and Edge 115, 
 <Section id="limitations" title="Limitations">
 
 - The element that scrolls loses its own `mask` and `animation` to the edges.
-- Both edges of an axis are the same size.
 
 </Section>
