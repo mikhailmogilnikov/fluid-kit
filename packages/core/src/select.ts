@@ -19,8 +19,9 @@ export const holdSelection = (doc: Document): (() => void) => {
       callout: style.getPropertyValue("-webkit-touch-callout"),
     };
     holds.set(doc, hold);
-    style.userSelect = "none";
+    // The prefixed one first: where it's an alias of `user-select`, writing it sets that too
     style.setProperty("-webkit-user-select", "none");
+    style.userSelect = "none";
     style.setProperty("-webkit-touch-callout", "none");
     doc.getSelection()?.removeAllRanges();
   }
@@ -32,8 +33,8 @@ export const holdSelection = (doc: Document): (() => void) => {
     const h = holds.get(doc);
     if (!h || --h.count > 0) return;
     holds.delete(doc);
-    style.userSelect = h.userSelect;
     style.setProperty("-webkit-user-select", h.webkit);
+    style.userSelect = h.userSelect;
     style.setProperty("-webkit-touch-callout", h.callout);
   };
 };
