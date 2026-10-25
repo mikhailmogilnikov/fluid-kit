@@ -32,6 +32,14 @@
  * restores it after.
  * For single controls, not containers: highlight lights a bar on any press inside it, and stretch
  * blocks scrolling and text selection in the whole subtree.
+ * Scroll edges, on any element that scrolls (not glass: they'd fade the glass too):
+ *   lb-edge       its content fades out toward its top and bottom edges, as under iOS bars,
+ *                 transparent where it's cut off. Each fade is as long as the content past its
+ *                 edge, up to --lb-edge-size: at the start of the scroll there's none at the top.
+ *   lb-edge-x     the same, left and right, for an element that scrolls sideways.
+ *                 Driven by the scroll itself (scroll-driven animations); where those aren't
+ *                 supported, there are no edges and nothing is faded. They use the element's
+ *                 `mask` and `animation`.
  * A disabled control (`:disabled`, `aria-disabled="true"`) isn't pressed: no light, swell or stretch.
  * Shape is plain border-radius; the default is a capsule.
  *
@@ -59,6 +67,7 @@
  *   --lb-stretch        stretch strength: 0 = off, 2 = default.
  *   --lb-stretch-axis   which way it stretches: x, y or both (the default), e.g. x for a
  *                       switch's thumb that stays in its track.
+ *   --lb-edge-size      how far a scroll edge fades: 28px by default.
  * Everything resolves on the glass itself, so it can be set on any ancestor.
  * data-lb-material="solid" on any ancestor makes glass opaque.
  *
@@ -111,6 +120,20 @@
   inherits: true;
   initial-value: 0.5;
 }
+/*
+ * How long each scroll edge's fade is, 0..1 of --lb-edge-size, by how far there's content past it;
+ * written by the scroll
+ */
+@property --_lb-edge-start {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+@property --_lb-edge-end {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
 @property --lb-lens {
   syntax: "<number>";
   inherits: true;
@@ -128,6 +151,7 @@
     --lb-depth: 0.5;
     --lb-stretch: 2;
     --lb-stretch-axis: both;
+    --lb-edge-size: 28px;
     --lb-tint: #007aff;
     --lb-tint-text: #ffffff;
     --lb-fill-light: #ffffff;
@@ -465,6 +489,57 @@
   }
   .lb-group[data-lb-melted] > .lb.lb-tinted:is(.lb-highlight, .lb-interactive) {
     background: var(--_highlight), var(--_fill);
+  }
+
+  /* ── Scroll edges ── */
+
+  /*
+   * The content fades toward the edges, on a smooth curve, transparent at the edge itself, so where
+   * it's cut off it's never seen. Each fade is as long as the content past its edge, up to
+   * --lb-edge-size: none at either end of the scroll, so it covers nothing there.
+   */
+  :is(.lb-edge, .lb-edge-x) {
+    --_lb-edge-to: to bottom;
+    --_lb-edge-a: calc(var(--lb-edge-size) * var(--_lb-edge-start, 0));
+    --_lb-edge-b: calc(var(--lb-edge-size) * var(--_lb-edge-end, 0));
+    --_lb-edge-mask: linear-gradient(
+      var(--_lb-edge-to),
+      transparent 0,
+      rgb(0 0 0 / 0.4375) calc(var(--_lb-edge-a) * 0.25),
+      rgb(0 0 0 / 0.75) calc(var(--_lb-edge-a) * 0.5),
+      rgb(0 0 0 / 0.9375) calc(var(--_lb-edge-a) * 0.75),
+      #000 var(--_lb-edge-a),
+      #000 calc(100% - var(--_lb-edge-b)),
+      rgb(0 0 0 / 0.9375) calc(100% - var(--_lb-edge-b) * 0.75),
+      rgb(0 0 0 / 0.75) calc(100% - var(--_lb-edge-b) * 0.5),
+      rgb(0 0 0 / 0.4375) calc(100% - var(--_lb-edge-b) * 0.25),
+      transparent 100%
+    );
+    -webkit-mask-image: var(--_lb-edge-mask);
+    mask-image: var(--_lb-edge-mask);
+  }
+  .lb-edge-x { --_lb-edge-to: to right; }
+
+  @supports (animation-timeline: scroll()) {
+    :is(.lb-edge, .lb-edge-x) {
+      animation:
+        lb-edge-start linear both,
+        lb-edge-end linear both;
+      animation-timeline: scroll(self block), scroll(self block);
+      animation-range:
+        0 var(--lb-edge-size),
+        calc(100% - var(--lb-edge-size)) 100%;
+    }
+    .lb-edge-x { animation-timeline: scroll(self inline), scroll(self inline); }
+  }
+
+  @keyframes lb-edge-start {
+    from { --_lb-edge-start: 0; }
+    to { --_lb-edge-start: 1; }
+  }
+  @keyframes lb-edge-end {
+    from { --_lb-edge-end: 1; }
+    to { --_lb-edge-end: 0; }
   }
 
   /* ── Accessibility ── */
