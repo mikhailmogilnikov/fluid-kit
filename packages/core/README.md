@@ -3,7 +3,7 @@
 What the [Fluid Kit](https://fluidkit.mogilnikov.dev) packages share: an interruptible,
 velocity-keeping spring every moving part runs on, boxes read as the browser draws them, and the
 DOM attributes they meet by. You get it with `@fluidkit/blur`, `@fluidkit/morph`,
-`@fluidkit/indicator` or `@fluidkit/drag`; install it on its own for the spring.
+`@fluidkit/indicator`, `@fluidkit/drag` or `@fluidkit/lift`; install it on its own for the spring.
 
 **[Documentation](https://fluidkit.mogilnikov.dev/core)** · [Changelog](CHANGELOG.md)
 

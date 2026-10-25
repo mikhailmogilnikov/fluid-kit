@@ -11,6 +11,7 @@ body:
         - "@fluidkit/morph"
         - "@fluidkit/indicator"
         - "@fluidkit/drag"
+        - "@fluidkit/lift"
         - "@fluidkit/core"
         - The docs site
     validations:
