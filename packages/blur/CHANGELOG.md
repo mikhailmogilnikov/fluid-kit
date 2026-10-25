@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.0
+
+### Minor Changes
+
+- 71fd814: Scroll edge options: `--lb-edge-start` and `--lb-edge-end` size one side's fade (the top or left, the bottom or right), `0px` turning that side's edge off; `--lb-edge-strength` sets how transparent the content gets at the edge, all the way (1) by default.
+
+### Patch Changes
+
+- Updated dependencies [c5ea523]
+  - @fluidkit/core@1.2.1
+
 ## 1.2.0
 
 ### Minor Changes
