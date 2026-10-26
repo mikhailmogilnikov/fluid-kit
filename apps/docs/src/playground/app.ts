@@ -231,6 +231,12 @@ const mark = (r: Result) => {
   if (link) link.dataset.check = !r.checked ? "none" : r.failures.length ? "fail" : "pass";
 };
 
+/** Every case, after every step: the page doesn't scroll sideways (a panel wider than a phone, say) */
+const sideways = () => {
+  const wide = document.documentElement.scrollWidth - document.documentElement.clientWidth;
+  return wide > 0 ? `the page scrolls sideways by ${wide}px` : null;
+};
+
 async function checkCase(id: string): Promise<Result> {
   open(id);
   // In sight: glass off screen draws nothing and isn't kept up to date (a group's melt), as on a
@@ -252,6 +258,7 @@ async function checkCase(id: string): Promise<Result> {
   const still = () => settle(mount, () => pending);
   if (!(await still())) failures.push("Start: never came to rest");
   verdict("Start", () => run.check?.(-1));
+  verdict("Start", sideways);
   for (let i = 0; i < meta.steps.length; i++) {
     const label = meta.steps[i];
     verdict(label, () => {
@@ -266,6 +273,7 @@ async function checkCase(id: string): Promise<Result> {
       continue;
     }
     verdict(label, () => run.check?.(i));
+    verdict(label, sideways);
   }
   const result = { id, checked, failures };
   results.set(id, result);

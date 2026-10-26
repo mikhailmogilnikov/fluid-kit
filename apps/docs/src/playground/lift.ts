@@ -321,6 +321,8 @@ export const lift: Record<string, Setup> = {
                   "the row's copy",
                   liftedOf()!.getBoundingClientRect(),
                   scaled(rows[at].getBoundingClientRect(), 1.04),
+                  // A list scrolled smoothly may rest between pixels, and Gecko rounds the row
+                  1.5,
                 )
               : "not lifted"
             : closed(root, menu),
