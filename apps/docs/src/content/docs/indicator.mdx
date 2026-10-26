@@ -322,7 +322,7 @@ Each item lends it its corners, circular and fitted as the browser draws them: a
 </Cell>
 <Cell title="Measuring">
 
-Items are measured at rest, without their own inline transforms, in the indicator's own pixels, so a container that's scaled (a menu flying in through a morph) works. They're measured again when anything in the container is resized or changed. A pointer is hit-tested against those boxes: nothing is laid out while it moves.
+Items are measured at rest, without their own inline transforms, in the indicator's own pixels, so a container that's scaled (a menu flying in through a morph) works. They're measured again when anything in the container is resized or changed; resting on an item that grows or shrinks (its [text animating](/text), say), it keeps to it frame by frame. A pointer is hit-tested against those boxes: nothing is laid out while it moves.
 
 </Cell>
 </Row>

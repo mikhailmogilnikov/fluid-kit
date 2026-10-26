@@ -1,0 +1,168 @@
+---
+package: "torph"
+name: Text
+order: 7
+description: "Labels and numbers that change in place: letters moving to where they go, digits rolling. With torph, on glass, tabs and morphs of the kit."
+intro: "A label that changes in place, its letters moving to where they go, and numbers whose digits roll: SwiftUI's content transitions, for the web. That's <a href=\"https://github.com/lochie/torph\">torph</a>'s, not a Fluid Kit package; here it is with the kit, which keeps up with text that grows and shrinks."
+---
+
+import Section from "../../components/docs/Section.astro";
+import Rows from "../../components/docs/Rows.astro";
+import Row from "../../components/docs/Row.astro";
+import Cell from "../../components/docs/Cell.astro";
+import Steps from "../../components/docs/Steps.astro";
+import Step from "../../components/docs/Step.astro";
+import Install from "../../components/docs/Install.astro";
+import Example from "../../components/docs/Example.astro";
+import TextExample from "../../components/TextExample.astro";
+
+<Section id="start" title="Get started">
+
+Animated text is a library of its own, and a good one already exists: [torph](https://github.com/lochie/torph) by Lochie Axon, dependency-free, with React, Vue and Svelte components and plain JavaScript. It morphs text by its letters, the ones the old and new text share moving to their new places, and numbers by their places, digits sliding up or down. Fluid Kit doesn't wrap it: you use torph as it is, and the kit's pieces keep up with the text it animates.
+
+<Steps>
+<Step>
+
+**Install.**
+
+<Install pkg="torph" />
+
+</Step>
+<Step>
+
+**Morph an element's text.** Give it the element, then the text it changes to.
+
+```ts
+import { TextMorph } from "torph";
+
+const label = new TextMorph({
+  element: document.querySelector(".label")!,
+  // On a spring, as the kit moves
+  ease: { stiffness: 260, damping: 30 },
+});
+
+label.update("Following");
+```
+
+</Step>
+</Steps>
+
+For money, percentages and digits that spin through the numbers between, as iOS's counters do, there's [NumberFlow](https://number-flow.barvian.me): numbers only, formatted with `Intl`.
+
+</Section>
+
+<Section id="examples" title="Examples">
+
+### On glass
+
+A label grows or shrinks over its letters, and torph animates its width with them: the glass around it is CSS, so it follows on its own, its press and highlight too. Follow, or get the app.
+
+<Example>
+<TextExample kind="buttons" />
+
+<Fragment slot="html">
+
+```html
+<button class="pill lb lb-interactive"><span class="label">Follow</span></button>
+```
+
+</Fragment>
+<Fragment slot="js">
+
+```ts
+import "@fluidkit/blur/style.css";
+import { TextMorph } from "torph";
+
+const button = document.querySelector<HTMLButtonElement>(".pill")!;
+const label = new TextMorph({ element: button.querySelector(".label")!, ease: { stiffness: 260, damping: 30 } });
+
+button.addEventListener("click", () => {
+  const on = button.getAttribute("aria-pressed") !== "true";
+  button.setAttribute("aria-pressed", String(on));
+  label.update(on ? "Following" : "Follow");
+});
+```
+
+</Fragment>
+</Example>
+
+### Tabs with counts
+
+Tabs as wide as their labels, a count in each. New mail comes in and the count rolls; its tab grows with it, and the [Indicator](/indicator) thumb resting on it keeps to it frame by frame, not a spring behind.
+
+<Example>
+<TextExample kind="tabs" />
+
+<Fragment slot="js">
+
+```ts
+import { createIndicator } from "@fluidkit/indicator";
+import { TextMorph } from "torph";
+
+const thumb = createIndicator({ container: tabs, indicator, trigger: "manual", rest: tabs.children[1] });
+const unread = new TextMorph({ element: tabs.querySelector(".unread")! });
+
+// The tab grows with its label; the thumb on it follows
+unread.update(`Unread ${count}`);
+```
+
+</Fragment>
+</Example>
+
+### A total
+
+A quantity and a total in a glass card, their digits rolling the way the number goes: up for more, down for less. Only the places that change move; `$` and `.` stay put.
+
+<Example>
+<TextExample kind="cart" />
+
+<Fragment slot="js">
+
+```ts
+const qty = new TextMorph({ element: qtyEl });
+const total = new TextMorph({ element: totalEl });
+
+function set(n: number) {
+  qty.update(String(n));
+  total.update(`$${(n * 12.5).toFixed(2)}`);
+}
+```
+
+</Fragment>
+</Example>
+
+</Section>
+
+<Section id="kit" title="With the kit">
+
+<Rows>
+<Row>
+<Cell title="Glass">
+
+Glass is CSS on the element: a button whose label grows is wider glass the same frame, highlight, press and corners included. Glass in a [group](/blur#groups) is redrawn the frame its child is resized, melted or not.
+
+</Cell>
+<Cell title="Indicator">
+
+Resting on an item that grows or shrinks, an [Indicator](/indicator) keeps to it exactly, frame by frame. Flying to it, it lands on the item as it is when it gets there.
+
+</Cell>
+</Row>
+<Row>
+<Cell title="Morph">
+
+A [Morph](/morph) state that resizes during a flight (a label changing as a panel opens) is followed: the shape lands on it as it ends up.
+
+</Cell>
+</Row>
+</Rows>
+
+</Section>
+
+<Section id="notes" title="Notes">
+
+- torph changes the element's children while it animates; give it an element of its own, a `<span>` in the button, not the button itself.
+- It respects reduced motion by default: the text changes at once.
+- For a value someone types into, pass the caret's position to `update()`, so a typed digit is inserted rather than every place renumbered. torph's [README](https://github.com/lochie/torph#editable-fields) has the details.
+
+</Section>

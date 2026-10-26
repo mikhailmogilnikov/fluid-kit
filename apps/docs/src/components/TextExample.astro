@@ -1,0 +1,300 @@
+---
+import Icon from "./Icon.astro";
+
+/**
+ * One of the animated text examples, live, with torph:
+ *   - buttons: glass buttons whose labels change, the glass growing with them
+ *   - tabs: tabs with counts, an indicator resting on the chosen one as its label grows
+ *   - cart: a quantity and a total, their digits rolling
+ */
+interface Props {
+  kind: "buttons" | "tabs" | "cart";
+}
+
+const { kind } = Astro.props;
+---
+
+<div class:list={["tx", `tx--${kind}`]} data-tx={kind}>
+  <div class="bd bd-aurora"></div>
+
+  {
+    kind === "buttons" && (
+      <div class="tx__row">
+        <button type="button" class="tx__pill lb lb-interactive" aria-pressed="false" data-tx-follow>
+          <span data-tx-text>Follow</span>
+        </button>
+        <button type="button" class="tx__pill tx__pill--get lb lb-interactive" data-tx-get>
+          <span data-tx-text>Get</span>
+        </button>
+      </div>
+    )
+  }
+
+  {
+    kind === "tabs" && (
+      <div class="tx__card lb">
+        <div class="tx__tabs" role="tablist" aria-label="Mail" data-tx-tabs>
+          <span class="tx__thumb" aria-hidden="true" data-tx-thumb />
+          <button type="button" role="tab" aria-selected="true">
+            <span data-tx-text data-tx-count="all">All 24</span>
+          </button>
+          <button type="button" role="tab" aria-selected="false">
+            <span data-tx-text data-tx-count="unread">Unread 3</span>
+          </button>
+          <button type="button" role="tab" aria-selected="false">
+            <span>Flagged</span>
+          </button>
+        </div>
+        <div class="tx__actions">
+          <button type="button" class="tx__action" data-tx-receive>
+            <Icon name="plus" size={16} />
+            New mail
+          </button>
+          <button type="button" class="tx__action" data-tx-read>
+            <Icon name="check" size={16} />
+            Read all
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  {
+    kind === "cart" && (
+      <div class="tx__card tx__cart lb">
+        <div class="tx__item">
+          <span class="tx__swatch" aria-hidden="true" />
+          <span class="tx__name">
+            Glass Mug
+            <small>$12.50 each</small>
+          </span>
+          <div class="tx__stepper">
+            <button type="button" class="lb lb-interactive" aria-label="One less" data-tx-less>
+              −
+            </button>
+            <span class="tx__qty" aria-live="polite" data-tx-text data-tx-qty>
+              1
+            </span>
+            <button type="button" class="lb lb-interactive" aria-label="One more" data-tx-more>
+              <Icon name="plus" size={16} />
+            </button>
+          </div>
+        </div>
+        <div class="tx__total">
+          Total
+          <span data-tx-text data-tx-total>
+            $12.50
+          </span>
+        </div>
+      </div>
+    )
+  }
+</div>
+
+<style>
+  .tx {
+    position: relative;
+    height: 300px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    place-items: center;
+    border-radius: 20px;
+    isolation: isolate;
+  }
+  /* Over the backdrop, which is positioned */
+  .tx > :not(.bd) { position: relative; }
+
+  .tx__row { display: flex; gap: 12px; }
+  .tx__pill {
+    height: 44px;
+    padding: 0 22px;
+    border-radius: 999px;
+    color: var(--ink);
+    font-size: 16px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .tx__pill[aria-pressed="true"] { color: var(--ink-2); }
+  .tx__pill--get { color: #0a84ff; }
+
+  .tx__card {
+    width: min(360px, calc(100% - 32px));
+    padding: 12px;
+    border-radius: 24px;
+    color: var(--ink);
+  }
+  /* A track the thumb slides in; tabs as wide as their labels, so a count that grows widens its tab */
+  .tx__tabs {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    padding: 3px;
+    border-radius: 999px;
+    background: color-mix(in srgb, currentColor 9%, transparent);
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .tx__tabs button {
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: none;
+    color: var(--ink-2);
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: color 0.2s;
+  }
+  .tx__tabs button[aria-selected="true"] { color: var(--ink); }
+  .tx__tabs button:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
+  .tx__thumb {
+    position: absolute;
+    z-index: -1;
+    background: color-mix(in srgb, #fff calc(100% - var(--lb-dark) * 78%), transparent);
+    box-shadow: 0 1px 3px rgb(0 0 0 / calc(0.12 - var(--lb-dark) * 0.12)), 0 0 0 0.5px rgb(0 0 0 / 0.04);
+  }
+  .tx__actions { display: flex; gap: 6px; margin-top: 10px; }
+  .tx__action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: none;
+    color: var(--ink-2);
+    font-size: 14px;
+  }
+  .tx__action:hover { color: var(--ink); background: color-mix(in srgb, currentColor 8%, transparent); }
+
+  .tx__cart { display: grid; gap: 14px; padding: 16px; }
+  .tx__item { display: flex; align-items: center; gap: 12px; }
+  .tx__swatch {
+    flex: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #84fab0, #8fd3f4);
+  }
+  .tx__name { flex: 1; display: grid; font-size: 15px; font-weight: 600; }
+  .tx__name small { color: var(--ink-2); font-size: 13px; font-weight: 400; }
+  .tx__stepper { display: flex; align-items: center; gap: 4px; }
+  .tx__stepper button {
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--ink);
+    font-size: 18px;
+    line-height: 1;
+  }
+  .tx__qty { min-width: 2ch; text-align: center; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .tx__total {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 12px;
+    border-top: 1px solid rgb(127 127 127 / 0.25);
+    color: var(--ink-2);
+    font-size: 15px;
+  }
+  .tx__total span { color: var(--ink); font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; }
+</style>
+
+<script>
+  import { TextMorph } from "torph";
+  import { createIndicator } from "@fluidkit/indicator";
+
+  /** About the springs the rest of the kit moves on */
+  const ease = { stiffness: 260, damping: 30 };
+  const morph = (element: HTMLElement) => {
+    const text = new TextMorph({ element, ease });
+    text.update(element.textContent!.trim());
+    return text;
+  };
+
+  for (const scene of document.querySelectorAll<HTMLElement>("[data-tx]:not([data-tx-ready])")) {
+    scene.dataset.txReady = "";
+    const label = (el: Element) => morph(el.querySelector<HTMLElement>("[data-tx-text]")!);
+
+    if (scene.dataset.tx === "buttons") {
+      const follow = scene.querySelector<HTMLButtonElement>("[data-tx-follow]")!;
+      const followText = label(follow);
+      follow.addEventListener("click", () => {
+        const on = follow.getAttribute("aria-pressed") !== "true";
+        follow.setAttribute("aria-pressed", String(on));
+        followText.update(on ? "Following" : "Follow");
+      });
+
+      // Get, downloading for a moment, then Open; Open starts over
+      const get = scene.querySelector<HTMLButtonElement>("[data-tx-get]")!;
+      const getText = label(get);
+      let step = 0;
+      get.addEventListener("click", () => {
+        if (step === 1) return;
+        if (step === 2) {
+          step = 0;
+          getText.update("Get");
+          return;
+        }
+        step = 1;
+        getText.update("Downloading…");
+        setTimeout(() => {
+          step = 2;
+          getText.update("Open");
+        }, 1600);
+      });
+      continue;
+    }
+
+    if (scene.dataset.tx === "tabs") {
+      const container = scene.querySelector<HTMLElement>("[data-tx-tabs]")!;
+      const tabs = [...container.querySelectorAll<HTMLButtonElement>("[role='tab']")];
+      const thumb = createIndicator({
+        container,
+        indicator: scene.querySelector<HTMLElement>("[data-tx-thumb]")!,
+        trigger: "manual",
+        rest: tabs[0],
+        focus: false,
+      });
+      for (const tab of tabs) {
+        tab.addEventListener("click", () => {
+          for (const t of tabs) t.setAttribute("aria-selected", String(t === tab));
+          thumb.rest = tab;
+        });
+      }
+
+      // Counts that change: the tab grows with its label, the thumb resting on it with it
+      const counts = { all: 24, unread: 3 };
+      const all = morph(container.querySelector<HTMLElement>("[data-tx-count='all']")!);
+      const unread = morph(container.querySelector<HTMLElement>("[data-tx-count='unread']")!);
+      const show = () => {
+        all.update(`All ${counts.all}`);
+        unread.update(counts.unread ? `Unread ${counts.unread}` : "Unread");
+      };
+      scene.querySelector("[data-tx-receive]")!.addEventListener("click", () => {
+        const n = 1 + Math.floor(Math.random() * 9);
+        counts.all += n;
+        counts.unread += n;
+        show();
+      });
+      scene.querySelector("[data-tx-read]")!.addEventListener("click", () => {
+        counts.unread = 0;
+        show();
+      });
+      continue;
+    }
+
+    // Cart: a quantity and a total, their digits rolling the way the number goes
+    const qty = morph(scene.querySelector<HTMLElement>("[data-tx-qty]")!);
+    const total = morph(scene.querySelector<HTMLElement>("[data-tx-total]")!);
+    let n = 1;
+    const set = (next: number) => {
+      n = Math.max(0, Math.min(99, next));
+      qty.update(String(n));
+      total.update(`$${(n * 12.5).toFixed(2)}`);
+    };
+    scene.querySelector("[data-tx-less]")!.addEventListener("click", () => set(n - 1));
+    scene.querySelector("[data-tx-more]")!.addEventListener("click", () => set(n + 1));
+  }
+</script>
