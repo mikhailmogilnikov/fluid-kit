@@ -48,7 +48,7 @@ const liftedOf = () => liftLayer()?.children[1] as HTMLElement | undefined;
 const lifted = (
   element: HTMLElement,
   menu: HTMLElement,
-  where: "below" | "above" | "left" | "right",
+  side: "auto" | "below" | "above" | "left" | "right",
   { shifted = false, scale = 1.04 } = {},
 ) => {
   const copy = liftedOf();
@@ -56,6 +56,14 @@ const lifted = (
   const got = copy.getBoundingClientRect();
   const want = scaled(element.getBoundingClientRect(), scale);
   const m = menu.getBoundingClientRect();
+  // Auto: under it with room there, else over it with room there, as the docs say. The room is the
+  // screen's: a short one (a phone's) may have none under an element the page can't scroll up
+  const where =
+    side !== "auto"
+      ? side
+      : innerHeight - 12 - (want.bottom + 10) >= m.height || want.top - 10 - 12 < m.height
+        ? "below"
+        : "above";
   const r = (v: number) => v.toFixed(1);
   return first(
     shifted
@@ -95,7 +103,7 @@ const closed = (root: HTMLElement, menu: HTMLElement) =>
     expect(menu.hidden && root.contains(menu), "the menu isn't back, hidden"),
   );
 
-const one: (block: ScrollLogicalPosition, where: "below" | "above", options?: Partial<LiftOptions>) => Setup =
+const one: (block: ScrollLogicalPosition, where: "auto" | "below", options?: Partial<LiftOptions>) => Setup =
   (block, where, options) => (root, kit) => {
     const [lift] = lifts(root, kit, options);
     const target = root.querySelector<HTMLElement>("[data-target]")!;
@@ -246,8 +254,8 @@ export const lift: Record<string, Setup> = {
     };
   },
 
-  "lift-below": one("center", "below"),
-  "lift-above": one("end", "above"),
+  "lift-below": one("center", "auto"),
+  "lift-above": one("end", "auto"),
   // Asked for under it, with no room there: it moves up for the menu
   "lift-tall": one("end", "below", { placement: "below" }),
   // The bubble's copy its size, its text on one line: as tall as the bubble, a little bigger

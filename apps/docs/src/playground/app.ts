@@ -233,6 +233,9 @@ const mark = (r: Result) => {
 
 async function checkCase(id: string): Promise<Result> {
   open(id);
+  // In sight: glass off screen draws nothing and isn't kept up to date (a group's melt), as on a
+  // phone, where the stage starts below the fold
+  stage.scrollIntoView({ block: "center", behavior: "instant" });
   const failures: string[] = [];
   let checked = false;
   const verdict = (label: string, read: () => string | null | undefined) => {

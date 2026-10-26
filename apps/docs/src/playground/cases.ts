@@ -279,7 +279,7 @@ export const CASES: CaseMeta[] = [
     title: "Menu below",
     tags: ["placement", "press"],
     expect:
-      "Held for half a second (or right-clicked), the photo lifts above everything, the page dimmed and blurred behind it, and the menu opens under it.",
+      "Held for half a second (or right-clicked), the photo lifts above everything, the page dimmed and blurred behind it, and the menu opens under it (over it on a screen too short for it under).",
     steps: ["Lift", "Close"],
   },
   {
