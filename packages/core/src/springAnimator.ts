@@ -40,6 +40,12 @@ export type SpringConfig<K extends string> = SpringParams | Record<K, SpringPara
  * precision (0.01 unless given): for pixels a quarter of a pixel is plenty and rests far sooner.
  */
 export class SpringAnimator<K extends string> {
+  /**
+   * How fast every spring runs, all of them at once: 0.25 is four times slower, slow motion to
+   * look at a transition or file a bug about it. 1 by default.
+   */
+  static timeScale = 1;
+
   /** Each channel's position, velocity, and whether it has turned since it last set off */
   private state: Record<K, { x: number; v: number; turned: boolean }>;
   private target: Record<K, number>;
@@ -145,7 +151,7 @@ export class SpringAnimator<K extends string> {
   private tick = (now: number) => {
     // A frame's time can be before the moment it was asked for (an input handler runs after the frame
     // began): no step back in time, which would push a spring away from its target
-    const dt = Math.max(0, Math.min((now - this.last) / 1000, 1 / 30));
+    const dt = Math.max(0, Math.min((now - this.last) / 1000, 1 / 30)) * SpringAnimator.timeScale;
     this.last = now;
 
     let resting = true;
