@@ -53,6 +53,56 @@ const one: (block: ScrollLogicalPosition, options?: Partial<LiftOptions>) => Set
   };
 
 export const lift: Record<string, Setup> = {
+  // The link's preview: a page of its own, from a template, bigger than the link
+  "lift-preview": (root, kit) => {
+    const template = root.querySelector<HTMLTemplateElement>("[data-preview]")!;
+    const [l] = lifts(root, kit, {
+      preview: () => template.content.firstElementChild!.cloneNode(true) as HTMLElement,
+    });
+    // A tap on the link isn't a trip away from the playground
+    root.querySelector("[data-target]")!.addEventListener("click", (e) => e.preventDefault());
+    return { steps: [() => l.open(), () => l.close()] };
+  },
+
+  "lift-keys": (root, kit) => {
+    const [l] = lifts(root, kit);
+    return { steps: [() => l.open()] };
+  },
+
+  // Open, the page scrolled from outside it, then closed: one step, the modal over the step bar
+  "lift-page-scrolls": (root, kit) => {
+    const [l] = lifts(root, kit);
+    const target = root.querySelector<HTMLElement>("[data-target]")!;
+    return {
+      steps: [
+        () => {
+          into(target, "center");
+          l.open();
+          kit.later(() => scrollBy({ top: 140, behavior: "instant" }), 700);
+          kit.later(() => l.close(), 1100);
+        },
+      ],
+    };
+  },
+
+  "lift-live": (root, kit) => {
+    const [l] = lifts(root, kit);
+    return { steps: [() => l.open(), () => l.close()] };
+  },
+
+  "lift-one-at-a-time": (root, kit) => {
+    const [first, second] = lifts(root, kit);
+    return {
+      steps: [
+        () => {
+          first.open();
+          kit.later(() => second.open(), 700);
+          kit.later(() => second.close(), 1600);
+        },
+      ],
+    };
+  },
+
   "lift-below": one("center"),
   "lift-above": one("end"),
   // Asked for under it, with no room there: it moves up for the menu

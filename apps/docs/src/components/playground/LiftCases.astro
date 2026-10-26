@@ -58,6 +58,67 @@ const rows = ["Night Swim", "Golden Hour", "Paper Planes", "Low Tide", "Neon Rai
   ))
 }
 
+<Case id="lift-preview">
+  <a class="lc-link" href="https://fluidkit.mogilnikov.dev" data-target>fluidkit.mogilnikov.dev</a>
+  <template data-preview>
+    <div class="lc-page">
+      <div class="lc-page__bar">fluidkit.mogilnikov.dev</div>
+      <div class="lc-page__hero"></div>
+      <b>Fluid Kit</b>
+      <span>Fluid interfaces for the web: glass, morphs, springs.</span>
+    </div>
+  </template>
+  <div class="lc-menu lb" role="menu" aria-label="Link" hidden data-menu>
+    <span class="lc-highlight" aria-hidden="true" data-highlight></span>
+    <button type="button" role="menuitem" data-item>Open <Icon name="forward" size={17} /></button>
+    <button type="button" role="menuitem" data-item>Copy Link <Icon name="copy" size={17} /></button>
+  </div>
+</Case>
+
+<Case id="lift-keys">
+  <div class="lc-photo lc-photo--center" tabindex="0" role="img" aria-label="Photo" style="--a: #84fab0; --b: #8fd3f4" data-target></div>
+  <div class="lc-menu lb" role="menu" aria-label="Photo" hidden data-menu>
+    <span class="lc-highlight" aria-hidden="true" data-highlight></span>
+    <button type="button" role="menuitem" data-item>Copy <Icon name="copy" size={17} /></button>
+    <button type="button" role="menuitem" aria-disabled="true" class="lc-disabled" data-item>Print <Icon name="layers" size={17} /></button>
+    <button type="button" role="menuitem" data-item>Share <Icon name="arrow" size={17} /></button>
+    <button type="button" role="menuitem" data-item>Favorite <Icon name="heart" size={17} /></button>
+  </div>
+</Case>
+
+<Case id="lift-page-scrolls">
+  <div class="lc-photo lc-photo--center" tabindex="0" role="img" aria-label="Photo" style="--a: #fccb90; --b: #d57eeb" data-target></div>
+  <div class="lc-menu lb" role="menu" aria-label="Photo" hidden data-menu>
+    <span class="lc-highlight" aria-hidden="true" data-highlight></span>
+    <button type="button" role="menuitem" data-item>Copy <Icon name="copy" size={17} /></button>
+    <button type="button" role="menuitem" data-item>Share <Icon name="arrow" size={17} /></button>
+  </div>
+</Case>
+
+<Case id="lift-live">
+  <div class="lc-card lb" tabindex="0" data-target>
+    <b>Delivery</b>
+    <label><input type="radio" name="lc-speed" value="standard" checked /> Standard</label>
+    <label><input type="radio" name="lc-speed" value="express" /> Express</label>
+    <iframe class="lc-frame" title="Map" srcdoc="<body style='margin:0;display:grid;place-items:center;height:100vh;font:13px system-ui;background:#e8f0fe'>A frame, loaded once</body>"></iframe>
+  </div>
+  <div class="lc-menu lb" role="menu" aria-label="Card" hidden data-menu>
+    <span class="lc-highlight" aria-hidden="true" data-highlight></span>
+    <button type="button" role="menuitem" data-item>Copy <Icon name="copy" size={17} /></button>
+    <button type="button" role="menuitem" data-item>Share <Icon name="arrow" size={17} /></button>
+  </div>
+</Case>
+
+<Case id="lift-one-at-a-time">
+  <div class="lc-photo lc-photo--left" tabindex="0" role="img" aria-label="First photo" style="--a: #ff9a9e; --b: #fad0c4" data-target></div>
+  <div class="lc-photo lc-photo--right" tabindex="0" role="img" aria-label="Second photo" style="--a: #a18cd1; --b: #fbc2eb" data-target></div>
+  <div class="lc-menu lb" role="menu" aria-label="Photo" hidden data-menu>
+    <span class="lc-highlight" aria-hidden="true" data-highlight></span>
+    <button type="button" role="menuitem" data-item>Copy <Icon name="copy" size={17} /></button>
+    <button type="button" role="menuitem" data-item>Share <Icon name="arrow" size={17} /></button>
+  </div>
+</Case>
+
 <Case id="lift-message">
   <div class="lc-chat lb">
     <div class="lc-bubble lc-bubble--in" tabindex="0" data-target>Are we still on for Friday?</div>
@@ -98,7 +159,45 @@ const rows = ["Night Swim", "Golden Hour", "Paper Planes", "Low Tide", "Neon Rai
   .lc-photo--bottom { bottom: 24px; left: calc(50% - 60px); }
   .lc-photo--left { top: calc(50% - 60px); left: 16px; }
   .lc-photo--right { top: calc(50% - 60px); right: 16px; }
+  .lc-photo--center { top: calc(50% - 60px); left: calc(50% - 60px); }
   .lc-photo--tall { bottom: 24px; left: calc(50% - 80px); width: 160px; height: 300px; }
+
+  .lc-link {
+    padding: 10px 16px;
+    border-radius: 12px;
+    background: var(--ground);
+    color: #0a84ff;
+    font-weight: 500;
+    text-decoration: none;
+  }
+  /* The preview: a page, bigger than its link */
+  .lc-page {
+    width: 300px;
+    display: grid;
+    gap: 4px;
+    padding: 0 0 18px;
+    overflow: hidden;
+    border-radius: 22px;
+    background: var(--ground);
+    color: var(--ink);
+    box-shadow: 0 20px 60px rgb(0 0 0 / 0.25);
+  }
+  .lc-page > :not(.lc-page__hero) { margin: 0 18px; }
+  .lc-page__bar { margin: 0 !important; padding: 10px 18px; background: var(--wash); color: var(--ink-2); font-size: 12px; }
+  .lc-page__hero { height: 150px; margin: -4px 0 10px; background: linear-gradient(135deg, #ff4f81, #2f7bff); }
+  .lc-page span { color: var(--ink-2); font-size: 14px; }
+
+  .lc-card {
+    width: 240px;
+    display: grid;
+    gap: 8px;
+    padding: 16px;
+    border-radius: 22px;
+    color: var(--ink);
+  }
+  .lc-card label { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+  .lc-frame { width: 100%; height: 70px; border: 0; border-radius: 10px; background: rgb(127 127 127 / 0.15); }
+  .lc-menu .lc-disabled { opacity: 0.4; cursor: default; }
 
   .lc-list {
     width: min(320px, calc(100% - 32px));

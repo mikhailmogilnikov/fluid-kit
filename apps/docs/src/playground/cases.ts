@@ -318,6 +318,51 @@ export const CASES: CaseMeta[] = [
     steps: ["Lift", "Close"],
   },
   {
+    id: "lift-preview",
+    pkg: "lift",
+    title: "A bigger preview",
+    tags: ["preview"],
+    expect:
+      "A link lifts a preview of its page, bigger than the link: it grows out of the link at its own size, centered on it and kept on screen, and shrinks back into the link when it closes.",
+    steps: ["Lift", "Close"],
+  },
+  {
+    id: "lift-keys",
+    pkg: "lift",
+    title: "From the keyboard",
+    tags: ["keyboard", "a11y", "disabled"],
+    expect:
+      "Opened by a key (or the step), the first item is focused. The arrow keys go through the items, past the disabled one, Home and End to the ends; PageDown doesn't scroll the page. Escape closes it and focus goes back where it was before it opened.",
+    steps: ["Open"],
+  },
+  {
+    id: "lift-page-scrolls",
+    pkg: "lift",
+    title: "The page scrolls while it's open",
+    tags: ["scroll", "close"],
+    expect:
+      "Lifted, then its page is scrolled from outside (as by its scrollbar) and closed: the photo settles back where the element is now, not where it was, and the element shows without a jump.",
+    steps: ["Lift, scroll, close"],
+  },
+  {
+    id: "lift-live",
+    pkg: "lift",
+    title: "A copy changes nothing",
+    tags: ["copy", "form", "iframe"],
+    expect:
+      "A card with a checked radio and a frame lifts as a picture: the radio stays checked in the page, and the frame isn't loaded again (an empty box in the copy).",
+    steps: ["Lift", "Close"],
+  },
+  {
+    id: "lift-one-at-a-time",
+    pkg: "lift",
+    title: "One at a time",
+    tags: ["modal"],
+    expect:
+      "One lift opens, then another while it's open: the first closes at once and the second lifts. Never two dims.",
+    steps: ["One, then the other"],
+  },
+  {
     id: "lift-scrolled",
     pkg: "lift",
     title: "In a scrolled list",
