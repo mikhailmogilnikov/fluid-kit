@@ -64,8 +64,8 @@ export type LiftOptions = {
   onClose?: () => void;
   /** Called with the item a finger is over while it slides on the menu, `null` off them */
   onHighlight?: (item: HTMLElement | null) => void;
-  /** Called with the item chosen, before the menu closes */
-  onSelect?: (item: HTMLElement) => void;
+  /** Called with the item chosen, before the menu closes; `false` keeps it open */
+  onSelect?: (item: HTMLElement) => void | boolean;
 };
 
 /** What a lift can be told again once made: all but its element and its menu */
@@ -404,7 +404,8 @@ export function createLift(options: LiftOptions): Lift {
   const chosen = (e: MouseEvent) => {
     const item = (e.target as Element | null)?.closest<HTMLElement>(items);
     if (!item || !menu?.contains(item) || item.matches(DISABLED)) return;
-    onSelect?.(item);
+    // `false` from the page: chosen, but the menu stays open (a toggle in it, say)
+    if (onSelect?.(item) === false) return;
     close();
   };
 
