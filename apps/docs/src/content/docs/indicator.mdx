@@ -300,6 +300,62 @@ The defaults are quick and don't overshoot: most of the way from one item to the
 
 </Section>
 
+<Section id="react" title="React">
+
+The same package, from `@fluidkit/indicator/react` (React 18 or later): components made of parts by default, and a hook for markup of your own. They're client components (`"use client"`), rendered on the server as plain markup.
+
+```tsx
+import { Indicator } from "@fluidkit/indicator/react";
+
+export function Tabs() {
+  const [tab, setTab] = useState("overview");
+  return (
+    <Indicator.Root value={tab} onValueChange={setTab} trigger="press" className="tabs" role="tablist">
+      <Indicator.Thumb className="thumb" />
+      <Indicator.Item value="overview" role="tab" aria-selected={tab === "overview"}>Overview</Indicator.Item>
+      <Indicator.Item value="releases" role="tab" aria-selected={tab === "releases"}>Releases</Indicator.Item>
+    </Indicator.Root>
+  );
+}
+```
+
+| Part | Renders | What it's for |
+| --- | --- | --- |
+| `Indicator.Root` | `div`, positioned | The container: every option of `createIndicator` but its elements, `items` and `rest` as props, and `value` / `defaultValue` / `onValueChange`, `active`, `onActiveChange` |
+| `Indicator.Thumb` | `span aria-hidden`, absolute, under the items | The one element that flies onto the items |
+| `Indicator.Item` | `button` | An item, known by its `value`. `data-selected` when it's chosen, `data-active` while the indicator is on it |
+
+**Chosen, and pointed at.** `value` is the item chosen, where the indicator rests: a click on an item chooses it, and a press dragged across the items chooses the one it's let go on (`trigger="press"`). `active` is an item pointed at by something else, followed as it changes, and back to rest on `null`: the finger on a [lift's](/lift#react) menu, say. `onActiveChange` hears of the item it's on, whatever put it there.
+
+**Controlled.** Without `value` the choice is its own, from `defaultValue`; with `value` and `onValueChange`, it follows the parent, and a click only asks to change it.
+
+**Your elements.** Every part renders as an element of yours with `render`, as in Base UI: an element, our props merged into it, or a function of the props and the part's state (`{ selected, active }` for an item).
+
+```tsx
+<Indicator.Item value="inbox" render={<a href="/inbox" />}>Inbox</Indicator.Item>
+<Indicator.Item value="sent" render={(props, { selected }) => <Tab {...props} bold={selected} />} />
+```
+
+**Its own items only.** A root knows the items made inside it, not a nested root's: a menu with an indicator of its own can sit in tabs with another.
+
+**New props, the same indicator.** It's made once its container and thumb are in the page and handed new props with `set()`, never made again for them: a new `trigger` takes over at once. Callbacks are always the latest.
+
+**The hook.** `useIndicator(options)` takes the same props as the root and gives refs for the container, the indicator and each item (`item(value)`), with `value`, `active`, `select(value)` and the engine.
+
+```tsx
+const tabs = useIndicator({ value: tab, onValueChange: setTab });
+
+<nav ref={tabs.container} className="tabs">
+  <span ref={tabs.indicator} className="thumb" />
+  <a ref={tabs.item("home")} href="/">Home</a>
+  <a ref={tabs.item("docs")} href="/docs">Docs</a>
+</nav>
+```
+
+With the hook the styles are yours too: the container positioned and the indicator absolute under the items, as in [Layout](#layout). The parts set both.
+
+</Section>
+
 <Section id="layout" title="Layout">
 
 <Rows>

@@ -180,7 +180,7 @@ Icons on a home screen, each with quick actions. A copy of the icon is what lift
 | `onOpen?: () => void` | It's lifting |
 | `onClose?: () => void` | It's closed and back in place |
 | `onHighlight?: (item) => void` | The finger that lifted it is over this item, or `null` off them |
-| `onSelect?: (item) => void` | This item was chosen, by a click, a key or a finger let go on it; the menu closes after. Never a disabled one (`:disabled`, `aria-disabled="true"`) |
+| `onSelect?: (item) => void \| boolean` | This item was chosen, by a click, a key or a finger let go on it; the menu closes after, unless it gives back `false` (a toggle in the menu, say). Never a disabled one (`:disabled`, `aria-disabled="true"`) |
 
 </Section>
 
@@ -193,6 +193,85 @@ Icons on a home screen, each with quick actions. A copy of the icon is what lift
 | `close()` | Settles it back and closes the menu |
 | `set(settings)` | Takes new options, all but `element` and `menu`, the rest kept: a component's props as they change, without a lift made again. Open, it takes them as it goes (dim, blur, callbacks) or the next time it opens |
 | `destroy()` | Closes it at once and removes its listeners. Later calls do nothing |
+
+</Section>
+
+<Section id="react" title="React">
+
+The same package, from `@fluidkit/lift/react` (React 18 or later): components made of parts by default, and a hook for markup of your own. They're client components (`"use client"`), rendered on the server as plain markup, the menu hidden.
+
+```tsx
+import { Lift } from "@fluidkit/lift/react";
+
+export function Photo({ src }: { src: string }) {
+  return (
+    <Lift.Root onSelect={(value) => act(value)}>
+      <Lift.Target render={<img className="photo" src={src} alt="" tabIndex={0} />} />
+      <Lift.Menu className="menu lb" aria-label="Photo">
+        <Lift.Item value="copy">Copy</Lift.Item>
+        <Lift.Item value="share">Share</Lift.Item>
+        <Lift.Separator />
+        <Lift.Item value="delete" disabled>
+          Delete
+        </Lift.Item>
+      </Lift.Menu>
+    </Lift.Root>
+  );
+}
+```
+
+| Part | Renders | What it's for |
+| --- | --- | --- |
+| `Lift.Root` | nothing of its own | The lift: every option of `createLift` but `element`, `menu` and `preview` as props, and `open` / `defaultOpen` / `onOpenChange`. `onSelect(value, item)` is told the item chosen |
+| `Lift.Target` | `div` | What's held and lifted. `data-state="open"` while it's lifted |
+| `Lift.Menu` | `div role="menu" hidden` | The menu, opened beside it |
+| `Lift.Item` | `button role="menuitem"` | An item. `value` is what the root's `onSelect` is given; `disabled` keeps it from being chosen (`aria-disabled`, `data-disabled`); its own `onSelect(event)` hears of it first, and `event.preventDefault()` keeps the menu open |
+| `Lift.Separator` | `div role="separator"` | A line between items, passed over by the finger and the keys |
+| `Lift.Preview` | `div`, hidden | Lifted instead of a copy, at its own size: something live, or bigger |
+
+**Your elements.** Every part renders as an element of yours with `render`, as in Base UI: an element, our props merged into it (classes joined, styles and handlers both kept, refs both set), or a function of the props and the part's state.
+
+```tsx
+<Lift.Target render={<img src={src} alt="" />} />
+<Lift.Target render={(props, { opened }) => <img {...props} src={opened ? large : src} alt="" />} />
+```
+
+**Controlled.** Without `open` it's its own; with `open` and `onOpenChange`, it follows the parent's state, and asks to change it when it's held, chosen from, or closed by the dim or Escape.
+
+```tsx
+const [open, setOpen] = useState(false);
+<Lift.Root open={open} onOpenChange={setOpen}>…</Lift.Root>
+```
+
+**New props, the same lift.** It's made once its target is in the page and handed new props with `set()`, never made again for them; callbacks are always the latest, so arrows written in the JSX are fine. A new target or menu element makes it again.
+
+**With an indicator.** The highlight under the finger is an [Indicator](/indicator#react), told by `onHighlight` which item it's over (`active`); the two parts become one element through `render`.
+
+```tsx
+const [pointed, setPointed] = useState<string | null>(null);
+
+<Lift.Root onHighlight={(item) => setPointed(item?.dataset.value ?? null)} onSelect={act}>
+  <Lift.Target render={<img src={src} alt="" />} />
+  <Lift.Menu className="menu lb">
+    <Indicator.Root active={pointed}>
+      <Indicator.Thumb className="highlight" />
+      <Lift.Item value="copy" render={<Indicator.Item value="copy" />}>Copy</Lift.Item>
+      <Lift.Item value="share" render={<Indicator.Item value="share" />}>Share</Lift.Item>
+    </Indicator.Root>
+  </Lift.Menu>
+</Lift.Root>
+```
+
+**The hook.** `useLift(options)` takes the same props as the root and gives refs for your elements, `opened`, `open()`, `close()` and the engine (`lift`), for markup the parts don't fit.
+
+```tsx
+const lift = useLift({ onSelect: (item) => act(item.dataset.action) });
+
+<img ref={lift.element} src={src} alt="" />
+<div ref={lift.menu} role="menu" hidden>…</div>
+```
+
+With the hook, the menu is your element and is moved into the lift's dialog while it's open: give it a parent of its own, so nothing React adds next to it then looks for it there. The parts do this for you. Unmounted while it's open, the lift is let go first and everything goes back where React expects it.
 
 </Section>
 

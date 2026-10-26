@@ -132,6 +132,10 @@ code {
   color: var(--ink);
   white-space: nowrap;
 }
+/* On a phone a long one (a signature) wraps, rather than widening the page past the screen */
+@media (max-width: 560px) {
+  code { white-space: normal; overflow-wrap: anywhere; }
+}
 
 .sr-only {
   position: absolute;
