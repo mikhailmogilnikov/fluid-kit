@@ -34,6 +34,25 @@ createLift({
 The menu is yours: Lift places it under the element (or over it), opens it and closes it. Options,
 the API and how it works are in the [documentation](https://fluidkit.mogilnikov.dev/lift).
 
+## React
+
+From `@fluidkit/lift/react`: components made of parts, each rendered as an element of yours with
+`render`, and `useLift()` for markup of your own.
+
+```tsx
+import { Lift } from "@fluidkit/lift/react";
+
+<Lift.Root onSelect={(value) => act(value)}>
+  <Lift.Target render={<img src={src} alt="" />} />
+  <Lift.Menu className="menu">
+    <Lift.Item value="copy">Copy</Lift.Item>
+    <Lift.Item value="share">Share</Lift.Item>
+  </Lift.Menu>
+</Lift.Root>
+```
+
+More in the [documentation](https://fluidkit.mogilnikov.dev/lift#react).
+
 ## License
 
 MIT © Mikhail Mogilnikov. See [LICENSE](LICENSE).

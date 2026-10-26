@@ -45,6 +45,23 @@ frames. For a chosen item, such as a tab, set `rest`; for full control, `trigger
 `to()`. Options, the API and the layout rules are in the
 [documentation](https://fluidkit.mogilnikov.dev/indicator).
 
+## React
+
+From `@fluidkit/indicator/react`: components made of parts, each rendered as an element of yours
+with `render`, and `useIndicator()` for markup of your own.
+
+```tsx
+import { Indicator } from "@fluidkit/indicator/react";
+
+<Indicator.Root value={tab} onValueChange={setTab} trigger="press">
+  <Indicator.Thumb className="thumb" />
+  <Indicator.Item value="overview">Overview</Indicator.Item>
+  <Indicator.Item value="releases">Releases</Indicator.Item>
+</Indicator.Root>
+```
+
+More in the [documentation](https://fluidkit.mogilnikov.dev/indicator#react).
+
 ## License
 
 MIT © Mikhail Mogilnikov. See [LICENSE](LICENSE).

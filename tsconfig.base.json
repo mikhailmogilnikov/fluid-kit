@@ -9,6 +9,7 @@
     "noUnusedParameters": true,
     "skipLibCheck": true,
     "isolatedModules": true,
-    "declaration": true
+    "declaration": true,
+    "jsx": "react-jsx"
   }
 }
