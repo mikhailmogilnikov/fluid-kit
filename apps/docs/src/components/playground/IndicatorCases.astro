@@ -1,0 +1,148 @@
+---
+import Case from "./Case.astro";
+import Icon from "../Icon.astro";
+
+const tabs = [
+  ["Overview", "Plays, saves and listeners this week."],
+  ["Releases", "Three albums and a single, newest first."],
+  ["Audience", "Where your listeners are, and when."],
+] as const;
+---
+
+<Case id="indicator-menu">
+  <div class="ic-menu lb" role="menu" aria-label="Album" data-menu>
+    <span class="ic-highlight" aria-hidden="true" data-highlight></span>
+    <button type="button" role="menuitem"><Icon name="plus" size={18} />Add to Library</button>
+    <button type="button" role="menuitem" data-step="Love"><Icon name="heart" size={18} />Love</button>
+    <button type="button" role="menuitem"><Icon name="arrow" size={18} />Share Album</button>
+    <hr />
+    <button type="button" role="menuitem" data-step="Copy Link"><Icon name="copy" size={18} />Copy Link</button>
+    <button type="button" role="menuitem" aria-disabled="true" data-step="Show in Store"><Icon name="eye" size={18} />Show in Store</button>
+  </div>
+</Case>
+
+<Case id="indicator-tabs">
+  <div class="ic-card lb">
+    <div class="ic-tabs" role="tablist" aria-label="Artist" data-tabs>
+      <span class="ic-thumb" aria-hidden="true" data-thumb></span>
+      {
+        tabs.map(([label, text], i) => (
+          <button type="button" role="tab" aria-selected={i === 0 ? "true" : "false"} data-text={text}>
+            {label}
+          </button>
+        ))
+      }
+    </div>
+    <p class="ic-text" role="tabpanel" data-panel>{tabs[0][1]}</p>
+  </div>
+</Case>
+
+<Case id="indicator-grow">
+  <div class="ic-card lb">
+    <div class="ic-tabs ic-tabs--fit" role="tablist" aria-label="Mail" data-tabs>
+      <span class="ic-thumb" aria-hidden="true" data-thumb></span>
+      <button type="button" role="tab" aria-selected="false"><span data-count="all">All 24</span></button>
+      <button type="button" role="tab" aria-selected="true"><span data-count="unread">Unread 3</span></button>
+      <button type="button" role="tab" aria-selected="false"><span>Flagged</span></button>
+    </div>
+  </div>
+</Case>
+
+<Case id="indicator-scaled">
+  <div class="ic-scaler">
+    <div class="ic-menu lb" role="menu" aria-label="Library" data-menu>
+      <span class="ic-highlight" aria-hidden="true" data-highlight></span>
+      <button type="button" role="menuitem" data-step="Albums"><Icon name="layers" size={18} />Albums</button>
+      <button type="button" role="menuitem" data-step="Artists"><Icon name="heart" size={18} />Artists</button>
+      <button type="button" role="menuitem" data-step="Songs"><Icon name="play" size={18} />Songs</button>
+    </div>
+  </div>
+</Case>
+
+<Case id="indicator-sweep">
+  <div class="ic-menu lb" role="menu" aria-label="Album" data-menu>
+    <span class="ic-highlight" aria-hidden="true" data-highlight></span>
+    <button type="button" role="menuitem"><Icon name="plus" size={18} />Add to Library</button>
+    <button type="button" role="menuitem"><Icon name="heart" size={18} />Love</button>
+    <button type="button" role="menuitem"><Icon name="arrow" size={18} />Share Album</button>
+    <button type="button" role="menuitem"><Icon name="copy" size={18} />Copy Link</button>
+    <button type="button" role="menuitem"><Icon name="layers" size={18} />Add to Queue</button>
+  </div>
+</Case>
+
+<style>
+  /* The container is positioned, and a stacking context of its own (glass is), so the indicator at
+     z-index -1 is drawn over its surface and under its items */
+  .ic-menu {
+    position: relative;
+    width: 248px;
+    display: grid;
+    padding: 8px;
+    border-radius: 32px;
+    color: var(--ink);
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .ic-menu button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    padding: 0 18px 0 16px;
+    border-radius: 999px;
+    color: inherit;
+    font-size: 15px;
+    text-align: left;
+  }
+  .ic-menu button[aria-disabled="true"] { opacity: 0.4; cursor: default; }
+  .ic-menu hr { width: calc(100% - 24px); margin: 4px 12px; border: 0; border-top: 1px solid rgb(127 127 127 / 0.25); }
+  .ic-highlight {
+    position: absolute;
+    z-index: -1;
+    background: color-mix(in srgb, currentColor calc(6% + var(--lb-dark) * 6%), transparent);
+  }
+  .ic-highlight[data-pressed] { background: color-mix(in srgb, currentColor calc(11% + var(--lb-dark) * 7%), transparent); }
+
+  /* Scaled by its container, as a menu flying in through a morph is */
+  .ic-scaler { transform: scale(0.75) rotate(0deg); }
+
+  .ic-card {
+    width: min(360px, calc(100% - 32px));
+    padding: 12px 12px 16px;
+    border-radius: 24px;
+    color: var(--ink);
+  }
+  .ic-tabs {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    padding: 3px;
+    border-radius: 999px;
+    background: color-mix(in srgb, currentColor 9%, transparent);
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .ic-tabs button {
+    flex: 1;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 999px;
+    color: var(--ink-2);
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: color 0.2s;
+  }
+  /* As wide as their labels: a count that grows widens its tab */
+  .ic-tabs--fit button { flex: none; padding: 0 14px; }
+  .ic-tabs button[aria-selected="true"] { color: var(--ink); }
+  .ic-thumb {
+    position: absolute;
+    z-index: -1;
+    background: color-mix(in srgb, #fff calc(100% - var(--lb-dark) * 78%), transparent);
+    box-shadow: 0 1px 3px rgb(0 0 0 / calc(0.12 - var(--lb-dark) * 0.12)), 0 0 0 0.5px rgb(0 0 0 / 0.04);
+  }
+  .ic-text { margin: 14px 10px 0; color: var(--ink-2); font-size: 14px; }
+</style>

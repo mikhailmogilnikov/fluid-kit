@@ -50,5 +50,7 @@ export default defineConfig({
   redirects: {
     // The whole documentation was one page before the packages split
     "/docs": "/blur",
+    // The lab's scenes are the playground's cases now
+    "/lab": "/playground",
   },
 });

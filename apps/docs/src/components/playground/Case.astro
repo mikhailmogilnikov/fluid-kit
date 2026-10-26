@@ -1,0 +1,13 @@
+---
+/**
+ * One case's markup, kept in a template: the playground clones it onto the stage when the case is
+ * opened, so each time it starts fresh, and nothing of a case that isn't open is in the page
+ */
+interface Props {
+  id: string;
+}
+
+const { id } = Astro.props;
+---
+
+<template data-case={id}><slot /></template>

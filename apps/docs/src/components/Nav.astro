@@ -23,6 +23,7 @@ const here = (id: string) => (current === id ? "page" : undefined);
     </a>
     <nav class="nav__links" aria-label="Packages">
       {packages.map((p) => <a href={`/${p.id}`} aria-current={here(p.id)}>{p.data.name}</a>)}
+      <a href="/playground" aria-current={here("playground")}>Playground</a>
     </nav>
     <div class="nav__end">
       <a class="nav__docs" href="/blur" aria-current={packages.some((p) => p.id === current) ? "page" : undefined}>

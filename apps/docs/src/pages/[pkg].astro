@@ -20,6 +20,11 @@ const { Content } = await render(page);
 /** A package's own demo, under its opening */
 const Demo = ({ blur: Playground, morph: MorphDemo } as Record<string, typeof Playground>)[page.id];
 
+/** Its first case in the playground, where there is one */
+const play = (
+  { blur: "blur-dock", edge: "blur-edge", morph: "morph-corner", indicator: "indicator-menu", drag: "drag-snap", lift: "lift-below", text: "indicator-grow" } as Record<string, string>
+)[page.id];
+
 /** The contents, from the page's own sections */
 const toc = [...(page.body ?? "").matchAll(/<Section\s([^>]*)>/g)].map(([, attrs]) => {
   const attr = (name: string) => new RegExp(`\\b${name}="([^"]*)"`).exec(attrs)?.[1];
@@ -69,6 +74,17 @@ const toc = [...(page.body ?? "").matchAll(/<Section\s([^>]*)>/g)].map(([, attrs
 
       <div class="docs__body">
         <Content components={{ pre: Fence }} />
+        {
+          play && (
+            <a class="docs-play" href={`/playground#${play}`}>
+              <span>
+                <b>Playground</b>
+                Its hard cases, live: slowed down, on other backdrops, with their boxes drawn.
+              </span>
+              <Icon name="forward" size={18} />
+            </a>
+          )
+        }
       </div>
     </div>
   </main>

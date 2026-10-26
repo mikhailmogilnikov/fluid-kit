@@ -1,0 +1,290 @@
+---
+import Base from "../layouts/Base.astro";
+import Nav from "../components/Nav.astro";
+import Icon from "../components/Icon.astro";
+import BlurCases from "../components/playground/BlurCases.astro";
+import MorphCases from "../components/playground/MorphCases.astro";
+import IndicatorCases from "../components/playground/IndicatorCases.astro";
+import DragCases from "../components/playground/DragCases.astro";
+import LiftCases from "../components/playground/LiftCases.astro";
+import { CASES, PACKAGES } from "../playground/cases";
+import core from "../../../../packages/core/package.json";
+import blur from "../../../../packages/blur/package.json";
+import morph from "../../../../packages/morph/package.json";
+import indicator from "../../../../packages/indicator/package.json";
+import drag from "../../../../packages/drag/package.json";
+import lift from "../../../../packages/lift/package.json";
+
+/** The packages as built here, for an issue's report */
+const versions = [core, blur, morph, indicator, drag, lift].map((p) => `${p.name}@${p.version}`).join(", ");
+const first = CASES[0];
+---
+
+<Base
+  title="Playground — Fluid Kit"
+  description="Every package's hard cases, live: slowed down, on different backdrops, with their boxes drawn. For seeing what should happen, and filing what doesn't."
+>
+  <Nav current="playground" />
+
+  <main class="pg" data-pg data-versions={versions}>
+    <details class="pg__side" open data-pg-side>
+      <summary class="pg__fold">
+        <span class="pg__fold-label">Case</span>
+        <span class="pg__fold-current" data-pg-current>{first.title}</span>
+        <Icon name="chevron" size={16} />
+      </summary>
+      <input class="pg__search" type="search" placeholder="Search cases" aria-label="Search cases" data-pg-search />
+      <nav class="pg__list" aria-label="Cases">
+        {
+          PACKAGES.map(([pkg, name]) => (
+            <div class="pg__group" data-pg-group={pkg}>
+              <span class="pg__group-name">{name}</span>
+              {CASES.filter((c) => c.pkg === pkg).map((c) => (
+                <a
+                  href={`#${c.id}`}
+                  data-pg-link={c.id}
+                  data-search={`${name} ${c.title} ${c.tags.join(" ")}`.toLowerCase()}
+                  aria-current={c === first ? "true" : undefined}
+                >
+                  {c.title}
+                </a>
+              ))}
+            </div>
+          ))
+        }
+        <p class="pg__none" hidden data-pg-none>No case matches.</p>
+      </nav>
+    </details>
+
+    <section class="pg__main" aria-labelledby="pg-title">
+      <div class="pg__controls">
+        <div class="seg" role="group" aria-label="Speed" data-pg-speed>
+          <span class="seg__thumb" aria-hidden="true"></span>
+          <button type="button" data-value="1" aria-pressed="true">Real time</button>
+          <button type="button" data-value="0.25" aria-pressed="false">Slow</button>
+          <button type="button" data-value="0.1" aria-pressed="false">Slower</button>
+        </div>
+        <div class="seg" role="group" aria-label="Backdrop" data-pg-bg>
+          <span class="seg__thumb" aria-hidden="true"></span>
+          <button type="button" data-value="aurora" aria-pressed="true">Aurora</button>
+          <button type="button" data-value="stripes" aria-pressed="false">Stripes</button>
+          <button type="button" data-value="photo" aria-pressed="false">Photo</button>
+          <button type="button" data-value="plain" aria-pressed="false">Plain</button>
+        </div>
+        <div class="pg__tools">
+          <button type="button" class="pg__tool" aria-pressed="false" data-pg-debug>
+            <Icon name="frame" size={16} />
+            Debug
+          </button>
+          <button type="button" class="pg__tool" data-pg-copy>
+            <Icon name="copy" size={16} />
+            <span data-pg-copy-label>Copy issue</span>
+          </button>
+        </div>
+      </div>
+
+      <header class="pg__head">
+        <div class="pg__heading">
+          <h1 class="pg__title" id="pg-title" data-pg-title>{first.title}</h1>
+          <div class="pg__meta">
+            <span class="pg__pkg" data-pg-pkg>{PACKAGES.find(([p]) => p === first.pkg)![1]}</span>
+            <div class="pg__tags" data-pg-tags>{first.tags.map((t) => <span>{t}</span>)}</div>
+          </div>
+        </div>
+        <div class="pg__bar">
+          <span class="pg__step" data-pg-step></span>
+          <button type="button" class="pg__next" data-pg-next>
+            <Icon name="play" size={14} />
+            <span data-pg-next-label></span>
+          </button>
+          <button type="button" class="pg__tool" aria-pressed="false" data-pg-auto>Auto</button>
+          <button type="button" class="pg__tool" data-pg-reset>Reset</button>
+          <span class="pg__only" data-pg-only hidden>Play with it: this case has no steps</span>
+        </div>
+      </header>
+      <p class="pg__expect" data-pg-expect>{first.expect}</p>
+
+      <div class="pg__stage" data-bg="aurora" data-pg-stage>
+        <div class="pg__backdrop bd" aria-hidden="true" data-pg-backdrop></div>
+        <div class="pg__mount" data-pg-mount></div>
+      </div>
+    </section>
+
+    <BlurCases />
+    <MorphCases />
+    <IndicatorCases />
+    <DragCases />
+    <LiftCases />
+  </main>
+</Base>
+
+<script>
+  import "../playground/app";
+</script>
+
+<style>
+  .pg {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 32px;
+    padding: 40px var(--edge) 64px;
+  }
+
+  /* The list: always open beside the stage; folded over it on a phone */
+  .pg__side {
+    position: sticky;
+    top: 96px;
+    align-self: start;
+    max-height: calc(100dvh - 120px);
+    display: flex;
+    flex-direction: column;
+  }
+  .pg__fold { display: none; }
+  .pg__search {
+    width: 100%;
+    height: 36px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--pill);
+    color: var(--ink);
+    font: inherit;
+    font-size: 14px;
+  }
+  .pg__search::placeholder { color: var(--ink-3); }
+  .pg__list {
+    overflow-y: auto;
+    margin-top: 12px;
+    padding-bottom: 12px;
+    overscroll-behavior: contain;
+  }
+  .pg__group { display: grid; margin-bottom: 14px; }
+  .pg__group-name {
+    padding: 6px 12px;
+    color: var(--ink-3);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .pg__list a {
+    padding: 6px 12px;
+    border-radius: 10px;
+    color: var(--ink-2);
+    font-size: 14px;
+    text-decoration: none;
+  }
+  .pg__list a:hover { color: var(--ink); background: var(--hair); }
+  .pg__list a[aria-current="true"] { color: var(--ink); background: var(--pill); font-weight: 500; }
+  .pg__none { padding: 6px 12px; color: var(--ink-3); font-size: 14px; }
+
+  .pg__controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .pg__tools { display: flex; gap: 6px; margin-left: auto; }
+  .pg__tool {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: var(--pill);
+    color: var(--ink-2);
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .pg__tool:hover { color: var(--ink); background: var(--pill-hover); }
+  .pg__tool[aria-pressed="true"] { color: var(--on-ink); background: var(--ink); }
+
+  /* The case, and its steps beside it: both in sight with the stage */
+  .pg__head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; margin-top: 24px; }
+  .pg__heading { display: grid; gap: 6px; min-width: 0; }
+  .pg__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+  .pg__pkg { color: var(--ink-3); font-size: 14px; font-weight: 500; }
+  .pg__title { margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.02em; }
+  .pg__tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pg__tags :global(span) {
+    padding: 2px 9px;
+    border-radius: 999px;
+    background: var(--pill);
+    color: var(--ink-2);
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .pg__expect { max-width: 80ch; margin: 10px 0 0; color: var(--ink-2); font-size: 15px; }
+
+  .pg__stage {
+    position: relative;
+    /* As tall as the window leaves under the case's name, within reason */
+    height: clamp(420px, calc(100dvh - 320px), 640px);
+    margin-top: 16px;
+    border-radius: 22px;
+    isolation: isolate;
+    overflow: hidden;
+  }
+  .pg__stage[data-bg="plain"] .pg__backdrop { background: var(--wash); }
+  .pg__stage[data-bg="photo"] .pg__backdrop {
+    background:
+      radial-gradient(circle at 20% 25%, #ffd36e 0, transparent 40%),
+      radial-gradient(circle at 80% 30%, #2f7bff 0, transparent 45%),
+      radial-gradient(circle at 60% 85%, #1fd1a5 0, transparent 45%),
+      radial-gradient(circle at 15% 90%, #ff4f81 0, transparent 40%),
+      linear-gradient(135deg, #b5179e, #3a0ca3);
+  }
+  .pg__mount {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    place-items: center;
+  }
+
+  .pg__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .pg__step { min-width: 40px; color: var(--ink-3); font-variant-numeric: tabular-nums; font-size: 14px; text-align: right; }
+  .pg__next {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 16px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--on-ink);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .pg__next:hover { background: var(--ink-hover); }
+  .pg__only { color: var(--ink-3); font-size: 14px; }
+  .pg__bar[data-steps="0"] :is(.pg__step, .pg__next, [data-pg-auto]) { display: none; }
+
+  @media (max-width: 860px) {
+    .pg { grid-template-columns: minmax(0, 1fr); gap: 16px; padding-top: 24px; }
+    .pg__side {
+      position: relative;
+      top: 0;
+      max-height: none;
+      padding: 4px;
+      border-radius: 20px;
+      background: var(--pill);
+    }
+    .pg__fold {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 40px;
+      padding: 0 12px;
+      list-style: none;
+      cursor: pointer;
+    }
+    .pg__fold::-webkit-details-marker { display: none; }
+    .pg__fold-label { color: var(--ink-3); font-size: 14px; }
+    .pg__fold-current { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+    .pg__side[open] .pg__fold :global(svg) { rotate: 180deg; }
+    .pg__search { background: var(--ground); }
+    .pg__list { max-height: 50dvh; }
+    .pg__tools { margin-left: 0; }
+    .pg__title { font-size: 24px; }
+    .pg__stage { height: 480px; border-radius: 18px; }
+    .pg__step { text-align: left; }
+  }
+</style>

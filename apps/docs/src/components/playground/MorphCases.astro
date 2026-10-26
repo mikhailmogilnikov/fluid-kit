@@ -1,31 +1,10 @@
 ---
-import Icon from "./Icon.astro";
-
-/**
- * Morph test bench: one scenario per scene, each built to show a different way a morph can go
- * wrong. Slow motion and chaos (random interruptions) apply to all of them; the HUD measures
- * every run.
- */
-const art =
-  "radial-gradient(circle at 20% 25%, #ffd36e 0, transparent 40%), radial-gradient(circle at 80% 30%, #2f7bff 0, transparent 45%), radial-gradient(circle at 60% 85%, #1fd1a5 0, transparent 45%), radial-gradient(circle at 15% 90%, #ff4f81 0, transparent 40%), linear-gradient(135deg, #b5179e, #3a0ca3)";
-const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`;
+import Case from "./Case.astro";
+import Icon from "../Icon.astro";
 ---
 
-<section class="mlab" aria-label="Morph">
-  <p class="mlab__lead">
-    <b>Morph.</b> A control swells into a panel of the same glass. Each scene below pushes on a
-    different weak spot; slow it down or let chaos interrupt it to see the seams.
-  </p>
-
-  <div class="mlab__bar">
-    <label><input type="checkbox" data-slow /> Slow motion ×4</label>
-    <label><input type="checkbox" data-chaos /> Chaos</label>
-    <output class="mlab__hud" data-hud>Open anything to measure</output>
-  </div>
-
-  <!-- 1. The reference case: a corner button, the menu opening over it -->
-  <section class="ms" data-scene="corner">
-    <div class="ms__art" style={hue(60)}></div>
+<Case id="morph-corner">
+  <div class="ms" data-scene="corner">
     <p class="ms__words" aria-hidden="true">Corner</p>
     <div class="ms__layer">
       <button class="src src--corner lb lb-interactive" type="button" aria-label="Create" aria-controls="m-corner" data-morph-source>
@@ -40,12 +19,11 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
       <button type="button" role="menuitem" data-close><Icon name="plus" size={18} match="plus" />New Tab</button>
       <button type="button" role="menuitem" data-close><Icon name="eye" size={18} />New Private Tab</button>
     </div>
-    <p class="ms__hint"><b>Corner.</b> The reference: grows right and down from the button.</p>
-  </section>
+  </div>
+</Case>
 
-  <!-- 2. Opposite anchor: grows up and left, content scales from the other side -->
-  <section class="ms" data-scene="fab">
-    <div class="ms__art" style={hue(200)}></div>
+<Case id="morph-upward">
+  <div class="ms" data-scene="fab">
     <p class="ms__words" aria-hidden="true">Upward</p>
     <div class="ms__layer">
       <button class="src src--fab lb lb-interactive" type="button" aria-label="Now playing" aria-controls="m-fab" data-morph-source>
@@ -67,12 +45,11 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
         <button type="button" aria-label="Next"><Icon name="next" size={22} /></button>
       </div>
     </div>
-    <p class="ms__hint"><b>Upward.</b> Anchored bottom-right: grows up and left.</p>
-  </section>
+  </div>
+</Case>
 
-  <!-- 3. A capsule with a text label that changes: corners from a capsule, the copy's label -->
-  <section class="ms" data-scene="pill">
-    <div class="ms__art" style={hue(110)}></div>
+<Case id="morph-capsule">
+  <div class="ms" data-scene="pill">
     <p class="ms__words" aria-hidden="true">Sort</p>
     <div class="ms__layer">
       <button class="src src--pill lb lb-interactive" type="button" aria-controls="m-pill" data-morph-source>
@@ -85,12 +62,11 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
       <button type="button" role="menuitemradio" aria-checked="false" data-pick><span>Most popular</span></button>
       <button type="button" role="menuitemradio" aria-checked="false" data-pick><span>A–Z</span></button>
     </div>
-    <p class="ms__hint"><b>Capsule with a label.</b> Pick an option: the button comes back with the new label.</p>
-  </section>
+  </div>
+</Case>
 
-  <!-- 4. A circle into a field: circle → capsule, an input inside, focus -->
-  <section class="ms" data-scene="search">
-    <div class="ms__art" style={hue(300)}></div>
+<Case id="morph-field">
+  <div class="ms" data-scene="search">
     <p class="ms__words" aria-hidden="true">Search</p>
     <div class="ms__layer">
       <button class="src src--search lb lb-interactive" type="button" aria-label="Search" aria-controls="m-search" data-morph-source>
@@ -101,12 +77,11 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
       <Icon name="search" size={18} match="search" />
       <input type="search" placeholder="Search" aria-label="Search" />
     </form>
-    <p class="ms__hint"><b>Into a field.</b> A circle into a long capsule, anchored right; type, Enter or Esc.</p>
-  </section>
+  </div>
+</Case>
 
-  <!-- 5. Inside a glass group: the shape melts with its neighbour, the hidden control drops out -->
-  <section class="ms" data-scene="group">
-    <div class="ms__art" style={hue(20)}></div>
+<Case id="morph-group">
+  <div class="ms" data-scene="group">
     <p class="ms__words" aria-hidden="true">Grouped</p>
     <div class="ms__layer">
       <div class="dock lb-group">
@@ -125,12 +100,11 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
       <button type="button" role="menuitem" data-close><Icon name="layers" size={18} />Add to Queue</button>
       <button type="button" role="menuitem" data-close><Icon name="copy" size={18} />Copy Link</button>
     </div>
-    <p class="ms__hint"><b>In a group.</b> Melted to the bar: pours up out of the dock, parts from it, and back.</p>
-  </section>
+  </div>
+</Case>
 
-  <!-- 5b. Over its neighbours in a group: lifted out as glass of its own, the bar blurred under it -->
-  <section class="ms" data-scene="group-over">
-    <div class="ms__art" style={hue(330)}></div>
+<Case id="morph-over-group">
+  <div class="ms" data-scene="group-over">
     <p class="ms__words" aria-hidden="true">Lifted</p>
     <div class="ms__layer">
       <div class="dock lb-group">
@@ -149,12 +123,11 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
       <button type="button" role="menuitem" data-close><Icon name="layers" size={18} />Add to Queue</button>
       <button type="button" role="menuitem" data-close><Icon name="copy" size={18} />Copy Link</button>
     </div>
-    <p class="ms__hint"><b>Over the group.</b> Covers the bar: lifts out as its own glass, the bar blurred beneath.</p>
-  </section>
+  </div>
+</Case>
 
-  <!-- 5c. Squircles: corner-shape goes along with the radius, round into squircle too -->
-  <section class="ms" data-scene="squircle">
-    <div class="ms__art" style={hue(90)}></div>
+<Case id="morph-squircle">
+  <div class="ms" data-scene="squircle">
     <p class="ms__words" aria-hidden="true">Squircle</p>
     <div class="ms__layer">
       <button class="src src--sq lb lb-interactive" type="button" aria-label="Apps" aria-controls="m-sq" data-morph-source>
@@ -174,12 +147,11 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
       <button type="button" role="menuitem" data-close><Icon name="copy" size={18} />Drafts</button>
       <button type="button" role="menuitem" data-close><Icon name="motion" size={18} />Scheduled</button>
     </div>
-    <p class="ms__hint"><b>Squircles.</b> Left: squircle into squircle. Right: round into squircle. Round where corner-shape isn't drawn.</p>
-  </section>
+  </div>
+</Case>
 
-  <!-- 6. Far away, no overlap: a long flight, clip and content far from their boxes -->
-  <section class="ms" data-scene="far">
-    <div class="ms__art" style={hue(160)}></div>
+<Case id="morph-far">
+  <div class="ms" data-scene="far">
     <p class="ms__words" aria-hidden="true">Far</p>
     <div class="ms__layer">
       <button class="src src--far lb lb-clear lb-interactive" type="button" aria-label="Details" aria-controls="m-far" data-morph-source>
@@ -191,12 +163,11 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
       <span>You'll find it in your library, on every device.</span>
       <button class="panel__action" type="button" data-close>Done</button>
     </div>
-    <p class="ms__hint"><b>Far.</b> Clear glass, no overlap: flies across the scene.</p>
-  </section>
+  </div>
+</Case>
 
-  <!-- 7. Edge cases: barely bigger than the control; tall and tinted -->
-  <section class="ms" data-scene="edges">
-    <div class="ms__art" style={hue(240)}></div>
+<Case id="morph-edges">
+  <div class="ms" data-scene="edges">
     <p class="ms__words" aria-hidden="true">Edges</p>
     <div class="ms__layer">
       <button class="src src--tiny lb lb-interactive" type="button" aria-controls="m-tiny" data-morph-source>
@@ -219,53 +190,15 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
       <button type="button" role="menuitem" data-close>Podcasts</button>
       <button type="button" role="menuitem" data-close>Downloaded</button>
     </div>
-    <p class="ms__hint"><b>Edges.</b> Left: barely bigger than the button. Right: tall, narrow, tinted.</p>
-  </section>
-</section>
+  </div>
+</Case>
 
 <style>
-  .mlab {
-    display: grid;
-    gap: 32px;
-  }
-  .mlab__lead { margin: 0; }
-
-  .mlab__bar {
-    position: sticky;
-    top: 84px;
-    z-index: 5;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px 20px;
-    padding: 10px 14px;
-    border-radius: 14px;
-    background: var(--wash);
-    color: var(--ink);
-  }
-  .mlab__bar label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-  }
-  .mlab__hud {
-    margin-left: auto;
-    font: 12px/1.4 var(--mono);
-    white-space: pre;
-    color: var(--ink-2);
-  }
-
+  /* A scene fills the stage; the stage is the backdrop */
   .ms {
-    position: relative;
-    height: 440px;
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
-  .ms__art {
     position: absolute;
-    inset: -20%;
-    background-size: 100% 100%;
+    inset: 0;
+    overflow: hidden;
   }
   .ms__words {
     position: absolute;
@@ -276,28 +209,12 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
     font-size: clamp(48px, 10vw, 120px);
     font-weight: 600;
     letter-spacing: -0.04em;
-    color: rgb(255 255 255 / 0.85);
+    color: color-mix(in srgb, var(--ink) 70%, transparent);
     line-height: 1;
   }
   .ms__layer {
     position: absolute;
     inset: 0;
-  }
-  .ms__hint {
-    position: absolute;
-    left: 16px;
-    right: 16px;
-    bottom: 12px;
-    margin: 0;
-    text-align: center;
-    color: rgb(255 255 255 / 0.85);
-    font-size: 14px;
-    pointer-events: none;
-  }
-  /* The scenes whose controls sit at the bottom carry the hint at the top */
-  :is([data-scene="fab"], [data-scene="group"], [data-scene="group-over"], [data-scene="far"]) .ms__hint {
-    top: 14px;
-    bottom: auto;
   }
 
   button:not(.lb) { all: unset; cursor: pointer; display: grid; place-items: center; }
@@ -476,147 +393,3 @@ const hue = (deg: number) => `background: ${art}; filter: hue-rotate(${deg}deg)`
   }
   .player__controls button { width: 48px; height: 48px; }
 </style>
-
-<script>
-  import { createMorph, defaultMorphSprings, type Morph, type MorphSprings } from "@fluidkit/morph";
-
-  type Entry = { scene: HTMLElement; source: HTMLElement; content: HTMLElement; morph: Morph | null };
-
-  const entries: Entry[] = [...document.querySelectorAll<HTMLElement>("[data-morph-source]")].map((source) => ({
-    scene: source.closest<HTMLElement>("[data-scene]")!,
-    source,
-    content: document.getElementById(source.getAttribute("aria-controls")!)!,
-    morph: null,
-  }));
-
-  // HUD: main-thread time per frame (from the frame's start to a task posted in it: springs,
-  // style, layout, the group's redraw and paint recording) and the gaps between frames
-  const hud = document.querySelector<HTMLOutputElement>("[data-hud]")!;
-  let probe: { name: string; busy: number[]; gaps: number[]; last: number; frame: number } | null = null;
-  const pong = new MessageChannel();
-  let frameStart = 0;
-  pong.port1.onmessage = () => probe?.busy.push(performance.now() - frameStart);
-  const sample = (now: number) => {
-    if (!probe) return;
-    if (probe.last) probe.gaps.push(now - probe.last);
-    probe.last = now;
-    frameStart = performance.now();
-    pong.port2.postMessage(0);
-    probe.frame = requestAnimationFrame(sample);
-  };
-  const measure = (name: string) => {
-    if (probe) cancelAnimationFrame(probe.frame);
-    probe = { name, busy: [], gaps: [], last: 0, frame: requestAnimationFrame(sample) };
-  };
-  const report = (open: boolean) => {
-    if (!probe) return;
-    cancelAnimationFrame(probe.frame);
-    const { name, busy, gaps } = probe;
-    probe = null;
-    if (!gaps.length) return;
-    const sorted = [...gaps].sort((a, b) => a - b);
-    const refresh = sorted[Math.floor(sorted.length / 2)];
-    const dropped = gaps.filter((g) => g > refresh * 1.5).length;
-    const avg = busy.reduce((a, b) => a + b, 0) / busy.length;
-    hud.value =
-      `${name} ${open ? "open" : "close"} · ${gaps.length} frames @ ${(1000 / refresh).toFixed(0)}Hz\n` +
-      `main avg ${avg.toFixed(1)}ms max ${Math.max(...busy).toFixed(1)}ms · dropped ${dropped}`;
-  };
-
-  const isOpen = (entry: Entry) => entry.morph?.current === entry.content;
-  // Focus follows: into the panel once open, back to the control once it's there again
-  const rested = (entry: Entry, open: boolean) => {
-    entry.source.setAttribute("aria-expanded", String(open));
-    if (open) {
-      entry.content.querySelector<HTMLElement>("input, button")?.focus({ preventScroll: true });
-    } else if (document.activeElement === document.body || entry.content.contains(document.activeElement)) {
-      entry.source.focus({ preventScroll: true });
-    }
-    report(open);
-  };
-
-  // Slow motion stretches every spring; changing it rebuilds the morphs
-  const slowed = (factor: number): { grow: MorphSprings; shrink: MorphSprings } => {
-    const scale = (set: MorphSprings) =>
-      Object.fromEntries(
-        Object.entries(set).map(([key, s]) => [key, { ...s, duration: s.duration * factor }]),
-      ) as MorphSprings;
-    return { grow: scale(defaultMorphSprings.grow), shrink: scale(defaultMorphSprings.shrink) };
-  };
-  const build = (factor: number) => {
-    for (const entry of entries) {
-      entry.morph?.destroy();
-      entry.morph = createMorph({
-        states: [entry.source, entry.content],
-        spring: slowed(factor),
-        onStart: (to) => entry.source.setAttribute("aria-expanded", String(to === entry.content)),
-        onRest: (at) => rested(entry, at === entry.content),
-      });
-    }
-  };
-  build(1);
-  document.querySelector<HTMLInputElement>("[data-slow]")!.addEventListener("change", (e) => {
-    build((e.target as HTMLInputElement).checked ? 4 : 1);
-  });
-
-  const toggle = (entry: Entry) => {
-    measure(entry.scene.dataset.scene!);
-    entry.morph?.to(isOpen(entry) ? entry.source : entry.content);
-  };
-  const close = (entry: Entry) => {
-    if (!isOpen(entry)) return;
-    measure(entry.scene.dataset.scene!);
-    entry.morph?.to(entry.source);
-  };
-
-  for (const entry of entries) {
-    entry.source.addEventListener("click", () => toggle(entry));
-    entry.content.addEventListener("click", (e) => {
-      const target = e.target as Element;
-      // A sort option relabels the control, and its label is the one that flies back into it
-      const pick = target.closest<HTMLElement>("[data-pick]");
-      if (pick) {
-        for (const option of entry.content.querySelectorAll<HTMLElement>("[data-pick]")) {
-          option.setAttribute("aria-checked", String(option === pick));
-          const label = option.querySelector("span")!;
-          if (option === pick) label.dataset.fkMatch = "sort";
-          else delete label.dataset.fkMatch;
-        }
-        entry.source.querySelector<HTMLElement>("[data-label]")!.textContent = pick.textContent!.trim();
-      }
-      if (pick || target.closest("[data-close]")) close(entry);
-    });
-    entry.content.addEventListener("submit", (e) => {
-      e.preventDefault();
-      close(entry);
-    });
-  }
-
-  // A press anywhere else in the scene closes what's open there
-  for (const scene of new Set(entries.map((e) => e.scene))) {
-    scene.addEventListener("pointerdown", (e) => {
-      const target = e.target as Node;
-      for (const entry of entries) {
-        if (entry.scene !== scene || !isOpen(entry)) continue;
-        if (entry.content.contains(target) || entry.source.contains(target)) continue;
-        close(entry);
-      }
-    });
-  }
-  document.addEventListener("keydown", (e) => {
-    if (e.key !== "Escape") return;
-    for (const entry of entries) close(entry);
-  });
-
-  // Chaos: something toggles every so often, often mid-flight, to catch what interrupting breaks
-  let chaos = 0;
-  const strike = () => {
-    const entry = entries[Math.floor(Math.random() * entries.length)];
-    toggle(entry);
-    chaos = window.setTimeout(strike, 120 + Math.random() * 600);
-  };
-  document.querySelector<HTMLInputElement>("[data-chaos]")!.addEventListener("change", (e) => {
-    window.clearTimeout(chaos);
-    if ((e.target as HTMLInputElement).checked) strike();
-  });
-</script>

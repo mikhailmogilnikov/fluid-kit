@@ -1,7 +1,7 @@
 ---
 package: "@fluidkit/core"
 name: Core
-order: 7
+order: 8
 description: "What the Fluid Kit packages share: an interruptible, velocity-keeping spring, boxes read as the browser draws them, and the DOM contract they meet by."
 intro: "The spring every moving part runs on, boxes read as the browser draws them, and the attributes the packages recognize each other by."
 ---
@@ -53,6 +53,13 @@ new SpringAnimator(
 ```
 
 `SpringParams` is `{ duration, bounce, settle? }`. `duration` is how long the motion feels, in seconds; it isn't a hard deadline. `bounce` runs from `0` (no overshoot) to `1`; below `1` the spring comes to rest. `settle` is the bounce after the first overshoot, `bounce` by default: a bouncy spring with a low `settle` overshoots once and then comes back without swinging. `to()` starts a new movement, with its bounce; `retarget()` changes the target of the current one without a new bounce.
+
+`SpringAnimator.timeScale` slows every spring down at once, or speeds it up: `0.25` is four times slower. Every package's springs are core's, so one setting slows morph, indicator, drag and lift together, as the [playground](/playground)'s speed does.
+
+```ts
+SpringAnimator.timeScale = 0.25; // slow motion
+SpringAnimator.timeScale = 1; // back to real time
+```
 
 </Section>
 

@@ -1,0 +1,285 @@
+---
+import Case from "./Case.astro";
+import Icon from "../Icon.astro";
+
+const songs = ["Night Swim", "Golden Hour", "Paper Planes", "Low Tide", "Neon Rain", "Glass Houses", "Static", "Slow Bloom", "Afterglow", "Northern Lines", "Saltwater", "Overpass", "Velvet", "Daybreak"];
+---
+
+<Case id="blur-dock">
+  <div class="bc-dock lb-group" data-group>
+    <div class="bc-bar lb">
+      <button type="button" aria-label="Back"><Icon name="back" size={20} /></button>
+      <button type="button" aria-label="Play"><Icon name="play" size={20} /></button>
+      <button type="button" aria-label="Next"><Icon name="next" size={20} /></button>
+    </div>
+    <button class="bc-orb lb" type="button" aria-label="Search" aria-pressed="false" data-orb>
+      <Icon name="search" size={20} />
+    </button>
+  </div>
+  <label class="bc-knob">
+    Merge distance <output data-merge-out>18px</output>
+    <input type="range" min="0" max="56" value="18" data-merge />
+  </label>
+</Case>
+
+<Case id="blur-stretch">
+  <div class="bc-toolbar lb-group">
+    <div class="bc-tb bc-tb--seg lb lb-stretch">
+      <button type="button">Albums</button>
+      <button type="button">Songs</button>
+    </div>
+    <button class="bc-tb bc-tb--round lb lb-interactive" type="button" aria-label="Add"><Icon name="plus" size={20} /></button>
+    <button class="bc-tb bc-tb--round bc-tb--far lb lb-interactive" type="button" aria-label="More"><Icon name="more" size={20} /></button>
+  </div>
+</Case>
+
+<Case id="blur-drops">
+  <div class="bc-field lb-group">
+    <div class="bc-pill lb">Liquid Blur</div>
+    <div class="bc-drop lb" aria-label="Draggable drop" data-drop><Icon name="heart" size={20} /></div>
+    <div class="bc-drop bc-drop--small lb" aria-label="Draggable drop" data-drop></div>
+  </div>
+</Case>
+
+<Case id="blur-scroll">
+  <div class="bc-phone">
+    <div class="bc-scroller" data-scroller>
+      <div class="bc-sticky lb">
+        <b>Library</b>
+        <Icon name="search" size={18} />
+      </div>
+      {
+        songs.map((s, i) => (
+          <div class="bc-row">
+            <span class="bc-art" style={`--h: ${(i * 47) % 360}`} />
+            {s}
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</Case>
+
+<Case id="blur-edge">
+  <div class="bc-phone">
+    <div class="bc-scroller bc-scroller--edge lb-edge" data-scroller>
+      {
+        songs.map((s, i) => (
+          <div class="bc-row">
+            <span class="bc-art" style={`--h: ${(i * 47) % 360}`} />
+            {s}
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</Case>
+
+<Case id="blur-lens">
+  <div class="bc-track">
+    <div class="bc-fill"></div>
+    <div class="bc-thumb lb" data-thumb></div>
+  </div>
+</Case>
+
+<Case id="blur-clipped">
+  <div class="bc-clip">
+    <div class="bc-clip__art"></div>
+    <div class="bc-clip__glass lb" data-mover>Clipped</div>
+  </div>
+</Case>
+
+<Case id="blur-variants">
+  <div class="bc-variants">
+    <button type="button" class="bc-variant lb lb-clear lb-interactive">Clear</button>
+    <button type="button" class="bc-variant lb lb-tinted lb-interactive" style="--lb-tint: #0a84ff; --lb-tint-text: #fff">Tinted</button>
+    <button type="button" class="bc-variant lb lb-interactive">Glass</button>
+  </div>
+</Case>
+
+<style>
+  /* Dock: a bar and a search button that slides out of it */
+  .bc-dock { position: relative; width: 240px; height: 56px; }
+  .bc-bar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 176px;
+    height: 56px;
+    border-radius: 28px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    color: var(--ink);
+  }
+  .bc-bar button { width: 48px; height: 48px; display: grid; place-items: center; }
+  .bc-orb {
+    position: absolute;
+    left: 184px;
+    top: 0;
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
+    display: grid;
+    place-items: center;
+    color: var(--ink);
+  }
+  .bc-knob {
+    position: absolute;
+    left: 50%;
+    bottom: 20px;
+    translate: -50% 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: var(--ground);
+    color: var(--ink-2);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .bc-knob output { min-width: 3em; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .bc-knob input { width: 120px; }
+
+  /* Stretch */
+  .bc-toolbar { position: relative; width: 340px; height: 56px; }
+  .bc-tb {
+    position: absolute;
+    top: 0;
+    height: 56px;
+    border-radius: 28px;
+    display: grid;
+    place-items: center;
+    color: var(--ink);
+  }
+  .bc-tb--seg {
+    left: 0;
+    width: 200px;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    font-weight: 600;
+  }
+  .bc-tb--seg button { padding: 0 12px; height: 44px; }
+  .bc-tb--round { left: 206px; width: 56px; }
+  .bc-tb--far { left: 284px; }
+
+  /* Drops */
+  .bc-field { position: absolute; inset: 0; }
+  .bc-pill {
+    position: absolute;
+    left: calc(50% - 110px);
+    top: calc(50% - 28px);
+    width: 220px;
+    height: 56px;
+    border-radius: 28px;
+    display: grid;
+    place-items: center;
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .bc-drop {
+    position: absolute;
+    left: calc(50% + 130px);
+    top: calc(50% - 28px);
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
+    display: grid;
+    place-items: center;
+    color: var(--ink);
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+  }
+  .bc-drop--small { left: calc(50% - 170px); top: calc(50% + 60px); width: 36px; height: 36px; border-radius: 18px; }
+
+  /* A phone-sized list */
+  .bc-phone {
+    width: min(320px, calc(100% - 32px));
+    height: calc(100% - 48px);
+    border-radius: 28px;
+    background: color-mix(in srgb, var(--ground) 30%, transparent);
+    overflow: hidden;
+  }
+  .bc-scroller { height: 100%; overflow-y: auto; overscroll-behavior: contain; }
+  .bc-scroller--edge { padding: 8px 0; }
+  .bc-sticky {
+    position: sticky;
+    top: 8px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 8px;
+    height: 48px;
+    padding: 0 18px;
+    border-radius: 24px;
+    color: var(--ink);
+  }
+  .bc-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    color: var(--ink);
+    font-size: 15px;
+  }
+  .bc-art {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, hsl(var(--h) 90% 65%), hsl(calc(var(--h) + 60) 90% 55%));
+  }
+
+  /* Lens: a thumb over stripes, so its blur shows */
+  .bc-track {
+    position: relative;
+    width: min(320px, calc(100% - 48px));
+    height: 8px;
+    border-radius: 4px;
+    background: repeating-linear-gradient(90deg, #ff3b30 0 10px, #ffcc00 10px 20px, #0a84ff 20px 30px);
+  }
+  .bc-fill { position: absolute; inset: 0 50% 0 0; border-radius: inherit; background: #0a84ff; }
+  .bc-thumb {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 64px;
+    height: 40px;
+    margin: -20px 0 0 -32px;
+    border-radius: 20px;
+    transition: --lb-lens 0.35s;
+  }
+
+  /* Glass that moves under a rounded clip */
+  .bc-clip {
+    position: relative;
+    width: min(320px, calc(100% - 48px));
+    height: 220px;
+    border-radius: 40px;
+    overflow: hidden;
+  }
+  .bc-clip__art {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(115deg, #ff3b30 0 20px, #ff9500 20px 40px, #34c759 40px 60px, #0a84ff 60px 80px);
+  }
+  .bc-clip__glass {
+    position: absolute;
+    left: -40px;
+    top: -30px;
+    width: 180px;
+    height: 120px;
+    border-radius: 30px;
+    display: grid;
+    place-items: center;
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  /* Variants */
+  .bc-variants { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; padding: 16px; }
+  .bc-variant { height: 48px; padding: 0 24px; border-radius: 24px; color: var(--ink); font-weight: 600; }
+</style>
