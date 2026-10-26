@@ -755,6 +755,7 @@ const morph = createMorph({
 | `update()` | Measures the states again and follows them mid-flight |
 | `add(state)` | Takes one more element as a state, hidden until it's asked for: an item added to a list later |
 | `remove(state)` | Lets go of a state and gives its inline styles back, before it leaves the page. Not the current one; one end of a flight under way lands it at once |
+| `set(settings)` | Takes new `spring`, `onStart`, `onRest` or `onProgress`, the rest kept: a component's props as they change, without a morph made again. New springs take the next flight |
 | `destroy()` | Stops the flight, removes the shape and gives every state its own inline styles back. Later calls do nothing |
 
 Sent back mid-way, it turns around keeping its speed. Sent to a third state mid-way, it starts over from where the shape is. During a flight it follows scrolling, window resizes and a state's own size changes (contents loaded on the way) by itself; call `update()` after anything else moves a state. `destroy()` doesn't remove your own event listeners.

@@ -295,6 +295,7 @@ The defaults are quick and don't overshoot: most of the way from one item to the
 | `rest` | Where it stays when nothing points. Set it when the choice changes, and it goes there unless something points at it now |
 | `to(item, move?)` | Onto `item`, or away with `null`. `{ instant: true }` puts it there at once |
 | `update()` | Measures the items again and follows them |
+| `set(settings)` | Takes new options, all but `container`, `indicator` and `rest` (a property of its own), the rest kept: a component's props as they change, without an indicator made again. A new `trigger` takes over at once |
 | `destroy()` | Stops it, removes its listeners and gives the indicator its own inline styles back. Later calls do nothing |
 
 </Section>

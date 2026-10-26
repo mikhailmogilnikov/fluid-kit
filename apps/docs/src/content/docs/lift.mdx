@@ -191,6 +191,7 @@ Icons on a home screen, each with quick actions. A copy of the icon is what lift
 | `opened` | Lifted, its menu open |
 | `open()` | Lifts it and opens the menu, its first item focused: for a button that opens it, say. Another lift open in the page closes at once |
 | `close()` | Settles it back and closes the menu |
+| `set(settings)` | Takes new options, all but `element` and `menu`, the rest kept: a component's props as they change, without a lift made again. Open, it takes them as it goes (dim, blur, callbacks) or the next time it opens |
 | `destroy()` | Closes it at once and removes its listeners. Later calls do nothing |
 
 </Section>

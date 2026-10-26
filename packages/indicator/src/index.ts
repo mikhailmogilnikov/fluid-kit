@@ -100,6 +100,9 @@ export type IndicatorOptions = {
 /** `instant`: there at once, as with reduced motion */
 export type IndicatorMove = { instant?: boolean };
 
+/** What an indicator can be told again once made: all but its container, indicator and rest (a property of its own) */
+export type IndicatorSettings = Omit<IndicatorOptions, "container" | "indicator" | "rest">;
+
 export type Indicator = {
   /** The item it's on or headed for; `null` while away */
   readonly current: HTMLElement | null;
@@ -109,6 +112,11 @@ export type Indicator = {
   to(item: HTMLElement | null, move?: IndicatorMove): void;
   /** Measures the items again and follows them: for one moved by something unseen */
   update(): void;
+  /**
+   * Takes new settings, the rest kept: a component's props as they change, without an indicator
+   * made again. A new trigger takes over at once; what pointed at it before lets go
+   */
+  set(settings: Partial<IndicatorSettings>): void;
   destroy(): void;
 };
 
@@ -164,23 +172,22 @@ export function createIndicator({
   trigger = "auto",
   rest: initialRest = null,
   click = true,
-  focus = trigger !== "manual",
+  focus: focusGiven,
   spring: given,
   onChange,
 }: IndicatorOptions): Indicator {
+  /** Keyboard focus moves it unless told not to, or manual */
+  let focus = focusGiven ?? trigger !== "manual";
   if (!container.contains(indicator)) throw new Error("indicator: it has to be in its container");
   const doc = container.ownerDocument;
   const win = doc.defaultView ?? window;
   const reduced = win.matchMedia("(prefers-reduced-motion: reduce)");
   const cornerShapes = drawsCornerShape(win);
-  const springs = { ...defaultIndicatorSprings, ...given };
-  const channels: Record<Channel, SpringParams> = {
-    cx: springs.x,
-    cy: springs.y,
-    w: springs.width,
-    h: springs.height,
-    p: springs.presence,
+  const channelsOf = (set?: Partial<IndicatorSprings>): Record<Channel, SpringParams> => {
+    const springs = { ...defaultIndicatorSprings, ...set };
+    return { cx: springs.x, cy: springs.y, w: springs.width, h: springs.height, p: springs.presence };
   };
+  let channels = channelsOf(given);
 
   // Its own corners, for items with none, read before any are written
   const ownStyle = win.getComputedStyle(indicator);
@@ -333,7 +340,7 @@ export function createIndicator({
       goal = { ...(was ? goalOf(was) : now), p: 0 };
     }
     aim = goal;
-    motion!.to(goal);
+    motion!.to(goal, channels);
     if (instant || reduced.matches) {
       motion!.jump(goal, { cx: 0, cy: 0, w: 0, h: 0, p: 0 });
       render(goal);
@@ -556,16 +563,24 @@ export function createIndicator({
   });
   changed.observe(container, { childList: true, subtree: true });
 
-  const listen = trigger !== "manual";
-  if (listen) {
-    container.addEventListener("pointermove", onMove);
-    container.addEventListener("pointerleave", onLeave);
-    container.addEventListener("pointerdown", onDown);
-  }
-  if (focus) {
-    container.addEventListener("focusin", onFocusIn);
-    container.addEventListener("focusout", onFocusOut);
-  }
+  /** Its listeners, for the trigger and focus it has now: set again when they change */
+  const listen = () => {
+    container.removeEventListener("pointermove", onMove);
+    container.removeEventListener("pointerleave", onLeave);
+    container.removeEventListener("pointerdown", onDown);
+    container.removeEventListener("focusin", onFocusIn);
+    container.removeEventListener("focusout", onFocusOut);
+    if (trigger !== "manual") {
+      container.addEventListener("pointermove", onMove);
+      container.addEventListener("pointerleave", onLeave);
+      container.addEventListener("pointerdown", onDown);
+    }
+    if (focus) {
+      container.addEventListener("focusin", onFocusIn);
+      container.addEventListener("focusout", onFocusOut);
+    }
+  };
+  listen();
 
   return {
     get current() {
@@ -585,6 +600,24 @@ export function createIndicator({
       go(item, instant);
     },
     update: relayout,
+    set(next) {
+      if (destroyed) return;
+      if ("onChange" in next) onChange = next.onChange;
+      if ("click" in next) click = next.click ?? true;
+      if ("spring" in next) channels = channelsOf(next.spring);
+      if ("items" in next) {
+        selector = next.items;
+        relayout();
+      }
+      if ("trigger" in next || "focus" in next) {
+        if ("trigger" in next) trigger = next.trigger ?? "auto";
+        if ("focus" in next) focusGiven = next.focus;
+        focus = focusGiven ?? trigger !== "manual";
+        // What pointed at it under the old ones lets go: it goes back to rest
+        if (session) back();
+        listen();
+      }
+    },
     destroy() {
       if (destroyed) return;
       destroyed = true;

@@ -123,6 +123,9 @@ export type MorphOptions = {
 /** `instant`: the states swap at once, as with reduced motion */
 export type MorphMove = { instant?: boolean };
 
+/** What a morph can be told again once made: its springs and callbacks */
+export type MorphSettings = Pick<MorphOptions, "spring" | "onStart" | "onRest" | "onProgress">;
+
 export type Morph = {
   /** The state asked for, at once; `moving` says whether it's there yet */
   readonly current: HTMLElement;
@@ -141,6 +144,11 @@ export type Morph = {
    * it's at; one end of a flight under way, and the flight lands at once.
    */
   remove(state: HTMLElement): void;
+  /**
+   * Takes new springs or callbacks, the rest kept: a component's props as they change, without a
+   * morph made again. New springs take the next flight; one under way keeps its own
+   */
+  set(settings: Partial<MorphSettings>): void;
   destroy(): void;
 };
 
@@ -352,10 +360,11 @@ export function createMorph({
   if (!states.length) throw new Error("morph: it needs states");
   if (!states.includes(initial)) throw new Error("morph: the initial state isn't one of its states");
   for (const el of states) if (!el.parentElement) throw new Error("morph: each state needs a parent");
-  const spring = {
-    grow: { ...defaultMorphSprings.grow, ...given?.grow },
-    shrink: { ...defaultMorphSprings.shrink, ...given?.shrink },
-  };
+  const springsOf = (set?: MorphOptions["spring"]) => ({
+    grow: { ...defaultMorphSprings.grow, ...set?.grow },
+    shrink: { ...defaultMorphSprings.shrink, ...set?.shrink },
+  });
+  let spring = springsOf(given);
   const doc = initial.ownerDocument;
   const win = doc.defaultView ?? window;
   const reduced = win.matchMedia("(prefers-reduced-motion: reduce)");
@@ -1320,6 +1329,12 @@ export function createMorph({
     },
     to,
     update,
+    set(next) {
+      if ("spring" in next) spring = springsOf(next.spring);
+      if ("onStart" in next) onStart = next.onStart;
+      if ("onRest" in next) onRest = next.onRest;
+      if ("onProgress" in next) onProgress = next.onProgress;
+    },
     add(el) {
       if (destroyed || saved.has(el)) return;
       if (!el.parentElement) throw new Error("morph: each state needs a parent");

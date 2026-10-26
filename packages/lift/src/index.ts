@@ -68,12 +68,20 @@ export type LiftOptions = {
   onSelect?: (item: HTMLElement) => void;
 };
 
+/** What a lift can be told again once made: all but its element and its menu */
+export type LiftSettings = Omit<LiftOptions, "element" | "menu">;
+
 export type Lift = {
   /** Lifted, its menu open */
   readonly opened: boolean;
   /** Lifts it and opens the menu, its first item focused */
   open(): void;
   close(): void;
+  /**
+   * Takes new settings, the rest kept: a component's props as they change, without a lift made
+   * again. Open, it takes them as it goes (its dim, blur, callbacks) or the next time it opens
+   */
+  set(settings: Partial<LiftSettings>): void;
   destroy(): void;
 };
 
@@ -222,16 +230,17 @@ function picture(from: HTMLElement, to: HTMLElement) {
 }
 
 export function createLift(options: LiftOptions): Lift {
-  const { element, menu, onOpen, onClose, onHighlight, onSelect } = options;
+  const { element, menu } = options;
+  let { onOpen, onClose, onHighlight, onSelect, preview } = options;
   const doc = element.ownerDocument;
   const win = doc.defaultView ?? window;
-  const items = options.items ?? ITEMS;
-  const delay = options.delay ?? DELAY;
-  const scale = options.scale ?? SCALE;
-  const dim = options.dim ?? DIM;
-  const blur = options.blur ?? BLUR;
-  const placement = options.placement ?? "auto";
-  const rise = options.spring ?? defaultLiftSpring;
+  let items = options.items ?? ITEMS;
+  let delay = options.delay ?? DELAY;
+  let scale = options.scale ?? SCALE;
+  let dim = options.dim ?? DIM;
+  let blur = options.blur ?? BLUR;
+  let placement = options.placement ?? "auto";
+  let rise = options.spring ?? defaultLiftSpring;
   const reduced = win.matchMedia("(prefers-reduced-motion: reduce)");
   const own = { callout: element.style.getPropertyValue("-webkit-touch-callout") };
   // A long press is the lift's, not iOS's callout
@@ -485,7 +494,7 @@ export function createLift(options: LiftOptions): Lift {
     layer.append(shade);
 
     // What's lifted: a preview of yours, kept to put back where it was, or a copy made a picture
-    const given = typeof options.preview === "function" ? options.preview(element) : options.preview;
+    const given = typeof preview === "function" ? preview(element) : preview;
     let putPreview = () => {};
     if (given) {
       copy = given;
@@ -718,6 +727,22 @@ export function createLift(options: LiftOptions): Lift {
     },
     open: () => open(true),
     close,
+    set(next) {
+      if ("items" in next) items = next.items ?? ITEMS;
+      if ("preview" in next) preview = next.preview;
+      if ("delay" in next) delay = next.delay ?? DELAY;
+      if ("scale" in next) scale = next.scale ?? SCALE;
+      if ("dim" in next) dim = next.dim ?? DIM;
+      if ("blur" in next) blur = next.blur ?? BLUR;
+      if ("placement" in next) placement = next.placement ?? "auto";
+      if ("spring" in next) rise = next.spring ?? defaultLiftSpring;
+      if ("onOpen" in next) onOpen = next.onOpen;
+      if ("onClose" in next) onClose = next.onClose;
+      if ("onHighlight" in next) onHighlight = next.onHighlight;
+      if ("onSelect" in next) onSelect = next.onSelect;
+      // Open, the dim and blur show the new ones at once
+      if (opened && !closing) draw(spring.values());
+    },
     destroy() {
       if (destroyed) return;
       destroyed = true;

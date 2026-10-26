@@ -91,6 +91,12 @@ export type DragOptions = {
  */
 export type DragMove = { instant?: boolean; velocity?: number | DragPoint };
 
+/**
+ * What a drag can be told again once made: all but its element, handle, axis, scroll area and
+ * initial snap point
+ */
+export type DragSettings = Omit<DragOptions, "element" | "handle" | "axis" | "scroll" | "initial">;
+
 export type Drag = {
   /** Its offset now */
   readonly position: DragPoint;
@@ -110,6 +116,11 @@ export type Drag = {
   to(position: number | DragPoint, move?: DragMove): void;
   /** Reads the snap points and bounds again, and follows them */
   update(): void;
+  /**
+   * Takes new settings, the rest kept: a component's props as they change, without a drag made
+   * again. New snap points or bounds are followed at once, as by `update()`
+   */
+  set(settings: Partial<DragSettings>): void;
   destroy(): void;
 };
 
@@ -161,12 +172,17 @@ type Input = { id: number; touch: boolean; x: number; y: number; t: number };
 const claimed = new Set<number>();
 
 export function createDrag(options: DragOptions): Drag {
-  const { element, handle = element, axis = "both", onStart, onMove, onEnd, onRest } = options;
+  const { element, handle = element, axis = "both" } = options;
+  let { onStart, onMove, onEnd, onRest } = options;
+  /** The snap points and bounds as given, a function or not: read again on `update()` */
+  let given = { snaps: options.snaps, bounds: options.bounds };
   const doc = element.ownerDocument;
   const win = doc.defaultView ?? window;
   const reduced = win.matchMedia("(prefers-reduced-motion: reduce)");
-  const rubber = Math.max(0, options.rubberband ?? RUBBERBAND);
-  const rate = Math.min(0.9999, Math.max(0, options.deceleration ?? DECELERATION));
+  const rubberOf = (v?: number) => Math.max(0, v ?? RUBBERBAND);
+  const rateOf = (v?: number) => Math.min(0.9999, Math.max(0, v ?? DECELERATION));
+  let rubber = rubberOf(options.rubberband);
+  let rate = rateOf(options.deceleration);
   const onX = axis !== "y";
   const onY = axis !== "x";
   const own = { translate: element.style.translate, touchAction: handle.style.touchAction };
@@ -183,9 +199,9 @@ export function createDrag(options: DragOptions): Drag {
   let size = { x: 0, y: 0 };
   /** The snap points, bounds and size as they are now */
   const read = () => {
-    const given = typeof options.snaps === "function" ? options.snaps() : (options.snaps ?? []);
-    snaps = given.map(point);
-    const b = typeof options.bounds === "function" ? options.bounds() : options.bounds;
+    const points = typeof given.snaps === "function" ? given.snaps() : (given.snaps ?? []);
+    snaps = points.map(point);
+    const b = typeof given.bounds === "function" ? given.bounds() : given.bounds;
     const range = (k: "x" | "y", on: boolean) => {
       if (!on) return [0, 0];
       const set = b?.[k];
@@ -242,8 +258,8 @@ export function createDrag(options: DragOptions): Drag {
     onMove?.({ ...position }, { ...velocity });
   };
 
-  const settling = options.spring ?? defaultDragSpring;
-  const follow = options.follow ?? null;
+  let settling = options.spring ?? defaultDragSpring;
+  let follow = options.follow ?? null;
 
   // A spring calls back once as it's made, before it's there; its first frame is written below
   let ready = false;
@@ -773,6 +789,23 @@ export function createDrag(options: DragOptions): Drag {
       settle(clamp(point(target)), move.velocity === undefined ? velocity : point(move.velocity), move.instant);
     },
     update: relayout,
+    set(next) {
+      if ("onStart" in next) onStart = next.onStart;
+      if ("onMove" in next) onMove = next.onMove;
+      if ("onEnd" in next) onEnd = next.onEnd;
+      if ("onRest" in next) onRest = next.onRest;
+      if ("rubberband" in next) rubber = rubberOf(next.rubberband);
+      if ("deceleration" in next) rate = rateOf(next.deceleration);
+      if ("spring" in next) settling = next.spring ?? defaultDragSpring;
+      if ("follow" in next) follow = next.follow ?? null;
+      if ("snaps" in next || "bounds" in next) {
+        given = {
+          snaps: "snaps" in next ? next.snaps : given.snaps,
+          bounds: "bounds" in next ? next.bounds : given.bounds,
+        };
+        relayout();
+      }
+    },
     destroy() {
       if (destroyed) return;
       destroyed = true;

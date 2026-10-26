@@ -507,6 +507,7 @@ The spring it settles on starts at the pointer's speed. The default has no bounc
 | `snap(index, move?)` | To a snap point. `{ instant: true }` puts it there at once; `{ velocity }` sets it off at a speed of your own |
 | `to(position, move?)` | To an offset within its bounds: a number along the axis, or `{ x, y }` |
 | `update()` | Reads the snap points and bounds again and follows them, to the same snap point |
+| `set(settings)` | Takes new options, all but `element`, `handle`, `axis`, `scroll` and `initial`, the rest kept: a component's props as they change, without a drag made again. New snap points or bounds are followed at once |
 | `destroy()` | Stops it, removes its listeners and gives the element its own `translate` and the handle its `touch-action` back. Later calls do nothing |
 
 </Section>
