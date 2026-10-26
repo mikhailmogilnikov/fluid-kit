@@ -214,7 +214,9 @@ export function createIndicator({
   const frame = () => {
     const cb = (indicator.offsetParent as HTMLElement | null) ?? container;
     const r = cb.getBoundingClientRect();
-    const scale = cb.offsetWidth ? r.width / cb.offsetWidth : 1;
+    // offsetWidth is rounded: a box 300.4px wide isn't scaled by 1.0013, which would put the
+    // indicator a fraction of a pixel off its item, and more off as the box grows
+    const scale = cb.offsetWidth && Math.abs(r.width - cb.offsetWidth) >= 1 ? r.width / cb.offsetWidth : 1;
     return {
       left: r.left + (cb.clientLeft - cb.scrollLeft) * scale,
       top: r.top + (cb.clientTop - cb.scrollTop) * scale,
@@ -278,6 +280,8 @@ export function createIndicator({
   let corners: Radii = [0, 0, 0, 0];
   let shape = 1;
   let motion: SpringAnimator<Channel> | null = null;
+  /** Where it was last sent */
+  let aim: Frame | null = null;
   let destroyed = false;
 
   const render = (f: Frame) => {
@@ -328,6 +332,7 @@ export function createIndicator({
       // pointer was over, not somewhere on the way to it
       goal = { ...(was ? goalOf(was) : now), p: 0 };
     }
+    aim = goal;
     motion!.to(goal);
     if (instant || reduced.matches) {
       motion!.jump(goal, { cx: 0, cy: 0, w: 0, h: 0, p: 0 });
@@ -338,6 +343,7 @@ export function createIndicator({
 
   // At rest where it rests, or away
   const first = initialRest ? spotOf(initialRest) : undefined;
+  if (first) aim = goalOf(first);
   if (first) {
     target = initialRest;
     corners = first.radii;
@@ -529,7 +535,19 @@ export function createIndicator({
     if (!spot) return;
     corners = spot.radii;
     shape = spot.shape;
-    motion.retarget(goalOf(spot));
+    const goal = goalOf(spot);
+    // Resting on its item, it keeps to it exactly: an item that grows (its text changing, say) is
+    // followed frame by frame, not chased by a spring a few frames behind
+    if (aim && resting(aim)) motion.jump(goal, { cx: 0, cy: 0, w: 0, h: 0, p: 0 });
+    aim = goal;
+    motion.retarget(goal);
+    if (resting(goal)) render(goal);
+  };
+  /** Drawn where it was sent and still there */
+  const resting = (goal: Frame) => {
+    const now = motion!.values();
+    const v = motion!.velocities();
+    return (["cx", "cy", "w", "h", "p"] as const).every((k) => Math.abs(now[k] - goal[k]) < 0.5 && Math.abs(v[k]) < 1);
   };
   resized.observe(container);
   const changed = new MutationObserver(() => {
