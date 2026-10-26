@@ -1,4 +1,5 @@
 import { createDrag } from "@fluidkit/drag";
+import { expect, first } from "./check";
 import type { Setup } from "./kit";
 
 export const drag: Record<string, Setup> = {
@@ -13,7 +14,23 @@ export const drag: Record<string, Setup> = {
       snaps: () => dots.map((dot) => dot.offsetLeft + dot.offsetWidth / 2 - card.offsetWidth / 2),
       initial: 0,
     });
-    return { steps: [1, 2, 0].map((i) => () => d.snap(i)), destroy: () => d.destroy() };
+    const order = [1, 2, 0];
+    return {
+      steps: order.map((i) => () => d.snap(i)),
+      // Centered on its dot, at rest
+      check: (step) => {
+        const i = step < 0 ? 0 : order[step];
+        const a = card.getBoundingClientRect();
+        const b = dots[i].getBoundingClientRect();
+        const off = Math.abs(a.left + a.width / 2 - (b.left + b.width / 2));
+        return first(
+          expect(d.current === i, `at snap ${d.current}, not ${i}`),
+          expect(off <= 1, `${off.toFixed(1)}px off its dot`),
+          expect(!d.moving, "still moving"),
+        );
+      },
+      destroy: () => d.destroy(),
+    };
   },
 
   // Free inside the frame, rubber past its sides
@@ -29,7 +46,20 @@ export const drag: Record<string, Setup> = {
       { x: (frame.clientWidth - ball.offsetWidth) / 2, y: (frame.clientHeight - ball.offsetHeight) / 2 },
       { instant: true },
     );
-    return { destroy: () => d.destroy() };
+    return {
+      // In the middle of its frame to start with
+      check: (step) => {
+        if (step >= 0) return undefined;
+        const f = frame.getBoundingClientRect();
+        const b = ball.getBoundingClientRect();
+        const off = Math.hypot(
+          b.left + b.width / 2 - (f.left + f.width / 2),
+          b.top + b.height / 2 - (f.top + f.height / 2),
+        );
+        return expect(off <= 2, `${off.toFixed(1)}px off the frame's middle`);
+      },
+      destroy: () => d.destroy(),
+    };
   },
 
   "drag-switch": (root) => {
@@ -54,7 +84,24 @@ export const drag: Record<string, Setup> = {
       d.snap(on ? 1 : 0);
     };
     toggle.addEventListener("click", () => flip(toggle.getAttribute("aria-checked") !== "true"));
-    return { steps: [() => flip(true), () => flip(false)], destroy: () => d.destroy() };
+    return {
+      steps: [() => flip(true), () => flip(false)],
+      // Checked, and the thumb at that end of the track
+      check: (step) => {
+        const on = step === 0;
+        const t = toggle.getBoundingClientRect();
+        const k = thumb.getBoundingClientRect();
+        const off = on ? Math.abs(t.right - 2 - k.right) : Math.abs(k.left - (t.left + 2));
+        return first(
+          expect(
+            toggle.getAttribute("aria-checked") === String(on),
+            `aria-checked is ${toggle.getAttribute("aria-checked")}`,
+          ),
+          expect(off <= 1, `the thumb is ${off.toFixed(1)}px from its end`),
+        );
+      },
+      destroy: () => d.destroy(),
+    };
   },
 
   // Open, half way, down to its title; its list hands the gesture back and forth with it
@@ -71,7 +118,20 @@ export const drag: Record<string, Setup> = {
       },
       initial: 1,
     });
-    return { steps: [0, 1, 2].map((i) => () => d.snap(i)), destroy: () => d.destroy() };
+    return {
+      steps: [0, 1, 2].map((i) => () => d.snap(i)),
+      // On its snap point: laid out open, moved down by the point
+      check: (step) => {
+        const i = step < 0 ? 1 : step;
+        const h = area.clientHeight;
+        const want = [0, h / 2 - 12, h - 12 - 76][i];
+        return first(
+          expect(d.current === i, `at snap ${d.current}, not ${i}`),
+          expect(Math.abs(d.position.y - want) <= 1, `at ${d.position.y.toFixed(1)}, not ${want}`),
+        );
+      },
+      destroy: () => d.destroy(),
+    };
   },
 
   // The card sideways; the slider's knob along it, its own drag
@@ -94,6 +154,14 @@ export const drag: Record<string, Setup> = {
     });
     inner.to(travel() * 0.4, { instant: true });
     return {
+      // The knob at 40%, the card in place
+      check: (step) =>
+        step < 0
+          ? first(
+              expect(Math.abs(inner.position.x - travel() * 0.4) <= 1, "the knob isn't at 40%"),
+              expect(outer.position.x === 0, "the card has moved"),
+            )
+          : undefined,
       destroy: () => {
         inner.destroy();
         outer.destroy();

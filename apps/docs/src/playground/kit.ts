@@ -1,7 +1,10 @@
-import { SpringAnimator } from "@fluidkit/core";
+import type { Check } from "./check";
 
-/** What a case's setup gives back: its steps, in the order of its `steps` labels, and its cleanup */
-export type Run = { steps?: Array<() => void>; destroy?: () => void };
+/**
+ * What a case's setup gives back: its steps, in the order of its `steps` labels, what it checks
+ * once each has played out, and its cleanup
+ */
+export type Run = { steps?: Array<() => void>; check?: Check; destroy?: () => void };
 
 /** What the playground lends a case: timers that follow the speed and end with the case */
 export type Kit = {
@@ -17,6 +20,3 @@ export type Kit = {
 };
 
 export type Setup = (root: HTMLElement, kit: Kit) => Run | void;
-
-/** Milliseconds of animation time as wall-clock time at the current speed */
-export const scaled = (ms: number) => ms / SpringAnimator.timeScale;

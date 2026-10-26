@@ -1,4 +1,5 @@
 import { SpringAnimator } from "@fluidkit/core";
+import { expect, first } from "./check";
 import type { Setup } from "./kit";
 
 /** A spring that moves an element by its `transform`, the way a script moves glass in a group */
@@ -23,7 +24,20 @@ export const blur: Record<string, Setup> = {
       group.style.setProperty("--lb-merge", `${merge.value}px`);
       out.value = `${merge.value}px`;
     });
-    return { steps: [() => set(true), () => set(false)], destroy: () => slide.stop() };
+    // Docked it's melted to the bar, 8px apart; split off 64px, it isn't
+    const melted = () => group.hasAttribute("data-lb-melted");
+    const at = (x: number, y: number) => {
+      const v = slide.values();
+      return Math.abs(v.x - x) < 0.5 && Math.abs(v.y - y) < 0.5;
+    };
+    return {
+      steps: [() => set(true), () => set(false)],
+      check: (step) =>
+        step === 0
+          ? first(expect(at(56, -40), "the button isn't out"), expect(!melted(), "still melted, split off"))
+          : first(expect(at(0, 0), "the button isn't back"), expect(melted(), "not melted, docked")),
+      destroy: () => slide.stop(),
+    };
   },
 
   // Played with: lb-stretch and the group do it all
@@ -55,7 +69,12 @@ export const blur: Record<string, Setup> = {
       drop.addEventListener("pointerup", release);
       drop.addEventListener("pointercancel", release);
     }
-    return { destroy: () => springs.forEach((s) => s.stop()) };
+    return {
+      // 20px from the pill, past the 18px merge: apart until one is dragged in
+      check: (step) =>
+        step < 0 ? expect(!root.querySelector("[data-lb-melted]"), "melted before anything moved") : undefined,
+      destroy: () => springs.forEach((s) => s.stop()),
+    };
   },
 
   "blur-scroll": (root) => scrolls(root),
@@ -65,7 +84,11 @@ export const blur: Record<string, Setup> = {
     const thumb = root.querySelector<HTMLElement>("[data-thumb]")!;
     // Transitioned: --lb-lens is registered, so it eases from glass to lens
     const set = (lens: boolean) => thumb.style.setProperty("--lb-lens", lens ? "1" : "0");
-    return { steps: [() => set(true), () => set(false)] };
+    const lens = () => Number(getComputedStyle(thumb).getPropertyValue("--lb-lens"));
+    return {
+      steps: [() => set(true), () => set(false)],
+      check: (step) => (step < 0 ? undefined : expect(lens() === (step === 0 ? 1 : 0), `--lb-lens is ${lens()}`)),
+    };
   },
 
   "blur-clipped": (root) => {
@@ -73,6 +96,15 @@ export const blur: Record<string, Setup> = {
     const slide = mover(glass, { duration: 0.9, bounce: 0.2 });
     return {
       steps: [() => slide.to({ x: 200, y: 140 }), () => slide.to({ x: 0, y: 0 })],
+      check: (step) => {
+        if (step < 0) return undefined;
+        const { x, y } = slide.values();
+        const [tx, ty] = step === 0 ? [200, 140] : [0, 0];
+        return expect(
+          Math.abs(x - tx) < 0.5 && Math.abs(y - ty) < 0.5,
+          `the glass is at ${x.toFixed(1)}, ${y.toFixed(1)}`,
+        );
+      },
       destroy: () => slide.stop(),
     };
   },
@@ -88,5 +120,12 @@ function scrolls(root: HTMLElement) {
       () => scroller.scrollTo({ top: scroller.scrollHeight, behavior: "smooth" }),
       () => scroller.scrollTo({ top: 0, behavior: "smooth" }),
     ],
+    check: (step: number) => {
+      if (step < 0) return undefined;
+      const end = scroller.scrollHeight - scroller.clientHeight;
+      return step === 0
+        ? expect(scroller.scrollTop >= end - 1, `scrolled to ${scroller.scrollTop} of ${end}`)
+        : expect(scroller.scrollTop <= 1, `scrolled to ${scroller.scrollTop}, not the top`);
+    },
   };
 }

@@ -1,4 +1,5 @@
 import { createMorph, type Morph } from "@fluidkit/morph";
+import { unseen } from "./check";
 import type { Kit, Setup } from "./kit";
 
 type Entry = { source: HTMLElement; content: HTMLElement; morph: Morph };
@@ -62,7 +63,24 @@ const scene: Setup = (root, kit: Kit) => {
   document.addEventListener("keydown", escape);
   kit.cleanup(() => document.removeEventListener("keydown", escape));
 
+  /** The pieces of the page's own (a group's glass): a flight's are gone again once it has landed */
+  let parts = 0;
+  const pieces = () => root.querySelectorAll("[data-fk-part]").length;
+
   return {
+    // Open after Open; closed at the start, after Close, and after turning back
+    check: (step) => {
+      if (step < 0) parts = pieces();
+      const opened = step === 0;
+      for (const e of entries) {
+        const at = opened ? e.content : e.source;
+        const other = opened ? e.source : e.content;
+        if (e.morph.current !== at) return opened ? "not open" : "not closed";
+        if (unseen(at)) return `${opened ? "the panel" : "the control"} isn't shown`;
+        if (!unseen(other)) return `${opened ? "the control" : "the panel"} is still shown`;
+      }
+      return pieces() === parts ? null : `${pieces() - parts} piece(s) of a flight left behind`;
+    },
     steps: [
       () => entries.forEach(open),
       () => entries.forEach(close),

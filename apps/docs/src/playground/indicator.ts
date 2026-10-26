@@ -1,5 +1,6 @@
 import { createIndicator } from "@fluidkit/indicator";
 import { TextMorph } from "torph";
+import { expect, same, sample, unseen } from "./check";
 import type { Kit, Setup } from "./kit";
 
 /** A mouse over `el`, as the browser would send it: the indicator hit-tests it as it would a real one */
@@ -22,8 +23,18 @@ const menu: Setup = (root) => {
   const container = root.querySelector<HTMLElement>("[data-menu]")!;
   const highlight = createIndicator({ container, indicator: root.querySelector<HTMLElement>("[data-highlight]")! });
   const marked = [...container.querySelectorAll<HTMLElement>("[data-step]")];
+  const shown = root.querySelector<HTMLElement>("[data-highlight]")!;
   return {
     steps: [...marked.map((item) => () => hover(container, item)), () => leave(container)],
+    // On the item it was sent to, exactly; away over a disabled one and off the menu
+    check: (step) => {
+      if (step < 0) return expect(unseen(shown), "shown before anything is pointed at");
+      const item = marked[step];
+      if (!item || item.getAttribute("aria-disabled") === "true") return expect(unseen(shown), "still shown");
+      return unseen(shown)
+        ? "not shown"
+        : same("the highlight", shown.getBoundingClientRect(), item.getBoundingClientRect());
+    },
     destroy: () => highlight.destroy(),
   };
 };
@@ -56,11 +67,30 @@ export const indicator: Record<string, Setup> = {
   "indicator-tabs": (root) => {
     const panel = root.querySelector<HTMLElement>("[data-panel]")!;
     const { all, thumb } = tabs(root, (tab) => (panel.textContent = tab.dataset.text ?? ""));
-    return { steps: [1, 2, 0].map((i) => () => all[i].click()), destroy: () => thumb.destroy() };
+    const shown = root.querySelector<HTMLElement>("[data-thumb]")!;
+    const order = [1, 2, 0];
+    return {
+      steps: order.map((i) => () => all[i].click()),
+      check: (step) =>
+        same("the thumb", shown.getBoundingClientRect(), all[step < 0 ? 0 : order[step]].getBoundingClientRect()),
+      destroy: () => thumb.destroy(),
+    };
   },
 
   "indicator-grow": (root) => {
     const { thumb } = tabs(root);
+    const shown = root.querySelector<HTMLElement>("[data-thumb]")!;
+    const tab = root.querySelector<HTMLElement>("[data-count='unread']")!.closest<HTMLElement>("[role='tab']")!;
+    // How far the thumb is from its tab, every frame while the count rolls: a spring behind shows here
+    let lag: ReturnType<typeof sample<number>> | null = null;
+    const watch = () => {
+      lag?.stop();
+      lag = sample(() => {
+        const a = shown.getBoundingClientRect();
+        const b = tab.getBoundingClientRect();
+        return Math.max(Math.abs(a.left - b.left), Math.abs(a.right - b.right));
+      });
+    };
     const morph = (el: HTMLElement) => {
       const text = new TextMorph({ element: el, ease: { stiffness: 260, damping: 30 } });
       text.update(el.textContent!.trim());
@@ -76,16 +106,26 @@ export const indicator: Record<string, Setup> = {
     return {
       steps: [
         () => {
+          watch();
           counts.all += 125;
           counts.unread += 125;
           show();
         },
         () => {
+          watch();
           counts.unread = 0;
           show();
         },
       ],
+      check: (step) => {
+        const settled = same("the thumb", shown.getBoundingClientRect(), tab.getBoundingClientRect());
+        if (step < 0 || settled || !lag) return settled;
+        lag.stop();
+        const worst = Math.max(0, ...lag.seen);
+        return expect(worst <= 1.5, `the thumb fell ${worst.toFixed(1)}px behind its tab`);
+      },
       destroy: () => {
+        lag?.stop();
         thumb.destroy();
         all.destroy();
         unread.destroy();
@@ -98,7 +138,10 @@ export const indicator: Record<string, Setup> = {
     const container = root.querySelector<HTMLElement>("[data-menu]")!;
     const highlight = createIndicator({ container, indicator: root.querySelector<HTMLElement>("[data-highlight]")! });
     const items = [...container.querySelectorAll<HTMLElement>("[role='menuitem']")];
+    const shown = root.querySelector<HTMLElement>("[data-highlight]")!;
     return {
+      // Gone: faded where the pointer left, not still running through the items
+      check: (step) => (step < 0 ? undefined : expect(unseen(shown), "still shown after the pointer left")),
       steps: [
         () => {
           items.forEach((item, i) => kit.later(() => hover(container, item), i * 16));

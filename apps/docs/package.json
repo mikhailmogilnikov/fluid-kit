@@ -6,7 +6,8 @@
     "dev": "astro dev --host",
     "build": "astro build",
     "preview": "astro preview",
-    "check-types": "astro check"
+    "check-types": "astro check",
+    "check:playground": "node scripts/check-playground.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^8.1.0",
@@ -21,6 +22,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.11",
+    "playwright": "1.64.1",
     "typescript": "^6"
   }
 }

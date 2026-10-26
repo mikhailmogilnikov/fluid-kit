@@ -3,6 +3,7 @@ import { installGlassGroups } from "@fluidkit/blur/melt";
 import { segmented } from "../scripts/segmented";
 import { CASES, PACKAGES, type CaseMeta } from "./cases";
 import type { Kit, Run, Setup } from "./kit";
+import { settle } from "./check";
 import { debugOverlay } from "./debug";
 import { blur } from "./blur";
 import { morph } from "./morph";
@@ -49,11 +50,11 @@ let speed = 1;
 const rate = (animation: Animation) => {
   animation.playbackRate = speed;
 };
-const setSpeed = (value: number) => {
+const setSpeed = (value: number, keep = true) => {
   speed = value;
   SpringAnimator.timeScale = value;
   for (const animation of document.getAnimations()) rate(animation);
-  remember("speed", String(value));
+  if (keep) remember("speed", String(value));
 };
 // New ones as they start: a glass's press, a stripe's slide
 for (const type of ["transitionrun", "animationstart"]) {
@@ -100,10 +101,21 @@ let step = 0;
 let leave: Array<() => void> = [];
 let auto = 0;
 
+/** The case's timers still to go off: a check waits for them */
+let pending = 0;
 const kit = (): Kit => ({
   later(fn, ms) {
-    const id = window.setTimeout(fn, ms / SpringAnimator.timeScale);
-    leave.push(() => window.clearTimeout(id));
+    pending++;
+    let done = false;
+    const id = window.setTimeout(() => {
+      done = true;
+      pending--;
+      fn();
+    }, ms / SpringAnimator.timeScale);
+    leave.push(() => {
+      window.clearTimeout(id);
+      if (!done) pending--;
+    });
   },
   cleanup(fn) {
     leave.push(fn);
@@ -151,6 +163,7 @@ const open = (id: string, focusList = false) => {
   $("pkg").textContent = PACKAGES.find(([p]) => p === meta.pkg)![1];
   $("tags").replaceChildren(...meta.tags.map((t) => Object.assign(document.createElement("span"), { textContent: t })));
   $("expect").textContent = meta.expect;
+  showFailures();
   $("current").textContent = meta.title;
   for (const link of page.querySelectorAll<HTMLAnchorElement>("[data-pg-link]")) {
     if (link.dataset.pgLink === meta.id) {
@@ -196,6 +209,96 @@ addEventListener("hashchange", () => {
   const id = location.hash.slice(1);
   if (id && id !== meta.id) open(id, true);
 });
+
+// ── Checks: every case's steps run, and what each should have done checked once it has played out ──
+
+type Result = { id: string; checked: boolean; failures: string[] };
+const results = new Map<string, Result>();
+const checkButton = $("check");
+const checkLabel = $("check-label");
+
+/** The open case's failures, under what it should do */
+function showFailures() {
+  const list = $("fails");
+  const failures = results.get(meta.id)?.failures ?? [];
+  list.replaceChildren(...failures.map((f) => Object.assign(document.createElement("li"), { textContent: f })));
+  list.hidden = !failures.length;
+}
+
+/** Each case's mark in the list: passed, failed, or checks nothing */
+const mark = (r: Result) => {
+  const link = page.querySelector<HTMLElement>(`[data-pg-link="${r.id}"]`);
+  if (link) link.dataset.check = !r.checked ? "none" : r.failures.length ? "fail" : "pass";
+};
+
+async function checkCase(id: string): Promise<Result> {
+  open(id);
+  const failures: string[] = [];
+  let checked = false;
+  const verdict = (label: string, read: () => string | null | undefined) => {
+    try {
+      const r = read();
+      if (r === undefined) return;
+      checked = true;
+      if (r) failures.push(`${label}: ${r}`);
+    } catch (e) {
+      checked = true;
+      failures.push(`${label}: threw ${(e as Error).message}`);
+    }
+  };
+  const still = () => settle(mount, () => pending);
+  if (!(await still())) failures.push("Start: never came to rest");
+  verdict("Start", () => run.check?.(-1));
+  for (let i = 0; i < meta.steps.length; i++) {
+    const label = meta.steps[i];
+    verdict(label, () => {
+      run.steps?.[i]?.();
+      return undefined;
+    });
+    step = (i + 1) % meta.steps.length;
+    showStep();
+    if (!(await still())) {
+      checked = true;
+      failures.push(`${label}: never came to rest`);
+      continue;
+    }
+    verdict(label, () => run.check?.(i));
+  }
+  const result = { id, checked, failures };
+  results.set(id, result);
+  mark(result);
+  return result;
+}
+
+/** All of them, four times as fast, back to the case and speed it started at */
+async function checkAll() {
+  const from = meta.id;
+  const was = speed;
+  checkButton.setAttribute("aria-busy", "true");
+  setSpeed(4, false);
+  try {
+    for (const [i, c] of CASES.entries()) {
+      checkLabel.textContent = `Checking ${i + 1} / ${CASES.length}`;
+      await checkCase(c.id);
+    }
+  } finally {
+    setSpeed(was, false);
+    checkButton.removeAttribute("aria-busy");
+  }
+  const all = [...results.values()].filter((r) => r.checked);
+  const passing = all.filter((r) => !r.failures.length).length;
+  checkLabel.textContent = `${passing} / ${all.length} passing`;
+  checkButton.dataset.state = passing === all.length ? "pass" : "fail";
+  // Back where it was, or on the first that failed
+  open(all.find((r) => r.failures.length)?.id ?? from, true);
+  return [...results.values()];
+}
+
+checkButton.addEventListener("click", () => {
+  if (!checkButton.hasAttribute("aria-busy")) void checkAll();
+});
+// For CI, which runs them in a browser: `await __playground.checkAll()`
+Object.assign(window, { __playground: { checkAll } });
 
 // ── Search ──
 

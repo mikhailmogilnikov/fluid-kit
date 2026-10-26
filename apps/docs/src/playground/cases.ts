@@ -341,7 +341,7 @@ export const CASES: CaseMeta[] = [
     title: "The page scrolls while it's open",
     tags: ["scroll", "close"],
     expect:
-      "Lifted, then its page is scrolled from outside (as by its scrollbar) and closed: the photo settles back where the element is now, not where it was, and the element shows without a jump.",
+      "Lifted, then its page is scrolled from outside (as by its scrollbar), and closed while a smooth scroll still runs: the photo settles back where the element is, following it, not where it was, and the element shows without a jump.",
     steps: ["Lift, scroll, close"],
   },
   {
