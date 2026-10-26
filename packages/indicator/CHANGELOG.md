@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.3
+
+### Patch Changes
+
+- 8a34144: Resting on an item that grows or shrinks (its text animating, say), the indicator keeps to it frame by frame instead of chasing it on a spring a few frames behind. And it's no longer a fraction of a pixel off its item in a container whose width isn't a whole number: `offsetWidth` is rounded, and was taken for a scale.
+- Updated dependencies [8c0c800]
+  - @fluidkit/core@1.3.0
+
 ## 1.0.2
 
 ### Patch Changes
