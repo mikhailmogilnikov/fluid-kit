@@ -6,11 +6,15 @@ import { SpringAnimator, holdSelection, px, still, swallowClick, type SpringPara
  *
  * What's lifted is a copy of the element, dressed as it's drawn (every computed style written on it,
  * so it looks the same out of its place), over the element, which is hidden where it is and keeps
- * its room: moved, a frame would reload and a video stop. For something live, or a bigger preview as
- * iOS shows, give `preview` an element of your own instead. They sit in a modal `<dialog>`, in the
- * top layer over any `overflow`, `z-index` and transform: the rest of the page is inert meanwhile,
- * Escape closes it and focus goes back. The dialog is the dim and the blur itself; the menu, yours,
- * is moved into it while it's open and put back after, its listeners kept.
+ * its room: moved, a frame would reload and a video stop. The copy is a picture: its frames are
+ * empty boxes, its videos their frame as it was, its form controls in no form or group. For something
+ * live, or a bigger preview as iOS shows, give `preview` an element of your own instead: it keeps
+ * its own size, centered on the element, and goes back where it was after. They sit in a modal
+ * `<dialog>`, in the top layer over any `overflow`, `z-index` and transform: the rest of the page is
+ * inert meanwhile and doesn't scroll by wheel, touch or keys, Escape closes it and focus goes back,
+ * the arrow keys go through the items. The dialog is the dim and the blur itself; the menu, yours,
+ * is moved into it while it's open and put back after, its listeners kept. One lift is open at a
+ * time in a page: another opening closes it at once.
  *
  * The menu opens under the element, or over it with no room under, its side by the element's side
  * of the screen, kept in from the edges; with room neither way the element moves up for it, as in
@@ -24,8 +28,9 @@ import { SpringAnimator, holdSelection, px, still, swallowClick, type SpringPara
  * press would end in is dropped.
  *
  * Springs: the copy rises from where the element is drawn, a little bigger, the dim and the menu
- * coming in with it; closing, it settles exactly back on the element before the element is shown.
- * With reduced motion it's all at once.
+ * coming in with it; closing, it settles exactly back on the element, wherever the element is by
+ * then (its page scrolled by a scrollbar, say), before the element is shown. With reduced motion
+ * it's all at once.
  */
 
 export type LiftPlacement = "auto" | "below" | "above";
@@ -37,7 +42,10 @@ export type LiftOptions = {
   menu?: HTMLElement;
   /** Its items, as a selector in the menu: `[role="menuitem"], button, a[href]` unless given */
   items?: string;
-  /** What's lifted instead of a copy: an element, or one made from the element */
+  /**
+   * What's lifted instead of a copy: an element, or one made from the element. It keeps its own
+   * size, centered on the element and kept on screen; one from the page goes back there after
+   */
   preview?: HTMLElement | ((element: HTMLElement) => HTMLElement);
   /** How long a press is held to lift it, ms: 500 unless given */
   delay?: number;
@@ -84,6 +92,11 @@ const SLOP = 8;
 const GAP = 10;
 const MARGIN = 12;
 const ITEMS = "[role='menuitem'], button, a[href]";
+const DISABLED = ":disabled, [aria-disabled='true']";
+/** Form controls: a copy's are in no form and no radio group, so it changes nothing of the page's */
+const CONTROLS = "input, select, textarea, button, fieldset, output, object";
+/** Keys that scroll a page, kept from the page under it */
+const SCROLL_KEYS = new Set(["PageUp", "PageDown", "ArrowLeft", "ArrowRight", " "]);
 /** Not copied onto a copy's root: where it is and how it moves are the lift's */
 const NOT_ROOT = new Set([
   "position",
@@ -136,6 +149,9 @@ const NOT_ROOT = new Set([
 const NEVER = /^(transition|animation)/;
 const ZERO = { x: 0, y: 0, s: 1, p: 0 };
 
+/** The lift open in each page, closed at once by another opening */
+const active = new WeakMap<Document, () => void>();
+
 /** The rule a modal dialog's own backdrop needs to be clear, once per document */
 const styled = new WeakSet<Document>();
 const style = (doc: Document) => {
@@ -159,14 +175,14 @@ function dress(from: Element, to: Element, root: boolean) {
   const win = from.ownerDocument.defaultView ?? window;
   if (from instanceof win.HTMLElement && to instanceof win.HTMLElement) {
     const computed = win.getComputedStyle(from);
-    const out = to.style;
+    // Written at once: one parse per element, not one per property, for a few hundred of them
+    let css = "";
     for (let i = 0; i < computed.length; i++) {
       const name = computed[i];
       if (NEVER.test(name) || (root && NOT_ROOT.has(name))) continue;
-      out.setProperty(name, computed.getPropertyValue(name));
+      css += `${name}:${computed.getPropertyValue(name)};`;
     }
-    out.setProperty("transition", "none");
-    out.setProperty("animation", "none");
+    to.style.cssText = `${css}transition:none;animation:none;`;
   }
   // A canvas's picture isn't in the copy: drawn again
   if (from instanceof win.HTMLCanvasElement && to instanceof win.HTMLCanvasElement) {
@@ -175,6 +191,34 @@ function dress(from: Element, to: Element, root: boolean) {
   const a = from.children;
   const b = to.children;
   for (let i = 0; i < a.length && i < b.length; i++) dress(a[i], b[i], false);
+}
+
+/**
+ * A copy made a picture of the element: no ids, its form controls in no form or group (a checked
+ * radio in a group of the page's would uncheck its original), its frames empty boxes rather than
+ * loaded again, its videos their frame as it is. Before it's in the page, so nothing of it loads
+ */
+function picture(from: HTMLElement, to: HTMLElement) {
+  const doc = from.ownerDocument;
+  const all = (el: HTMLElement, selector: string) => [
+    ...(el.matches(selector) ? [el] : []),
+    ...el.querySelectorAll(selector),
+  ];
+  for (const el of all(to, "[id]")) el.removeAttribute("id");
+  for (const el of all(to, CONTROLS)) {
+    el.removeAttribute("name");
+    el.removeAttribute("form");
+  }
+  for (const frame of all(to, "iframe, embed")) frame.replaceWith(doc.createElement("div"));
+  const videos = all(from, "video") as HTMLVideoElement[];
+  all(to, "video").forEach((video, i) => {
+    const source = videos[i];
+    const frame = doc.createElement("canvas");
+    frame.width = source.videoWidth;
+    frame.height = source.videoHeight;
+    if (source.readyState >= 2) frame.getContext("2d")?.drawImage(source, 0, 0);
+    video.replaceWith(frame);
+  });
 }
 
 export function createLift(options: LiftOptions): Lift {
@@ -202,6 +246,10 @@ export function createLift(options: LiftOptions): Lift {
   let shade: HTMLElement | null = null;
   let copy: HTMLElement | null = null;
   let restore: (() => void) | null = null;
+  /** Where what's lifted is laid out in the dialog, unscaled: the element's box for a copy */
+  let laid = { left: 0, top: 0, width: 0, height: 0 };
+  /** The window's width as it opened: a narrower or wider one closes it, a shorter one doesn't */
+  let openWidth = 0;
   /** Where the menu's growth comes from, for its scale */
   let menuOrigin = "50% 0";
 
@@ -228,8 +276,8 @@ export function createLift(options: LiftOptions): Lift {
 
   /** The press under way, until it lifts, is let go or given up */
   let press: { id: number; x: number; y: number; timer: number; unhold: () => void } | null = null;
-  /** The finger that lifted it, followed onto the menu until it's let go */
-  let finger: { id: number; x: number; y: number; moved: boolean } | null = null;
+  /** The finger that lifted it, followed onto the menu until it's let go; no text selected meanwhile */
+  let finger: { id: number; x: number; y: number; moved: boolean; unhold: () => void } | null = null;
   let highlighted: HTMLElement | null = null;
   /** The menu key or Shift+F10 just pressed: the context menu that follows is the keyboard's */
   let byKeyboard = false;
@@ -271,10 +319,13 @@ export function createLift(options: LiftOptions): Lift {
   /** Lifted by a long press: the finger is followed onto the menu */
   const lift = (id: number) => {
     const at = press;
-    endPress();
     if (!at) return;
+    // The selection stays held while the finger slides onto the menu, its text unselected
+    const unhold = at.unhold;
+    at.unhold = () => {};
+    endPress();
     open(false);
-    finger = { id, x: at.x, y: at.y, moved: false };
+    finger = { id, x: at.x, y: at.y, moved: false, unhold };
     // Hit-tested from here on, not kept by the element: what's under it now is the menu
     try {
       element.releasePointerCapture(id);
@@ -289,7 +340,7 @@ export function createLift(options: LiftOptions): Lift {
   const itemAt = (x: number, y: number) => {
     if (!menu) return null;
     const hit = doc.elementFromPoint(x, y)?.closest<HTMLElement>(items) ?? null;
-    return hit && menu.contains(hit) && !hit.matches(":disabled, [aria-disabled='true']") ? hit : null;
+    return hit && menu.contains(hit) && !hit.matches(DISABLED) ? hit : null;
   };
   const highlight = (item: HTMLElement | null) => {
     if (item === highlighted) return;
@@ -305,6 +356,7 @@ export function createLift(options: LiftOptions): Lift {
     if (finger.moved) highlight(itemAt(e.clientX, e.clientY));
   };
   const endFinger = () => {
+    finger?.unhold();
     finger = null;
     win.removeEventListener("pointermove", fingerMoved, true);
     win.removeEventListener("pointerup", fingerUp, true);
@@ -342,20 +394,23 @@ export function createLift(options: LiftOptions): Lift {
   /** A choice: told, then closed. Its own click has run by then */
   const chosen = (e: MouseEvent) => {
     const item = (e.target as Element | null)?.closest<HTMLElement>(items);
-    if (!item || !menu?.contains(item)) return;
+    if (!item || !menu?.contains(item) || item.matches(DISABLED)) return;
     onSelect?.(item);
     close();
   };
 
-  /** Where everything goes: the copy's lift and shift, the menu's place and where it grows from */
-  const place = (box: DOMRect, menuSize: { w: number; h: number }) => {
+  /**
+   * Where everything goes: the lifted thing's shift, the menu's place and where it grows from.
+   * `lifted` is where it shows once lifted, before any shift
+   */
+  const place = (
+    lifted: { left: number; top: number; width: number; height: number },
+    menuSize: { w: number; h: number },
+  ) => {
     const vw = win.innerWidth;
     const vh = win.innerHeight;
-    // Lifted around its center
-    const w = box.width * scale;
-    const h = box.height * scale;
-    let top = box.top - (h - box.height) / 2;
-    const left = box.left - (w - box.width) / 2;
+    const { left, width: w, height: h } = lifted;
+    let top = lifted.top;
     let dy = 0;
     let menuTop = 0;
     let above = false;
@@ -376,25 +431,43 @@ export function createLift(options: LiftOptions): Lift {
       top += dy;
     }
     // Its side by the element's side of the screen, kept in from the edges
-    const leftAligned = box.left + box.width / 2 < vw / 2;
+    const leftAligned = left + w / 2 < vw / 2;
     const menuLeft = Math.min(Math.max(MARGIN, leftAligned ? left : left + w - menuSize.w), vw - MARGIN - menuSize.w);
     const originX = Math.min(Math.max(0, left + w / 2 - menuLeft), menuSize.w);
     return { dy, menuTop, menuLeft, origin: `${px(originX)} ${above ? "100%" : "0"}` };
   };
 
-  const open = (focusFirst = true) => {
-    if (destroyed || opened) return;
-    opened = true;
-    closing = false;
-    style(doc);
-
-    // Its box as drawn now (giving a little under the press, say), and as laid out: its transitions
-    // off for that, or a press's scale would still be easing back and the copy laid out smaller
-    const drawn = element.getBoundingClientRect();
+  /**
+   * The element's box as laid out: its transitions off for the read, or a press's scale still easing
+   * back would make it smaller
+   */
+  const measure = () => {
     const ownTransition = element.style.transition;
     element.style.transition = "none";
     const box = still(element, () => element.getBoundingClientRect(), "none");
     element.style.transition = ownTransition;
+    return box;
+  };
+  /** The springs' values that put what's lifted exactly over a box of the element's */
+  const over = (box: { left: number; top: number; width: number; height: number }) => ({
+    x: box.left + box.width / 2 - (laid.left + laid.width / 2),
+    y: box.top + box.height / 2 - (laid.top + laid.height / 2),
+    s: laid.width ? box.width / laid.width : 1,
+  });
+
+  const open = (focusFirst = true) => {
+    if (destroyed || opened) return;
+    // One at a time: another lift open in this page closes at once
+    active.get(doc)?.();
+    active.set(doc, teardown);
+    opened = true;
+    closing = false;
+    openWidth = win.innerWidth;
+    style(doc);
+
+    // Its box as drawn now (giving a little under the press, say), and as laid out
+    const drawn = element.getBoundingClientRect();
+    const box = measure();
 
     layer = doc.createElement("dialog");
     layer.setAttribute("data-fk-lift", "");
@@ -411,12 +484,31 @@ export function createLift(options: LiftOptions): Lift {
     shade.style.cssText = "position: absolute; inset: 0;";
     layer.append(shade);
 
+    // What's lifted: a preview of yours, kept to put back where it was, or a copy made a picture
     const given = typeof options.preview === "function" ? options.preview(element) : options.preview;
-    copy = given ?? (element.cloneNode(true) as HTMLElement);
-    if (!given) {
+    let putPreview = () => {};
+    if (given) {
+      copy = given;
+      const home = { parent: given.parentNode, next: given.nextSibling, style: given.getAttribute("style") };
+      const attrs = ["aria-hidden", "inert", "data-lifted"].map((name) => [name, given.getAttribute(name)] as const);
+      putPreview = () => {
+        if (home.parent) home.parent.insertBefore(given, home.next?.parentNode === home.parent ? home.next : null);
+        else given.remove();
+        if (home.style === null) given.removeAttribute("style");
+        else given.setAttribute("style", home.style);
+        for (const [name, value] of attrs) {
+          if (value === null) given.removeAttribute(name);
+          else given.setAttribute(name, value);
+        }
+      };
+    } else {
+      copy = element.cloneNode(true) as HTMLElement;
+      picture(element, copy);
       dress(element, copy, true);
-      for (const el of [copy, ...copy.querySelectorAll("[id]")]) el.removeAttribute("id");
       copy.removeAttribute("data-lifting");
+      copy.style.width = px(box.width);
+      copy.style.height = px(box.height);
+      copy.style.boxSizing = "border-box";
     }
     copy.setAttribute("aria-hidden", "true");
     copy.inert = true;
@@ -424,17 +516,13 @@ export function createLift(options: LiftOptions): Lift {
     copy.style.position = "absolute";
     copy.style.left = px(box.left);
     copy.style.top = px(box.top);
-    copy.style.width = px(box.width);
-    copy.style.height = px(box.height);
     copy.style.margin = "0";
-    copy.style.boxSizing = "border-box";
     copy.style.transformOrigin = "50% 50%";
     copy.style.pointerEvents = "none";
     layer.append(copy);
 
-    // The menu, moved in, shown, and measured where it is
+    // The menu, moved in, hidden until it's placed
     let putBack = () => {};
-    let at = { dy: 0, menuTop: 0, menuLeft: 0, origin: "50% 0" };
     if (menu) {
       const mark = doc.createComment("lift");
       menu.before(mark);
@@ -443,26 +531,52 @@ export function createLift(options: LiftOptions): Lift {
       menu.style.position = "absolute";
       menu.style.margin = "0";
       menu.style.transition = "none";
-      layer.append(menu);
-      // Open before it's measured: a closed dialog isn't laid out. Nothing shows yet: the copy is
-      // over the element, the dim and the menu not there
       menu.style.opacity = "0";
-      doc.body.append(layer);
-      layer.showModal();
-      at = place(box, { w: menu.offsetWidth, h: menu.offsetHeight });
-      menu.style.left = px(at.menuLeft);
-      menu.style.top = px(at.menuTop);
-      menuOrigin = at.origin;
+      layer.append(menu);
       putBack = () => {
         mark.replaceWith(menu);
         if (ownMenu.style === null) menu.removeAttribute("style");
         else menu.setAttribute("style", ownMenu.style);
         menu.hidden = ownMenu.hidden;
       };
+    }
+    // Open before anything's measured: a closed dialog isn't laid out. Nothing shows yet: the copy is
+    // over the element, the dim and the menu not there, all in this task
+    doc.body.append(layer);
+    layer.showModal();
+
+    // Laid out: a copy on the element's box, a preview at its own size centered on it, on screen
+    const vw = win.innerWidth;
+    const vh = win.innerHeight;
+    let liftScale = scale;
+    if (given) {
+      const w = given.offsetWidth;
+      const h = given.offsetHeight;
+      const clamp = (v: number, size: number, room: number) =>
+        Math.min(Math.max(MARGIN, v), Math.max(MARGIN, room - MARGIN - size));
+      laid = {
+        left: clamp(box.left + box.width / 2 - w / 2, w, vw),
+        top: clamp(box.top + box.height / 2 - h / 2, h, vh),
+        width: w,
+        height: h,
+      };
+      copy.style.left = px(laid.left);
+      copy.style.top = px(laid.top);
+      liftScale = 1;
     } else {
-      doc.body.append(layer);
-      layer.showModal();
-      at = place(box, { w: 0, h: 0 });
+      laid = { left: box.left, top: box.top, width: box.width, height: box.height };
+    }
+    const lifted = {
+      left: laid.left - (laid.width * (liftScale - 1)) / 2,
+      top: laid.top - (laid.height * (liftScale - 1)) / 2,
+      width: laid.width * liftScale,
+      height: laid.height * liftScale,
+    };
+    const at = place(lifted, menu ? { w: menu.offsetWidth, h: menu.offsetHeight } : { w: 0, h: 0 });
+    if (menu) {
+      menu.style.left = px(at.menuLeft);
+      menu.style.top = px(at.menuTop);
+      menuOrigin = at.origin;
     }
 
     const ownVisibility = element.style.visibility;
@@ -470,28 +584,27 @@ export function createLift(options: LiftOptions): Lift {
     element.setAttribute("data-lifted", "");
 
     layer.addEventListener("cancel", cancelled);
+    layer.addEventListener("close", closedNatively);
     layer.addEventListener("click", clickedLayer);
+    layer.addEventListener("keydown", keyed);
     layer.addEventListener("wheel", stillPage, { passive: false });
     layer.addEventListener("touchmove", stillPage, { passive: false });
     menu?.addEventListener("click", chosen);
     win.addEventListener("resize", resized);
+    doc.addEventListener("scroll", scrolled, { capture: true, passive: true });
 
     restore = () => {
       putBack();
+      putPreview();
       element.style.visibility = ownVisibility;
       element.removeAttribute("data-lifted");
     };
 
-    if (focusFirst) menu?.querySelector<HTMLElement>(items)?.focus();
+    if (focusFirst) itemsOf()[0]?.focus();
 
-    // From as it's drawn now, up to lifted
-    const from = {
-      x: drawn.left + drawn.width / 2 - (box.left + box.width / 2),
-      y: drawn.top + drawn.height / 2 - (box.top + box.height / 2),
-      s: box.width ? drawn.width / box.width : 1,
-      p: 0,
-    };
-    const to = { x: 0, y: at.dy, s: scale, p: 1 };
+    // From over the element as it's drawn now, up to lifted
+    const from = { ...over(drawn), p: 0 };
+    const to = { x: 0, y: at.dy, s: liftScale, p: 1 };
     spring.stop();
     spring.jump(from, { x: 0, y: 0, s: 0, p: 0 });
     draw(from);
@@ -511,7 +624,8 @@ export function createLift(options: LiftOptions): Lift {
       teardown();
       return;
     }
-    spring.to(ZERO, SETTLE);
+    // Back over the element where it is now: its page may have scrolled (a scrollbar dragged)
+    spring.to({ ...over(measure()), p: 0 }, SETTLE);
   };
 
   const teardown = () => {
@@ -519,12 +633,16 @@ export function createLift(options: LiftOptions): Lift {
     closing = false;
     if (!opened) return;
     opened = false;
+    if (active.get(doc) === teardown) active.delete(doc);
     layer?.removeEventListener("cancel", cancelled);
+    layer?.removeEventListener("close", closedNatively);
     layer?.removeEventListener("click", clickedLayer);
+    layer?.removeEventListener("keydown", keyed);
     layer?.removeEventListener("wheel", stillPage);
     layer?.removeEventListener("touchmove", stillPage);
     menu?.removeEventListener("click", chosen);
     win.removeEventListener("resize", resized);
+    doc.removeEventListener("scroll", scrolled, { capture: true });
     restore?.();
     restore = null;
     if (layer?.open) layer.close();
@@ -539,6 +657,13 @@ export function createLift(options: LiftOptions): Lift {
     e.preventDefault();
     close();
   };
+  /**
+   * Closed by the browser after all (a second Escape it doesn't let a page keep open): what was in
+   * the dialog is gone at once, so the element is shown at once
+   */
+  const closedNatively = () => {
+    if (opened) teardown();
+  };
   /** A press on the dim, anywhere but the menu, closes it */
   const clickedLayer = (e: MouseEvent) => {
     if (menu?.contains(e.target as Node)) return;
@@ -548,7 +673,39 @@ export function createLift(options: LiftOptions): Lift {
   const stillPage = (e: Event) => {
     if (!menu?.contains(e.target as Node)) e.preventDefault();
   };
-  const resized = () => close();
+  /** The items that can be chosen, in order */
+  const itemsOf = () =>
+    menu
+      ? [...menu.querySelectorAll<HTMLElement>(items)].filter((i) => !i.matches(DISABLED) && i.getClientRects().length)
+      : [];
+  /** The arrow keys, Home and End go through the items; keys that scroll a page don't scroll this one */
+  const keyed = (e: KeyboardEvent) => {
+    const target = e.target as HTMLElement;
+    const typing = target.matches("input, textarea, select, [contenteditable]:not([contenteditable='false'])");
+    const list = itemsOf();
+    const at = list.indexOf(doc.activeElement as HTMLElement);
+    const step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.key];
+    let next = -1;
+    if (step && !typing) next = at < 0 ? (step > 0 ? 0 : list.length - 1) : (at + step + list.length) % list.length;
+    else if (e.key === "Home" && !typing) next = 0;
+    else if (e.key === "End" && !typing) next = list.length - 1;
+    if (next >= 0 && list[next]) {
+      e.preventDefault();
+      list[next].focus();
+      return;
+    }
+    // Space presses a focused button or link; anywhere else, as PageDown, it would scroll the page
+    const pressable = target.matches("button, a[href], [role='menuitem'], summary, input, textarea, select");
+    if (SCROLL_KEYS.has(e.key) && !typing && !(e.key === " " && pressable)) e.preventDefault();
+  };
+  /** Closing while its page still scrolls (a smooth scroll running on): it lands where the element goes */
+  const scrolled = () => {
+    if (closing) spring.retarget({ ...over(measure()), p: 0 });
+  };
+  /** A narrower or wider window closes it; a shorter one (a phone's bars, its keyboard) doesn't */
+  const resized = () => {
+    if (win.innerWidth !== openWidth) close();
+  };
 
   element.addEventListener("pointerdown", down);
   element.addEventListener("contextmenu", contextMenu);
