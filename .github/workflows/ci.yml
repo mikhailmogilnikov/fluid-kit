@@ -47,6 +47,8 @@ jobs:
   # Every case of the playground, its steps run and what each should do checked, in three engines
   playground:
     runs-on: ubuntu-latest
+    # A browser install that hangs on the runner (it has, for 12 minutes) gives up rather than hours
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6

@@ -281,15 +281,16 @@ async function checkCase(id: string): Promise<Result> {
   return result;
 }
 
-/** All of them, four times as fast, back to the case and speed it started at */
-async function checkAll() {
+/** All of them (or those given), four times as fast, back to the case and speed it started at */
+async function checkAll(ids?: string[]) {
   const from = meta.id;
   const was = speed;
+  const cases = ids ? CASES.filter((c) => ids.includes(c.id)) : CASES;
   checkButton.setAttribute("aria-busy", "true");
   setSpeed(4, false);
   try {
-    for (const [i, c] of CASES.entries()) {
-      checkLabel.textContent = `Checking ${i + 1} / ${CASES.length}`;
+    for (const [i, c] of cases.entries()) {
+      checkLabel.textContent = `Checking ${i + 1} / ${cases.length}`;
       await checkCase(c.id);
     }
   } finally {
@@ -302,13 +303,13 @@ async function checkAll() {
   checkButton.dataset.state = passing === all.length ? "pass" : "fail";
   // Back where it was, or on the first that failed
   open(all.find((r) => r.failures.length)?.id ?? from, true);
-  return [...results.values()];
+  return cases.map((c) => results.get(c.id)!);
 }
 
 checkButton.addEventListener("click", () => {
   if (!checkButton.hasAttribute("aria-busy")) void checkAll();
 });
-// For CI, which runs them in a browser: `await __playground.checkAll()`
+// For CI, which runs them in a browser: `await __playground.checkAll()`, or some of them by id
 Object.assign(window, { __playground: { checkAll } });
 
 // ── Search ──

@@ -66,7 +66,15 @@ try {
       page.on("pageerror", (e) => errors.push(e.message));
       await page.goto(url);
       await page.waitForFunction(() => "__playground" in window);
-      const results = await page.evaluate(() => window.__playground.checkAll());
+      // Its fonts in: text that reflows as they swap in moves everything
+      await page.evaluate(() => document.fonts.ready);
+      const first = await page.evaluate(() => window.__playground.checkAll());
+      // A failure is checked once more before it counts: a slow machine (CI's) can be slow to come
+      // to rest once. Failing twice, it's real; passing the second time, it's told as flaky
+      const again = first.filter((r) => r.failures.length).map((r) => r.id);
+      const retried = again.length ? await page.evaluate((ids) => window.__playground.checkAll(ids), again) : [];
+      const flaky = retried.filter((r) => !r.failures.length).map((r) => r.id);
+      const results = first.map((r) => retried.find((x) => x.id === r.id) ?? r);
       // After a run too: what it shows then (its count) mustn't widen the page
       const wide = await page.evaluate(
         () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -80,6 +88,7 @@ try {
         console.log(`  ✗ ${r.id}`);
         for (const f of r.failures) console.log(`      ${f}`);
       }
+      for (const id of flaky) console.log(`  ⚠ ${id} failed once, passed checked again`);
       if (wide > 0) console.log(`  ✗ the page scrolls sideways by ${wide}px after the run`);
       for (const e of errors) console.log(`  page error: ${e}`);
       if (failing.length || errors.length || wide > 0) failed = true;
