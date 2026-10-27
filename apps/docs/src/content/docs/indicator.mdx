@@ -4,7 +4,7 @@ name: Indicator
 order: 3
 description: "A single element that moves to whatever is hovered, pressed or selected: a menu highlight, a tab thumb. Uses interruptible springs and motion blur."
 intro: "Menu highlights and tab thumbs: one element that moves to whatever is hovered, pressed or selected. Works with any element, and on <a href=\"/blur\">Liquid Blur</a> glass."
-react: "Components and a hook from <code>@fluidkit/indicator/react</code>. Code, props and API on this page are for React."
+frameworks: ["react", "vue"]
 ---
 
 import Section from "../../components/docs/Section.astro";
@@ -123,6 +123,50 @@ Components are marked `"use client"`. On the server they render plain markup.
 </Steps>
 
 </Only>
+<Only vue>
+
+<Steps>
+<Step>
+
+**Install.** The Vue components are included in the package (Vue 3.5+).
+
+<Install pkg="@fluidkit/indicator" />
+
+</Step>
+<Step>
+
+**Add the parts.** The root is the container, the thumb is the element that moves, and each item has a `value`. `v-model` holds the selected item. The parts handle positioning and put the thumb behind the items; the look is up to you.
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { Indicator } from "@fluidkit/indicator/vue";
+
+const tab = ref("overview");
+</script>
+
+<template>
+  <Indicator.Root v-model="tab" trigger="press" class="tabs">
+    <Indicator.Thumb class="tabs__thumb" />
+    <Indicator.Item value="overview">Overview</Indicator.Item>
+    <Indicator.Item value="releases">Releases</Indicator.Item>
+  </Indicator.Root>
+</template>
+```
+
+```css
+.tabs { isolation: isolate; display: flex; padding: 3px; border-radius: 999px; }
+.tabs__thumb { background: #fff; }
+/* The selected tab, and the one under the thumb */
+.tabs [data-selected] { font-weight: 600; }
+```
+
+On the server, including Nuxt, the components render plain markup.
+
+</Step>
+</Steps>
+
+</Only>
 
 </Section>
 
@@ -186,6 +230,29 @@ export function AlbumMenu() {
 ```
 
 </Fragment>
+<Fragment slot="vue">
+
+```vue
+<script setup lang="ts">
+import "@fluidkit/blur/style.css";
+import { Indicator } from "@fluidkit/indicator/vue";
+</script>
+
+<!-- Default trigger: hover for mouse, press and drag for touch -->
+<template>
+  <Indicator.Root class="menu lb" role="menu" aria-label="Album">
+    <Indicator.Thumb class="highlight" />
+    <Indicator.Item value="library" role="menuitem"><PlusIcon />Add to Library</Indicator.Item>
+    <Indicator.Item value="love" role="menuitem"><HeartIcon />Love</Indicator.Item>
+    <Indicator.Item value="share" role="menuitem"><ArrowIcon />Share Album</Indicator.Item>
+    <hr />
+    <Indicator.Item value="link" role="menuitem"><CopyIcon />Copy Link</Indicator.Item>
+    <Indicator.Item value="store" role="menuitem" aria-disabled="true"><EyeIcon />Show in Store</Indicator.Item>
+  </Indicator.Root>
+</template>
+```
+
+</Fragment>
 <Fragment slot="css">
 
 ```css
@@ -227,7 +294,7 @@ export function AlbumMenu() {
 
 ### Tabs
 
-iOS-style tabs: the thumb sits on the selected tab (`rest`; in React, `value`). Press and drag across the tabs and it follows the pointer; the tab you release on is selected (`trigger: "press"`). The code switchers on this page work the same way.
+iOS-style tabs: the thumb sits on the selected tab (`rest`; in React, `value`; in Vue, `v-model`). Press and drag across the tabs and it follows the pointer; the tab you release on is selected (`trigger: "press"`). The code switchers on this page work the same way.
 
 <Example>
 <IndicatorExample kind="tabs" />
@@ -295,6 +362,29 @@ export function ArtistTabs() {
 ```
 
 </Fragment>
+<Fragment slot="vue">
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { Indicator } from "@fluidkit/indicator/vue";
+
+const tabs = { overview: "Overview", releases: "Releases", audience: "Audience" };
+const tab = ref("overview");
+</script>
+
+<template>
+  <!-- Shows the selection only; keyboard focus keeps its own ring -->
+  <Indicator.Root v-model="tab" trigger="press" :focus="false" class="tabs" role="tablist" aria-label="Artist">
+    <Indicator.Thumb class="tabs__thumb" />
+    <Indicator.Item v-for="(label, value) in tabs" :key="value" :value="value" role="tab" :aria-selected="tab === value">
+      {{ label }}
+    </Indicator.Item>
+  </Indicator.Root>
+</template>
+```
+
+</Fragment>
 <Fragment slot="css">
 
 ```css
@@ -353,7 +443,7 @@ Follows the pressed item, across items while the pointer is down. On touch it ap
 </Cell>
 <Cell title="<code>manual</code>">
 
-Only `to()` and `rest` move it (in React, `value` and `active`). For an indicator driven by your own state, like the current section of a page.
+Only `to()` and `rest` move it (in React and Vue, the selected value and `active`). For an indicator driven by your own state, like the current section of a page.
 
 </Cell>
 </Row>
@@ -396,7 +486,9 @@ The default springs are fast and don't overshoot: the indicator covers most of t
 
 </Section>
 
-<Section id="parts" title="Parts" only="react">
+<Section id="parts" title="Parts" only="react vue">
+
+<Only react>
 
 | Part | Renders | Description |
 | --- | --- | --- |
@@ -424,9 +516,43 @@ The default springs are fast and don't overshoot: the indicator covers most of t
 
 Changing props never recreates the indicator; a new `trigger` applies immediately. Callbacks always see the latest values.
 
+</Only>
+<Only vue>
+
+| Part | Renders | Description |
+| --- | --- | --- |
+| `Indicator.Root` | `div`, positioned | The container for the items and thumb. Takes the props below |
+| `Indicator.Thumb` | `span aria-hidden`, absolute, behind the items | The element that moves |
+| `Indicator.Item` | `button` | An item with a `value`. Has `data-selected` when selected and `data-active` while the indicator is on it |
+
+Every part also takes `as-child`, see [Composition](#composition).
+
+`Indicator.Root` props and events:
+
+| Prop or event | Description |
+| --- | --- |
+| `v-model` | The selected item. Without it, the root keeps its own, starting at `defaultValue` |
+| `defaultValue?: string \| null` | The initially selected item, for uncontrolled use |
+| `active?: string \| null` | An item pointed at by something else, like the finger on a [Lift](/lift) menu. `null` goes back to the selected item |
+| `@active-change="(value) => …"` | The indicator moved to another item, or hid (`null`) |
+| `trigger?: "auto" \| "hover" \| "press" \| "manual"` | What moves it, see [Triggers](#triggers). Default: `auto` |
+| `click?: boolean` | With press, click (and select) the item where the pointer is released. Default: `true` |
+| `focus?: boolean` | Move to items with visible keyboard focus. Default: `true`, except with `manual` |
+| `spring?: Partial<IndicatorSprings>` | Springs for `x`, `y`, `width`, `height` and `presence`. Default: `defaultIndicatorSprings`, fast and without overshoot |
+
+**Controlled.** With `v-model`, clicks update your ref. To accept or refuse a change yourself, pass `:model-value` and handle `@update:model-value`.
+
+**Nesting.** A root only tracks its own items, not those of a nested root, so a menu with its own indicator can sit inside tabs with another.
+
+Changing props never recreates the indicator; a new `trigger` applies immediately.
+
+</Only>
+
 </Section>
 
-<Section id="composition" title="Composition" only="react">
+<Section id="composition" title="Composition" only="react vue">
+
+<Only react>
 
 **Render as your own element.** Every part accepts `render`, as in Base UI: pass an element and our props are merged into it, or a function that receives the props and state (`{ selected, active }` for items).
 
@@ -437,9 +563,29 @@ Changing props never recreates the indicator; a new `trigger` applies immediatel
 
 **With Lift.** In a [Lift](/lift#composition) menu, pass the item under the finger as `active`, and use `render` to make each lift item an indicator item too.
 
+</Only>
+<Only vue>
+
+**Render as your own element.** Every part accepts `as-child`, as in Reka UI: instead of its own element, the part renders the first element in its slot, with our attributes, classes, styles, listeners and refs merged in. The slot also receives the part's state (`{ selected, active }` for items).
+
+```vue
+<Indicator.Item value="inbox" as-child>
+  <RouterLink to="/inbox">Inbox</RouterLink>
+</Indicator.Item>
+<Indicator.Item v-slot="{ selected }" value="sent">
+  <b v-if="selected">Sent</b><template v-else>Sent</template>
+</Indicator.Item>
+```
+
+**With Lift.** In a [Lift](/lift#composition) menu, pass the item under the finger as `active`, and use `as-child` to make each lift item an indicator item too.
+
+</Only>
+
 </Section>
 
-<Section id="hook" title="The hook" only="react">
+<Section id="hook" title="The hook" only="react vue">
+
+<Only react>
 
 Use `useIndicator(options)` when the parts don't fit your markup. It takes the same options as `Indicator.Root` and returns refs.
 
@@ -463,7 +609,41 @@ const nav = useIndicator({ value: page, onValueChange: setPage });
 | `select(value)` | Selects an item, like a click |
 | `engine` | The underlying engine, once mounted |
 
-With the hook, styling is up to you: position the container, and make the indicator absolute and behind the items, as described in [Layout](#layout). The parts do this for you.
+With the hook, styling is up to you: position the container, and make the indicator absolute and behind the items, as described in [How it works](#layout). The parts do this for you.
+
+</Only>
+<Only vue>
+
+Use `useIndicator(options)` when the parts don't fit your markup. Options can be an object, a ref or a getter; a getter is read again when what it uses changes. It returns function refs for `:ref`.
+
+```vue
+<script setup lang="ts">
+import { useIndicator } from "@fluidkit/indicator/vue";
+
+const page = ref("home");
+const nav = useIndicator(() => ({ value: page.value, onValueChange: (v) => (page.value = v) }));
+</script>
+
+<template>
+  <nav :ref="nav.container" class="tabs">
+    <span :ref="nav.indicator" class="thumb" />
+    <a :ref="nav.item('home')" href="/">Home</a>
+    <a :ref="nav.item('docs')" href="/docs">Docs</a>
+  </nav>
+</template>
+```
+
+| Member | Description |
+| --- | --- |
+| `container`, `indicator` | Function refs for the container and the moving element |
+| `item(value)` | Function ref for the item with this value |
+| `value`, `active` | Refs: the selected item, and the item the indicator is on now |
+| `select(value)` | Selects an item, like a click |
+| `engine` | Shallow ref to the underlying engine, once mounted |
+
+With the composable, styling is up to you: position the container, and make the indicator absolute and behind the items, as described in [How it works](#layout). The parts do this for you.
+
+</Only>
 
 </Section>
 

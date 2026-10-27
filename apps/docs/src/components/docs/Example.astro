@@ -1,17 +1,19 @@
 ---
 /**
  * A live example with its code behind tabs: the example in the default slot, the code in the
- * `html`, `js`, `react` and `css` slots (Markdown code blocks). A tab shows only for a slot that's
- * filled. With React code given, the HTML and JS tabs are JavaScript's and the React tab React's:
- * each shows with its framework chosen
+ * `html`, `js`, `react`, `vue` and `css` slots (Markdown code blocks). A tab shows only for a slot
+ * that's filled. With a framework's code given, the HTML and TS tabs are for TypeScript without a framework and the
+ * React and Vue tabs their own: each shows while the page shows its framework
  */
 const react = Astro.slots.has("react");
+const vue = Astro.slots.has("vue");
 const tabs = (
   [
     ["example", "Example", undefined],
-    ["html", "HTML", react ? "js" : undefined],
-    ["js", "JS", react ? "js" : undefined],
+    ["html", "HTML", react || vue ? "js" : undefined],
+    ["js", "TS", react || vue ? "js" : undefined],
     ["react", "React", "react"],
+    ["vue", "Vue", "vue"],
     ["css", "CSS", undefined],
   ] as const
 ).filter(([slot]) => slot === "example" || Astro.slots.has(slot));
@@ -34,6 +36,7 @@ const tabs = (
   {Astro.slots.has("html") && <div class="ex__panel" data-panel="html" hidden><slot name="html" /></div>}
   {Astro.slots.has("js") && <div class="ex__panel" data-panel="js" hidden><slot name="js" /></div>}
   {react && <div class="ex__panel" data-panel="react" hidden><slot name="react" /></div>}
+  {vue && <div class="ex__panel" data-panel="vue" hidden><slot name="vue" /></div>}
   {Astro.slots.has("css") && <div class="ex__panel" data-panel="css" hidden><slot name="css" /></div>}
 </div>
 

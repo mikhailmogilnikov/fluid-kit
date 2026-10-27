@@ -4,7 +4,7 @@ name: Drag
 order: 4
 description: "Drag an element with rubber-band edges and snap points. On release, a spring carries the pointer's speed. For sheets, swipe actions and switches."
 intro: "Sheets, swipeable rows, switch thumbs. Drag an element with rubber-band edges; on release it snaps to where the flick takes it, keeping the finger's speed. Works with any element, and with <a href=\"/blur\">Liquid Blur</a> glass."
-react: "Components and a hook from <code>@fluidkit/drag/react</code>. Code, props and API on this page are for React."
+frameworks: ["react", "vue"]
 ---
 
 import Section from "../../components/docs/Section.astro";
@@ -117,6 +117,49 @@ Components are marked `"use client"`. On the server they render plain markup at 
 </Steps>
 
 </Only>
+<Only vue>
+
+<Steps>
+<Step>
+
+**Install.** The Vue components are included in the package (Vue 3.5+).
+
+<Install pkg="@fluidkit/drag" />
+
+</Step>
+<Step>
+
+**Lay out the element at its starting position.** Snap points and bounds are pixel offsets from there. Drag moves the element with inline `translate`, so `transform` and `scale` stay free for you.
+
+```css
+/* Laid out fully open; Drag moves it down to the other positions */
+.sheet { position: absolute; top: 12px; left: 0; right: 0; height: 100%; }
+```
+
+</Step>
+<Step>
+
+**Add `Drag.Root`.** It's the element that moves. Snap points can be a function of the parent's size; it's called again when the size changes.
+
+```vue
+<script setup lang="ts">
+import { Drag } from "@fluidkit/drag/vue";
+</script>
+
+<template>
+  <!-- Open, half way, collapsed to the title -->
+  <Drag.Root class="sheet" axis="y" :snaps="({ height }) => [0, height / 2, height - 88]" :default-snap="1">
+    <slot />
+  </Drag.Root>
+</template>
+```
+
+On the server, including Nuxt, the components render plain markup at offset 0.
+
+</Step>
+</Steps>
+
+</Only>
 
 </Section>
 
@@ -198,6 +241,36 @@ export function Nearby({ places }: { places: Place[] }) {
     </div>
   );
 }
+```
+
+</Fragment>
+<Fragment slot="vue">
+
+```vue
+<script setup lang="ts">
+import "@fluidkit/blur/style.css";
+import { Drag } from "@fluidkit/drag/vue";
+
+defineProps<{ places: { id: string; name: string }[] }>();
+</script>
+
+<template>
+  <div class="screen">
+    <!-- Offsets from the laid-out position (12px from the top): open, half way, collapsed -->
+    <Drag.Root axis="y" :snaps="({ height }) => [0, height / 2 - 12, height - 12 - 76]" :default-snap="1" as-child>
+      <section class="sheet lb" aria-label="Nearby">
+        <span class="sheet__grabber" aria-hidden="true" />
+        <h3>Nearby</h3>
+        <!-- One gesture can scroll the list and move the sheet -->
+        <Drag.Scroll as-child>
+          <ul class="sheet__list">
+            <li v-for="place in places" :key="place.id">{{ place.name }}</li>
+          </ul>
+        </Drag.Scroll>
+      </section>
+    </Drag.Root>
+  </div>
+</template>
 ```
 
 </Fragment>
@@ -406,6 +479,78 @@ function Row({ mail, snap, onSnapChange, onStart }: RowProps) {
 ```
 
 </Fragment>
+<Fragment slot="vue">
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { Drag } from "@fluidkit/drag/vue";
+
+type Mail = { id: string; subject: string };
+defineProps<{ mails: Mail[] }>();
+const LEAD = 92;
+const TRAIL = 168;
+// Snap points: fully right, left action, closed, right actions, fully left
+const ALL_RIGHT = 0;
+const CLOSED = 2;
+const ALL_LEFT = 4;
+// remove(mail) and toggleUnread(mail) are your own functions
+
+// Which row is open, and how far. Only one at a time
+const open = ref<{ id: string; snap: number } | null>(null);
+const rows = new Map<string, HTMLElement>();
+const snapOf = (mail: Mail) => (open.value?.id === mail.id ? open.value.snap : CLOSED);
+const setSnap = (mail: Mail, snap: number) => (open.value = snap === CLOSED ? null : { id: mail.id, snap });
+// Starting to swipe another row closes this one
+const start = (mail: Mail) => open.value?.id !== mail.id && (open.value = null);
+// Width for the actions; past half way to the edge, the outer action fills the row
+const follow = (mail: Mail, x: number) => {
+  const row = rows.get(mail.id)!;
+  row.style.setProperty("--x", String(x));
+  row.toggleAttribute("data-full", x < -(TRAIL + row.clientWidth) / 2 || x > (LEAD + row.clientWidth) / 2);
+};
+// A full swipe runs the action on release; after marking, slide back closed
+const land = (mail: Mail, snap: number) => {
+  if (snap === ALL_LEFT) remove(mail);
+  if (snap === ALL_RIGHT) toggleUnread(mail);
+  setSnap(mail, snap === ALL_RIGHT ? CLOSED : snap);
+};
+</script>
+
+<template>
+  <ul class="inbox lb">
+    <li v-for="mail in mails" :key="mail.id" :ref="(el) => el && rows.set(mail.id, el as HTMLElement)" class="row">
+      <div class="row__lead" aria-hidden="true">
+        <button type="button" class="unread" tabindex="-1" @click="toggleUnread(mail); setSnap(mail, CLOSED)">
+          Unread
+        </button>
+      </div>
+      <div class="row__trail" aria-hidden="true">
+        <button type="button" class="flag" tabindex="-1" @click="setSnap(mail, CLOSED)">Flag</button>
+        <button type="button" class="delete" tabindex="-1" @click="setSnap(mail, ALL_LEFT); remove(mail)">
+          Delete
+        </button>
+      </div>
+      <!-- Drags don't fire clicks, so a click is a tap -->
+      <Drag.Root
+        class="row__face"
+        axis="x"
+        :snaps="({ width }) => [width, LEAD, 0, -TRAIL, -width]"
+        :snap="snapOf(mail)"
+        :deceleration="0.99"
+        @start="start(mail)"
+        @move="({ x }) => follow(mail, x)"
+        @update:snap="(snap) => land(mail, snap)"
+        @click="setSnap(mail, CLOSED)"
+      >
+        …
+      </Drag.Root>
+    </li>
+  </ul>
+</template>
+```
+
+</Fragment>
 <Fragment slot="css">
 
 ```css
@@ -517,6 +662,56 @@ export function Switch({ checked, onCheckedChange, label }: SwitchProps) {
     </button>
   );
 }
+```
+
+</Fragment>
+<Fragment slot="vue">
+
+```vue
+<script setup lang="ts">
+import { shallowRef } from "vue";
+import { useDrag } from "@fluidkit/drag/vue";
+
+defineProps<{ label: string }>();
+const checked = defineModel<boolean>({ required: true });
+const toggle = shallowRef<HTMLElement | null>(null);
+// The handle (the switch) contains the moving thumb, so use the composable
+const drag = useDrag(() => ({
+  axis: "x",
+  snaps: ({ width, element }) => [0, width - element.offsetWidth - 4],
+  snap: checked.value ? 1 : 0,
+  onSnapChange: (snap) => (checked.value = snap === 1),
+  rubberband: 0,
+  spring: { duration: 0.3, bounce: 0 },
+  // Trails the pointer slightly, so quick back-and-forth looks smooth
+  follow: { duration: 0.18, bounce: 0 },
+  onMove: ({ x }) => {
+    const el = toggle.value!;
+    const travel = el.clientWidth - el.firstElementChild!.clientWidth - 4;
+    el.style.setProperty("--on", String(x / travel));
+  },
+}));
+// One ref for both: the switch element, and the drag's handle
+const toggleRef = (el: unknown) => {
+  toggle.value = el as HTMLElement | null;
+  drag.handle(el);
+};
+</script>
+
+<template>
+  <!-- Tap or Space toggles. Drags don't fire clicks -->
+  <button
+    :ref="toggleRef"
+    type="button"
+    class="switch"
+    role="switch"
+    :aria-checked="checked"
+    :aria-label="label"
+    @click="checked = !checked"
+  >
+    <span :ref="drag.element" class="switch__thumb lb" />
+  </button>
+</template>
 ```
 
 </Fragment>
@@ -649,6 +844,63 @@ export function Volume() {
 ```
 
 </Fragment>
+<Fragment slot="vue">
+
+```vue
+<script setup lang="ts">
+import { ref, shallowRef, watch } from "vue";
+import { useDrag } from "@fluidkit/drag/vue";
+
+const slider = shallowRef<HTMLElement | null>(null);
+const knob = shallowRef<HTMLElement | null>(null);
+const value = ref(0.6);
+const travel = () => slider.value!.clientWidth - knob.value!.offsetWidth;
+const drag = useDrag({
+  axis: "x",
+  bounds: ({ width, element }) => ({ x: [0, width - element.offsetWidth] }),
+  rubberband: 0.2,
+  deceleration: 0,
+  spring: { duration: 0.25, bounce: 0 },
+  follow: { duration: 0.12, bounce: 0 },
+  onMove: ({ x }) => (value.value = Math.min(1, Math.max(0, x / travel()))),
+});
+// One ref for both: each element, and the drag's
+const sliderRef = (el: unknown) => {
+  slider.value = el as HTMLElement | null;
+  drag.handle(el);
+};
+const knobRef = (el: unknown) => {
+  knob.value = el as HTMLElement | null;
+  drag.element(el);
+};
+// Initial position
+watch(drag.drag, (engine) => engine?.to(travel() * 0.6, { instant: true }));
+// Tap the track to jump there. Drags don't fire clicks
+const jump = (e: MouseEvent) =>
+  drag.to(e.clientX - slider.value!.getBoundingClientRect().left - knob.value!.offsetWidth / 2);
+// Arrow keys: drag.to(drag.drag.value.position.x ± step)
+</script>
+
+<template>
+  <div
+    :ref="sliderRef"
+    class="slider"
+    role="slider"
+    tabindex="0"
+    aria-label="Volume"
+    aria-valuemin="0"
+    aria-valuemax="100"
+    :aria-valuenow="Math.round(value * 100)"
+    :style="{ '--v': value }"
+    @click="jump"
+  >
+    <span class="slider__track"><span class="slider__fill" /></span>
+    <span :ref="knobRef" class="slider__knob lb lb-stretch" />
+  </div>
+</template>
+```
+
+</Fragment>
 <Fragment slot="css">
 
 ```css
@@ -751,6 +1003,41 @@ export function Pip({ src }: { src: string }) {
 ```
 
 </Fragment>
+<Fragment slot="vue">
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { Drag, type DragArea } from "@fluidkit/drag/vue";
+
+defineProps<{ src: string }>();
+const big = ref(false);
+// Laid out in the top-left corner, 16px in. Corners are recomputed on resize
+const corners = ({ width, height, element }: DragArea) => {
+  const x = width - element.offsetWidth - 32;
+  const y = height - element.offsetHeight - 32;
+  return [{ x: 0, y: 0 }, { x, y: 0 }, { x: 0, y }, { x, y }];
+};
+// Double-tap toggles the size
+let lastTap = 0;
+const tap = (e: MouseEvent) => {
+  if (e.timeStamp - lastTap > 320) return void (lastTap = e.timeStamp);
+  lastTap = 0;
+  big.value = !big.value;
+};
+// Pinch: pass `disabled` while resizing with two fingers
+</script>
+
+<template>
+  <div class="room">
+    <Drag.Root :snaps="corners" :default-snap="3" :spring="{ duration: 0.45, bounce: 0.2 }" as-child>
+      <video class="pip" :data-big="big || undefined" :src="src" muted autoplay loop playsinline @click="tap" />
+    </Drag.Root>
+  </div>
+</template>
+```
+
+</Fragment>
 <Fragment slot="css">
 
 ```css
@@ -827,7 +1114,9 @@ The release spring starts at the pointer's speed. The default spring has no boun
 
 </Section>
 
-<Section id="parts" title="Parts" only="react">
+<Section id="parts" title="Parts" only="react vue">
+
+<Only react>
 
 | Part | Renders | Description |
 | --- | --- | --- |
@@ -865,9 +1154,52 @@ const [snap, setSnap] = useState(1);
 
 Changing props never recreates the drag, and callbacks always see the latest values. Changing `axis`, or adding a handle or scroll area, recreates it at the same position.
 
+</Only>
+<Only vue>
+
+| Part | Renders | Description |
+| --- | --- | --- |
+| `Drag.Root` | `div` | The element that moves. Has `data-snap` with the current snap point and `data-dragging` while dragged |
+| `Drag.Handle` | `div` | The part you grab, like a sheet's grabber. Without it, the whole root is the handle |
+| `Drag.Scroll` | `div` | A scrollable area inside, like a sheet's list. One gesture can [scroll it and move the root](#scroll) |
+
+Every part also takes `as-child`, see [Composition](#composition).
+
+`Drag.Root` props and events:
+
+| Prop or event | Description |
+| --- | --- |
+| `axis?: "x" \| "y" \| "both"` | Direction of movement. Default: `both` |
+| `snaps?: DragSnaps \| (area) => DragSnaps` | Where it can come to rest: offsets along the axis, or `{ x, y }` points for `both`. A function receives `{ width, height, element }` (the parent's inner size and the element), and is called again on resize and when what it uses changes |
+| `bounds?: DragBounds \| (area) => DragBounds` | `{ x?: [min, max], y?: [min, max] }`. Past these it stretches like rubber. Default: the outermost snap points |
+| `v-model:snap` | The current snap point. Without it, the root keeps its own, starting at `defaultSnap` |
+| `defaultSnap?: number` | Initial snap point, for uncontrolled use. Default: `0` |
+| `disabled?: boolean` | Disables dragging. An active drag is released |
+| `rubberband?: number` | Resistance past the bounds. Default: `0.55`. `0` stops at the edge |
+| `deceleration?: number` | How fast a flick slows down, per millisecond. Default: `0.998` |
+| `spring?: SpringParams` | The release spring. Default: `{ duration: 0.4, bounce: 0 }`. See [core](/core#spring) |
+| `follow?: SpringParams` | If set, the element trails the pointer on this spring |
+| `@start` | A drag started, or the element was grabbed mid-motion |
+| `@move="(position, velocity) => …"` | Every frame it moves. Update the DOM directly here; writing to reactive state would re-render every frame |
+| `@end="(snap) => …"` | Released, with the target snap point (`null` without snaps) |
+| `@rest` | It stopped moving |
+
+**Controlled.** With `v-model:snap`, a release updates your ref. To accept or refuse it yourself, pass `:snap` and handle `@update:snap`; if you don't change `snap`, it goes back.
+
+```vue
+<Drag.Root v-model:snap="snap">…</Drag.Root>
+<button @click="snap = 0">Open</button>
+```
+
+Changing props never recreates the drag. Changing `axis`, or adding a handle or scroll area, recreates it at the same position.
+
+</Only>
+
 </Section>
 
-<Section id="composition" title="Composition" only="react">
+<Section id="composition" title="Composition" only="react vue">
+
+<Only react>
 
 **Render as your own element.** Every part accepts `render`, as in Base UI: pass an element and our props are merged into it, or a function that receives the props and state (`{ snap, dragging }`).
 
@@ -889,9 +1221,38 @@ import { Glass } from "@fluidkit/blur/react";
 
 **Styling.** `data-snap` on the root shows the current snap point, `data-dragging` is there while it's dragged.
 
+</Only>
+<Only vue>
+
+**Render as your own element.** Every part accepts `as-child`, as in Reka UI: instead of its own element, the part renders the first element in its slot, with our attributes, classes, styles, listeners and refs merged in. The slot also receives the part's state (`{ snap, dragging }`).
+
+```vue
+<Drag.Root axis="y" :snaps="snaps" as-child>
+  <section aria-label="Nearby">
+    <Drag.Scroll as-child><ul class="list">…</ul></Drag.Scroll>
+  </section>
+</Drag.Root>
+```
+
+**Glass.** Make it glass with `class="lb"`, or render it as [`Glass`](/blur#components). Drag only writes `translate`, so press effects keep working.
+
+```vue
+<Drag.Root axis="y" :snaps="snaps" as-child>
+  <Glass as-child><section class="sheet">…</section></Glass>
+</Drag.Root>
+```
+
+**Handle outside the element.** With parts, the handle sits inside the moving element. For a switch or slider it's the other way round (the thumb is inside the handle), so use [the composable](#hook), as the examples above do.
+
+**Styling.** `data-snap` on the root shows the current snap point, `data-dragging` is there while it's dragged.
+
+</Only>
+
 </Section>
 
-<Section id="hook" title="The hook" only="react">
+<Section id="hook" title="The hook" only="react vue">
+
+<Only react>
 
 Use `useDrag(options)` when the parts don't fit your markup. It takes the same options as `Drag.Root` and returns refs.
 
@@ -913,6 +1274,38 @@ const drag = useDrag({ axis: "x", snaps: ({ width, element }) => [0, width - ele
 | `snapTo(index, move?)` | Animates to a snap point. `{ instant: true }` jumps there; `{ velocity }` sets the starting speed |
 | `to(position, move?)` | Animates to an offset within the bounds |
 | `drag` | The underlying engine, once mounted: `position`, `velocity`, `update()` |
+
+</Only>
+<Only vue>
+
+Use `useDrag(options)` when the parts don't fit your markup. Options can be an object, a ref or a getter; a getter is read again when what it uses changes. It returns function refs for `:ref`.
+
+```vue
+<script setup lang="ts">
+import { useDrag } from "@fluidkit/drag/vue";
+
+const drag = useDrag({ axis: "x", snaps: ({ width, element }) => [0, width - element.offsetWidth] });
+</script>
+
+<template>
+  <div :ref="drag.handle" class="track">
+    <span :ref="drag.element" class="thumb" />
+  </div>
+</template>
+```
+
+| Member | Description |
+| --- | --- |
+| `element`, `handle`, `scroll` | Function refs for the moving element, the handle and the scroll area |
+| `snap` | Computed: the current snap point |
+| `dragging` | Ref: `true` while dragged |
+| `snapTo(index, move?)` | Animates to a snap point. `{ instant: true }` jumps there; `{ velocity }` sets the starting speed |
+| `to(position, move?)` | Animates to an offset within the bounds |
+| `drag` | Shallow ref to the underlying engine, once mounted: `position`, `velocity`, `update()` |
+
+To put two refs on one element (yours and the drag's), use one function that calls both, as the switch above does.
+
+</Only>
 
 </Section>
 
@@ -951,7 +1344,7 @@ Roles, labels and keyboard support are up to you: a sheet's `dialog` role, a swi
 
 <Section id="scroll" title="A list inside">
 
-A sheet with a scrollable list can share one gesture between the two, like in iOS. Pass the list as `scroll` (in React, use `Drag.Scroll`). For touch:
+A sheet with a scrollable list can share one gesture between the two, like in iOS. Pass the list as `scroll` (in React and Vue, use `Drag.Scroll`). For touch:
 
 <Rows>
 <Row>

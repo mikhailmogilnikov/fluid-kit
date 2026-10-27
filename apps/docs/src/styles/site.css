@@ -15,6 +15,7 @@
   --pill: #ececec;
   --pill-hover: #e4e4e4;
   --thumb: #fff;
+  --vue-dark: #35495e;
   --hair: rgb(23 23 23 / 0.09);
   --glow: rgb(23 23 23 / 0.16);
   --shot: 0 30px 80px rgb(0 0 0 / 0.14);
@@ -48,6 +49,7 @@
     --pill: #232323;
     --pill-hover: #2c2c2c;
     --thumb: #3a3a3c;
+    --vue-dark: #b9c6d3;
     --hair: rgb(255 255 255 / 0.1);
     --glow: rgb(255 255 255 / 0.16);
     --shot: 0 30px 80px rgb(0 0 0 / 0.6);
@@ -67,6 +69,7 @@
   --pill: #232323;
   --pill-hover: #2c2c2c;
   --thumb: #3a3a3c;
+  --vue-dark: #b9c6d3;
   --hair: rgb(255 255 255 / 0.1);
   --glow: rgb(255 255 255 / 0.16);
   --shot: 0 30px 80px rgb(0 0 0 / 0.6);
@@ -177,26 +180,90 @@ code {
 
 .nav__links {
   display: flex;
-  gap: 22px;
+  align-items: center;
+  gap: 4px;
   margin-left: auto;
 }
-.nav__links a {
-  color: var(--ink-3);
+/* On the elements themselves, not through the parent: the morph flies a snapshot of Docs without it */
+.nav__docs,
+.nav__play {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: var(--ink-2);
+  font: inherit;
+  font-weight: 500;
   white-space: nowrap;
   transition: color 0.15s;
 }
-/* Short of room for the links, the byline goes first */
-@media (max-width: 1170px) {
+.nav__docs:hover,
+.nav__play:hover,
+.nav__play[aria-current="page"],
+.nav__docs[data-current],
+.nav__docs[aria-expanded="true"] { color: var(--ink); }
+/* A menu, not a page: a chevron, and a fill only under the pointer, where the menu grows from */
+.nav__docs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-right: 10px;
+  border: 0;
+  cursor: pointer;
+  transition: color 0.15s, background-color 0.15s;
+}
+.nav__docs:hover { background: var(--hair); }
+.nav__docs svg { margin-top: 1px; opacity: 0.6; }
+.nav__docs:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+/* Short of room, the byline goes first */
+@media (max-width: 760px) {
   .brand__by { display: none; }
 }
-.nav__links a:hover { color: var(--ink); }
+
+/* Under the bar at its right end; hidden until the morph shows it */
+.nav__panel {
+  position: absolute;
+  top: 60px;
+  right: var(--edge);
+  z-index: 2;
+  width: min(340px, calc(100vw - 2 * var(--edge)));
+  box-sizing: border-box;
+  display: grid;
+  padding: 8px;
+  border-radius: 28px;
+  color: var(--ink);
+  pointer-events: auto;
+  visibility: hidden;
+}
+.nav__panel a {
+  display: grid;
+  padding: 7px 16px;
+  border-radius: 18px;
+}
+.nav__panel a:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+.nav__panel b { font-weight: 500; }
+.nav__panel span { color: var(--ink-3); font-size: 13px; }
+.nav__panel hr {
+  margin: 6px 16px;
+  border: 0;
+  border-top: 1px solid rgb(127 127 127 / 0.25);
+}
+/* Behind the pages: on the one pointed at, else the one being read */
+.nav__highlight {
+  position: absolute;
+  z-index: -1;
+  background: color-mix(in srgb, currentColor calc(7% + var(--lb-dark, 0) * 5%), transparent);
+}
+.nav__highlight[data-pressed] {
+  background: color-mix(in srgb, currentColor calc(11% + var(--lb-dark, 0) * 7%), transparent);
+}
 
 .nav__end {
   display: flex;
   align-items: center;
   gap: 6px;
 }
-.nav__links + .nav__end { margin-left: 4px; }
 
 .icon-link {
   display: grid;
@@ -209,12 +276,14 @@ code {
 }
 .icon-link:hover { color: var(--ink); background: var(--hair); }
 
-@media (max-width: 1000px) {
-  .nav__links { display: none; }
-  .nav__links + .nav__end { margin-left: auto; }
+/* On a phone the playground is in the Docs menu only, and Docs is a little tighter */
+@media (max-width: 480px) {
+  .nav__play { display: none; }
+  .nav__docs { padding: 0 8px 0 12px; }
 }
-@media (max-width: 640px) {
-  .brand__by { display: none; }
+/* The narrowest phones: the mark alone, the name in its label */
+@media (max-width: 359px) {
+  .brand__name { display: none; }
 }
 
 /* ── Logo mark: two colors under a pane of glass ── */
@@ -465,9 +534,26 @@ code {
  * painted once and the glass over it never has to blur a moving picture.
  */
 .bd-aurora { background: #fbeaf2 url("../assets/mesh-light.png") center / cover; }
-:root[data-theme="dark"] .bd-aurora { background-color: #4a2088; background-image: url("../assets/mesh-dark.png"); }
+/*
+ * In the dark, gray silk: a bright fold across the middle, softer ones beside it. Smooth gray alone
+ * looks the same blurred or not; the folds' edges are what glass visibly softens
+ */
+:root[data-theme="dark"] .bd-aurora { background: #0e0e10 url("../assets/silk-dark.png") center / cover; }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .bd-aurora { background-color: #4a2088; background-image: url("../assets/mesh-dark.png"); }
+  :root:not([data-theme="light"]) .bd-aurora { background: #0e0e10 url("../assets/silk-dark.png") center / cover; }
+}
+/* Each library's scenes their own fold, so no two look alike */
+:root[data-theme="dark"] .bd-aurora[data-silk="indicator"] { background-image: url("../assets/silk-indicator-dark.png"); }
+:root[data-theme="dark"] .bd-aurora[data-silk="drag"] { background-image: url("../assets/silk-drag-dark.png"); }
+:root[data-theme="dark"] .bd-aurora[data-silk="lift"] { background-image: url("../assets/silk-lift-dark.png"); }
+:root[data-theme="dark"] .bd-aurora[data-silk="edge"] { background-image: url("../assets/silk-edge-dark.png"); }
+:root[data-theme="dark"] .bd-aurora[data-silk="text"] { background-image: url("../assets/silk-text-dark.png"); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .bd-aurora[data-silk="indicator"] { background-image: url("../assets/silk-indicator-dark.png"); }
+  :root:not([data-theme="light"]) .bd-aurora[data-silk="drag"] { background-image: url("../assets/silk-drag-dark.png"); }
+  :root:not([data-theme="light"]) .bd-aurora[data-silk="lift"] { background-image: url("../assets/silk-lift-dark.png"); }
+  :root:not([data-theme="light"]) .bd-aurora[data-silk="edge"] { background-image: url("../assets/silk-edge-dark.png"); }
+  :root:not([data-theme="light"]) .bd-aurora[data-silk="text"] { background-image: url("../assets/silk-text-dark.png"); }
 }
 
 .bd-stripes::before {
@@ -1457,22 +1543,6 @@ code {
 /* Signatures may wrap on a phone */
 .prose b code { white-space: normal; overflow-wrap: anywhere; }
 
-/* ── Two pages: the current one in the nav ── */
-
-.nav__links a[aria-current="page"] { color: var(--ink); }
-
-/* On a phone the section links hide; Docs stays reachable */
-.nav__docs {
-  display: none;
-  padding: 0 10px;
-  color: var(--ink-2);
-  font-weight: 500;
-}
-.nav__docs[aria-current="page"] { color: var(--ink); }
-@media (max-width: 860px) {
-  .nav__docs { display: block; }
-}
-
 /* Docs page header, then the package's demo */
 .docs-head {
   padding: clamp(56px, 8vw, 96px) var(--edge) 0;
@@ -1643,11 +1713,11 @@ code {
 .docs-head__title .mark { --s: 2.2; }
 .docs-head__lead {
   margin-top: clamp(20px, 2.4vw, 28px);
-  max-width: 34ch;
+  max-width: 44ch;
   color: var(--ink-2);
-  font-size: clamp(20px, 2.2vw, 26px);
-  line-height: 1.35;
-  letter-spacing: -0.015em;
+  font-size: clamp(17px, 1.6vw, 20px);
+  line-height: 1.45;
+  letter-spacing: -0.01em;
   text-wrap: balance;
 }
 .docs-head__lead a {
@@ -1762,12 +1832,13 @@ code {
 .docs-play svg { flex: none; }
 
 /*
- * Docs for one framework: what's written for JavaScript (`data-only="js"`) or React
- * (`data-only="react"`) shows only with that one chosen (`data-framework` on the root, JavaScript
- * unless React is chosen, set before the page is first painted)
+ * Docs for some frameworks: `data-only` lists them (`js`, `react`, `vue`), and they show only while
+ * the page shows one of them (`data-view` on the root: the framework chosen where the page has docs
+ * for it, TypeScript without one otherwise, set before the page is first painted)
  */
-:root:not([data-framework="react"]) [data-only="react"],
-:root[data-framework="react"] [data-only="js"] {
+:root:not([data-view]) [data-only]:not([data-only~="js"]),
+:root[data-view="react"] [data-only]:not([data-only~="react"]),
+:root[data-view="vue"] [data-only]:not([data-only~="vue"]) {
   display: none !important;
 }
 .only { display: contents; }
@@ -1776,25 +1847,19 @@ code {
 .doc > .only > * + * { margin-top: 20px; }
 .doc > .doc__title + .only > :first-child { margin-top: 16px; }
 
-/* The framework the page is written for: under its opening, in the contents, in the folded contents */
-.framework {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  margin-top: 22px;
-  color: var(--ink-3);
-  font-size: 14px;
+/* Which framework the docs are for, under the page's opening: each with its mark, in color once chosen */
+.framework { margin-top: 24px; }
+.framework button { height: 34px; padding: 0 14px 0 10px; gap: 8px; font-size: 14px; }
+.framework__mark {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  filter: grayscale(1);
+  opacity: 0.5;
+  transition: filter 0.25s, opacity 0.25s;
 }
-/* Under the opening: the switch in a row, what React gets on this page on a row of its own under it */
-.framework--head { display: grid; grid-template-columns: max-content max-content 1fr; }
-.framework__note { grid-column: 1 / -1; max-width: 62ch; margin: 2px 0 0; color: var(--ink-2); }
-.framework__note a { color: var(--ink); }
-/* In the contents: over them, the switch a column wide */
-.framework--toc { display: grid; gap: 8px; margin: 0 0 28px; }
-.framework--toc .seg { justify-self: start; }
-/* Folded: a row at the top of the opened contents */
-.framework--fold { margin: 0 0 6px; padding: 4px 10px 10px; border-bottom: 1px solid var(--hair); }
+.framework button:hover .framework__mark { opacity: 0.75; }
+.framework button[aria-pressed="true"] .framework__mark { filter: none; opacity: 1; }
 
 /* A section written for one framework says so beside its title */
 .doc__only {

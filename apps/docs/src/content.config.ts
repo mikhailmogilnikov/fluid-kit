@@ -16,8 +16,11 @@ const docs = defineCollection({
     intro: z.string(),
     /** Order in the nav */
     order: z.number(),
-    /** What React gets on this page, in a line under the framework switch; inline HTML */
-    react: z.string().optional(),
+    /**
+     * The frameworks the page has docs of their own for, besides TypeScript without one. With another
+     * one chosen, the page shows its TypeScript docs
+     */
+    frameworks: z.array(z.enum(["react", "vue"])).default(["react"]),
   }),
 });
 

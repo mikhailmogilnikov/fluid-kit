@@ -59,14 +59,13 @@ const art =
     inset: 0;
     background: #eef0ff url("../assets/mesh-morph-light.png") center / cover;
   }
+  /* In the dark, gray silk, its fold the other way from blur's */
   :global(:root[data-theme="dark"]) .mprev__art {
-    background-color: #2a3c9a;
-    background-image: url("../assets/mesh-morph-dark.png");
+    background: #0e0e10 url("../assets/silk-morph-dark.png") center / cover;
   }
   @media (prefers-color-scheme: dark) {
     :global(:root:not([data-theme="light"])) .mprev__art {
-      background-color: #2a3c9a;
-      background-image: url("../assets/mesh-morph-dark.png");
+      background: #0e0e10 url("../assets/silk-morph-dark.png") center / cover;
     }
   }
 

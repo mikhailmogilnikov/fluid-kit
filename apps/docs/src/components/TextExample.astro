@@ -9,13 +9,15 @@ import Icon from "./Icon.astro";
  */
 interface Props {
   kind: "buttons" | "tabs" | "cart";
+  /** As a page's preview: the preview's size and corners, and room for a hint (the slot) */
+  card?: boolean;
 }
 
-const { kind } = Astro.props;
+const { kind, card = false } = Astro.props;
 ---
 
-<div class:list={["tx", `tx--${kind}`]} data-tx={kind}>
-  <div class="bd bd-aurora"></div>
+<div class:list={["tx", `tx--${kind}`, { "tx--card": card }]} data-tx={kind} data-hints={card ? "" : undefined}>
+  <div class="bd bd-aurora" data-silk="text"></div>
 
   {
     kind === "buttons" && (
@@ -89,6 +91,7 @@ const { kind } = Astro.props;
       </div>
     )
   }
+  <slot />
 </div>
 
 <style>
@@ -101,8 +104,12 @@ const { kind } = Astro.props;
     border-radius: 20px;
     isolation: isolate;
   }
+  .tx--card {
+    height: var(--mdemo-height);
+    border-radius: var(--radius);
+  }
   /* Over the backdrop, which is positioned */
-  .tx > :not(.bd) { position: relative; }
+  .tx > :not(.bd, .hint) { position: relative; }
 
   .tx__row { display: flex; gap: 12px; }
   .tx__pill {

@@ -1,14 +1,16 @@
 ---
 /**
- * Docs for one framework: shown only with it chosen. `<Only react>…</Only>` for React,
- * `<Only js>…</Only>` for plain JavaScript; Markdown inside works as anywhere
+ * Docs for some frameworks: shown only while the page shows one of them. `<Only react>…</Only>` for
+ * React, `<Only vue>` for Vue, `<Only js>` for TypeScript without a framework, `<Only react vue>` for both;
+ * Markdown inside works as anywhere
  */
 interface Props {
   js?: boolean;
   react?: boolean;
+  vue?: boolean;
 }
 
-const { react = false } = Astro.props;
+const only = (["js", "react", "vue"] as const).filter((framework) => Astro.props[framework]).join(" ") || "js";
 ---
 
-<div class="only" data-only={react ? "react" : "js"}><slot /></div>
+<div class="only" data-only={only}><slot /></div>

@@ -1,39 +1,49 @@
 ---
 /**
- * Which framework the docs are written for: JavaScript or React. Remembered across pages, and in
- * three places on a page (under its opening, in the contents beside it, in the folded contents on a
- * phone), every one moving with the others. Switching keeps the place being read where it is
+ * Which framework the docs are for: TypeScript (no framework), React or Vue, each with its mark.
+ * Remembered across pages. A page without docs of its own for the framework chosen shows its
+ * TypeScript docs. Switching keeps the place being read where it is
  */
-interface Props {
-  /** Where it is: under the opening, with a line on what React gets here; in the contents; folded */
-  place?: "head" | "toc" | "fold";
-  /** What React gets on this page; inline HTML */
-  note?: string;
-}
-
-const { place = "head", note } = Astro.props;
 ---
 
-<div class:list={["framework", `framework--${place}`]}>
-  <span class="framework__label">{place === "toc" ? "Framework" : "Docs for"}</span>
-  <div class="seg" role="group" aria-label="Framework" data-framework-switch>
-    <span class="seg__thumb" aria-hidden="true"></span>
-    <button type="button" data-value="js" aria-pressed="true">JavaScript</button>
-    <button type="button" data-value="react" aria-pressed="false">React</button>
-  </div>
-  {note && <p class="framework__note" data-only="react" set:html={note} />}
+<div class="framework seg" role="group" aria-label="Docs for" data-framework-switch>
+  <span class="seg__thumb" aria-hidden="true"></span>
+  <button type="button" data-value="js" aria-pressed="true">
+    <svg class="framework__mark" viewBox="0 0 24 24" aria-hidden="true">
+      <rect width="24" height="24" rx="4" fill="#3178c6"></rect>
+      <text x="21.6" y="20.6" text-anchor="end" fill="#fff" font-size="10.5" font-weight="700" letter-spacing="-0.3">TS</text>
+    </svg>
+    TypeScript
+  </button>
+  <button type="button" data-value="react" aria-pressed="false">
+    <svg class="framework__mark" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#149eca" stroke-width="1.3">
+      <ellipse cx="12" cy="12" rx="10.5" ry="4.2"></ellipse>
+      <ellipse cx="12" cy="12" rx="10.5" ry="4.2" transform="rotate(60 12 12)"></ellipse>
+      <ellipse cx="12" cy="12" rx="10.5" ry="4.2" transform="rotate(120 12 12)"></ellipse>
+      <circle cx="12" cy="12" r="2" fill="#149eca" stroke="none"></circle>
+    </svg>
+    React
+  </button>
+  <button type="button" data-value="vue" aria-pressed="false">
+    <svg class="framework__mark" viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="#41b883" d="M0 1.65 12 22.35 24 1.65h-4.8L12 14.07 4.74 1.65z"></path>
+      <path fill="var(--vue-dark)" d="M4.74 1.65 12 14.13l7.2-12.48h-4.44L12 6.45 9.18 1.65z"></path>
+    </svg>
+    Vue
+  </button>
 </div>
 
 <script>
   import { segmented } from "../../scripts/segmented";
 
   const root = document.documentElement;
-  const controls = [...document.querySelectorAll<HTMLElement>("[data-framework-switch]")].map((seg) =>
-    segmented(seg, (value) => choose(value)),
-  );
+  const seg = document.querySelector<HTMLElement>("[data-framework-switch]");
+  const control = seg ? segmented(seg, (value) => choose(value)) : null;
+  /** The frameworks this page has docs of its own for */
+  const has = (root.dataset.frameworks ?? "").split(" ");
 
   /**
-   * What's read now, to keep in place: the first block written for both frameworks at or under the
+   * What's read now, to keep in place: the first block written for every framework at or under the
    * top of the screen (below the nav), and how far down it is
    */
   const anchor = () => {
@@ -51,14 +61,16 @@ const { place = "head", note } = Astro.props;
   function choose(framework: string) {
     if ((root.dataset.framework ?? "js") === framework) return;
     const kept = anchor();
-    if (framework === "react") root.dataset.framework = "react";
-    else delete root.dataset.framework;
+    if (framework === "js") delete root.dataset.framework;
+    else root.dataset.framework = framework;
+    // Its own docs where the page has them, the TypeScript ones where not
+    if (framework !== "js" && has.includes(framework)) root.dataset.view = framework;
+    else delete root.dataset.view;
     // The page above may have grown or shrunk: what was read is put back where it was
     if (kept) window.scrollBy({ top: kept.el.getBoundingClientRect().top - kept.top, behavior: "instant" });
     try {
       localStorage.setItem("fk-framework", framework);
     } catch {}
-    for (const control of controls) control.select(framework, true);
     // A link to this page says it from now on, and the examples hear of it
     const url = new URL(location.href);
     if (url.searchParams.has("framework")) {
@@ -68,6 +80,5 @@ const { place = "head", note } = Astro.props;
     window.dispatchEvent(new CustomEvent("fk:framework", { detail: framework }));
   }
 
-  const now = root.dataset.framework ?? "js";
-  for (const control of controls) control.select(now, true);
+  control?.select(root.dataset.framework ?? "js", true);
 </script>

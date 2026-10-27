@@ -4,7 +4,7 @@ name: Lift
 order: 5
 description: "Long-press any element to lift it above the page, with the background dimmed and blurred, and open your menu next to it. The iOS context menu, for the web."
 intro: "Long-press any element and it lifts above the page, with the background dimmed and blurred, and your menu opens next to it. Slide the same finger onto an item to pick it. The iOS context menu, for the web; with <a href=\"/blur\">Liquid Blur</a>, the menu can be glass."
-react: "Components and a hook from <code>@fluidkit/lift/react</code>. Code, props and API on this page are for React."
+frameworks: ["react", "vue"]
 ---
 
 import Section from "../../components/docs/Section.astro";
@@ -105,6 +105,47 @@ Components are marked `"use client"`. On the server they render plain markup. A 
 </Steps>
 
 </Only>
+<Only vue>
+
+<Steps>
+<Step>
+
+**Install.** The Vue components are included in the package (Vue 3.5+).
+
+<Install pkg="@fluidkit/lift" />
+
+</Step>
+<Step>
+
+**Add the parts.** Put the target, the menu and its items inside `Lift.Root`. The menu stays hidden until the target is lifted, and `@select` receives the `value` of the chosen item.
+
+```vue
+<script setup lang="ts">
+import { Lift } from "@fluidkit/lift/vue";
+
+defineProps<{ src: string }>();
+</script>
+
+<template>
+  <Lift.Root @select="(value) => console.log(value)">
+    <Lift.Target as-child>
+      <img class="photo" :src="src" alt="" tabindex="0" />
+    </Lift.Target>
+    <Lift.Menu class="menu" aria-label="Photo">
+      <Lift.Item value="copy">Copy</Lift.Item>
+      <Lift.Item value="share">Share</Lift.Item>
+      <Lift.Item value="delete">Delete</Lift.Item>
+    </Lift.Menu>
+  </Lift.Root>
+</template>
+```
+
+On the server, including Nuxt, the components render plain markup; the lift starts working after hydration.
+
+</Step>
+</Steps>
+
+</Only>
 
 </Section>
 
@@ -112,7 +153,7 @@ Components are marked `"use client"`. On the server they render plain markup. A 
 
 ### Photos
 
-Hold a photo, or right-click it. It shrinks slightly while held (`data-lifting`), then lifts, and the menu opens below it (or above, near the bottom of the screen). Keep your finger down and slide onto an item to pick it on release. The highlight is an [Indicator](/indicator) driven by `onHighlight`. In the JavaScript version, six photos share one menu; in React, each photo has its own.
+Hold a photo, or right-click it. It shrinks slightly while held (`data-lifting`), then lifts, and the menu opens below it (or above, near the bottom of the screen). Keep your finger down and slide onto an item to pick it on release. The highlight is an [Indicator](/indicator) driven by `onHighlight`. In the TypeScript version, six photos share one menu; in React and Vue, each photo has its own.
 
 <Example>
 <LiftExample kind="photos" />
@@ -168,6 +209,42 @@ export function Photo({ src }: { src: string }) {
     </Lift.Root>
   );
 }
+```
+
+</Fragment>
+<Fragment slot="vue">
+
+```vue
+<script setup lang="ts">
+import "@fluidkit/blur/style.css";
+import { ref } from "vue";
+import { Indicator } from "@fluidkit/indicator/vue";
+import { Lift } from "@fluidkit/lift/vue";
+
+defineProps<{ src: string }>();
+const items = ["Copy", "Share", "Favorite", "Delete"];
+// The item under the finger, where the highlight goes
+const pointed = ref<string | null>(null);
+const act = (value: string) => {
+  /* … */
+};
+</script>
+
+<template>
+  <Lift.Root @highlight="(item) => (pointed = item?.dataset.value ?? null)" @select="act">
+    <Lift.Target as-child>
+      <img class="photo" :src="src" alt="" tabindex="0" />
+    </Lift.Target>
+    <Lift.Menu class="menu lb" aria-label="Photo">
+      <Indicator.Root :active="pointed">
+        <Indicator.Thumb class="menu__highlight" />
+        <Lift.Item v-for="label in items" :key="label" :value="label" as-child>
+          <Indicator.Item :value="label">{{ label }}</Indicator.Item>
+        </Lift.Item>
+      </Indicator.Root>
+    </Lift.Menu>
+  </Lift.Root>
+</template>
 ```
 
 </Fragment>
@@ -257,6 +334,42 @@ export function Bubble({ text }: { text: string }) {
 ```
 
 </Fragment>
+<Fragment slot="vue">
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { Lift } from "@fluidkit/lift/vue";
+
+defineProps<{ text: string }>();
+const reactions = ["❤️", "👍", "😂", "😮", "😢", "🔥"];
+const reaction = ref<string | null>(null);
+const choose = (value: string) => {
+  if (reactions.includes(value)) reaction.value = reaction.value === value ? null : value;
+};
+</script>
+
+<template>
+  <Lift.Root @select="choose">
+    <Lift.Target class="bubble" tabindex="0">
+      {{ text }}
+      <span v-if="reaction" class="bubble__reaction">{{ reaction }}</span>
+    </Lift.Target>
+    <Lift.Menu class="stack" aria-label="Message">
+      <div class="reactions lb" role="group" aria-label="React">
+        <Lift.Item v-for="r in reactions" :key="r" :value="r" :aria-label="`React ${r}`">{{ r }}</Lift.Item>
+      </div>
+      <div class="menu lb">
+        <Lift.Item value="reply">Reply</Lift.Item>
+        <Lift.Item value="copy">Copy</Lift.Item>
+        <Lift.Item value="delete">Delete</Lift.Item>
+      </div>
+    </Lift.Menu>
+  </Lift.Root>
+</template>
+```
+
+</Fragment>
 </Example>
 
 ### An app icon
@@ -287,6 +400,35 @@ export function AppIcon({ app }: { app: App }) {
     </Lift.Root>
   );
 }
+```
+
+</Fragment>
+<Fragment slot="vue">
+
+```vue
+<script setup lang="ts">
+import { Lift } from "@fluidkit/lift/vue";
+
+defineProps<{ app: { name: string; glyph: string; gradient: string } }>();
+const run = (action: string) => {
+  /* … */
+};
+</script>
+
+<template>
+  <Lift.Root @select="run">
+    <Lift.Target class="icon" :style="{ background: app.gradient }" :aria-label="app.name" tabindex="0">
+      {{ app.glyph }}
+    </Lift.Target>
+    <Lift.Menu class="menu lb" :aria-label="app.name">
+      <Lift.Item value="new">New Item</Lift.Item>
+      <Lift.Item value="search">Search</Lift.Item>
+      <Lift.Separator />
+      <Lift.Item value="edit">Edit Home Screen</Lift.Item>
+      <Lift.Item value="remove" class="danger">Remove App</Lift.Item>
+    </Lift.Menu>
+  </Lift.Root>
+</template>
 ```
 
 </Fragment>
@@ -329,7 +471,9 @@ export function AppIcon({ app }: { app: App }) {
 
 </Section>
 
-<Section id="parts" title="Parts" only="react">
+<Section id="parts" title="Parts" only="react vue">
+
+<Only react>
 
 | Part | Renders | Description |
 | --- | --- | --- |
@@ -366,9 +510,51 @@ const [open, setOpen] = useState(false);
 
 Changing props never recreates the lift, and callbacks always see the latest values, so inline arrow functions are fine. A new target or menu element recreates it.
 
+</Only>
+<Only vue>
+
+| Part | Renders | Description |
+| --- | --- | --- |
+| `Lift.Root` | nothing | Holds the props below and connects the parts inside it |
+| `Lift.Target` | `div` | The element to hold and lift. Has `data-state="open"` while lifted |
+| `Lift.Menu` | `div role="menu" hidden` | The menu, hidden until opened |
+| `Lift.Item` | `button role="menuitem"` | A menu item. `value` is passed to the root's `@select`. `disabled` prevents choosing it. Its own `@select="(event) => …"` runs first; call `event.preventDefault()` to keep the menu open |
+| `Lift.Separator` | `div role="separator"` | A divider, skipped by the finger and the keyboard |
+| `Lift.Preview` | `div`, hidden | Lifted instead of a copy, at its own size: something live, or larger |
+
+Every part also takes `as-child`, see [Composition](#composition).
+
+`Lift.Root` props and events:
+
+| Prop or event | Description |
+| --- | --- |
+| `@select="(value, item) => …"` | An item was chosen. Receives its `value` and element. The menu then closes, unless the item's own `@select` prevented it. Never fires for disabled items |
+| `v-model:open` | Whether it's open, for controlled use |
+| `defaultOpen?: boolean` | Whether it starts open, for uncontrolled use |
+| `@highlight="(item) => …"` | The finger that lifted it moved over an item, or off the items (`null`) |
+| `delay?: number` | How long to hold, in ms. Default: `500` |
+| `scale?: number` | How much larger the lifted element gets. Default: `1.04` |
+| `dim?: number` | How dark the page gets, `0` to `1`. Default: `0.2` |
+| `blur?: number` | How much the page is blurred, in px. Default: `12` |
+| `placement?: "auto" \| "below" \| "above"` | Where the menu opens. Default: `auto` |
+| `spring?: SpringParams` | The lift animation spring. Default: `defaultLiftSpring`. See [core](/core#spring) |
+| `items?: string` | Selector for items inside the menu. Default: `Lift.Item`s, buttons and links |
+
+**Controlled.** Use `v-model:open` to keep the open state in your component.
+
+```vue
+<Lift.Root v-model:open="open">…</Lift.Root>
+```
+
+Changing props never recreates the lift. A new target or menu element recreates it.
+
+</Only>
+
 </Section>
 
-<Section id="composition" title="Composition" only="react">
+<Section id="composition" title="Composition" only="react vue">
+
+<Only react>
 
 **Render as your own element.** Every part accepts `render`, as in Base UI: pass an element and our props are merged into it (classes joined, styles, handlers and refs combined), or a function that receives the props and state.
 
@@ -396,9 +582,44 @@ const [pointed, setPointed] = useState<string | null>(null);
 
 **Styling.** Parts expose state as data attributes: `data-state="open"` on the target and menu, `data-lifting` while held, `data-highlighted` on the item under the finger, `data-disabled` on disabled items.
 
+</Only>
+<Only vue>
+
+**Render as your own element.** Every part accepts `as-child`, as in Reka UI: instead of its own element, the part renders the first element in its slot, with our attributes, classes, styles, listeners and refs merged in. The slot also receives the part's state.
+
+```vue
+<Lift.Target as-child>
+  <img :src="src" alt="" />
+</Lift.Target>
+<Lift.Target v-slot="{ opened }" as-child>
+  <img :src="opened ? large : src" alt="" />
+</Lift.Target>
+```
+
+**With an indicator.** The highlight under the finger is an [Indicator](/indicator). `@highlight` tells it which item is under the finger (`active`), and `as-child` makes each lift item an indicator item too.
+
+```vue
+<Lift.Root @highlight="(item) => (pointed = item?.dataset.value ?? null)" @select="act">
+  <Lift.Target as-child><img :src="src" alt="" /></Lift.Target>
+  <Lift.Menu class="menu lb">
+    <Indicator.Root :active="pointed">
+      <Indicator.Thumb class="highlight" />
+      <Lift.Item value="copy" as-child><Indicator.Item value="copy">Copy</Indicator.Item></Lift.Item>
+      <Lift.Item value="share" as-child><Indicator.Item value="share">Share</Indicator.Item></Lift.Item>
+    </Indicator.Root>
+  </Lift.Menu>
+</Lift.Root>
+```
+
+**Styling.** Parts expose state as data attributes: `data-state="open"` on the target and menu, `data-lifting` while held, `data-highlighted` on the item under the finger, `data-disabled` on disabled items.
+
+</Only>
+
 </Section>
 
-<Section id="hook" title="The hook" only="react">
+<Section id="hook" title="The hook" only="react vue">
+
+<Only react>
 
 Use `useLift(options)` when the parts don't fit your markup. It takes the same options as `Lift.Root` (except `onSelect` receives the item element) and returns refs.
 
@@ -421,6 +642,37 @@ const lift = useLift({ onSelect: (item) => act(item.dataset.action) });
 | `lift` | The underlying engine, once mounted |
 
 While open, the menu is moved into Lift's dialog. Wrap it in its own parent element, as above, so React doesn't get confused by the missing node. The parts do this for you. If the component unmounts while open, the lift closes first and everything goes back where React expects it.
+
+</Only>
+<Only vue>
+
+Use `useLift(options)` when the parts don't fit your markup. Options can be an object, a ref or a getter; a getter is read again when what it uses changes. It returns function refs for `:ref`.
+
+```vue
+<script setup lang="ts">
+import { useLift } from "@fluidkit/lift/vue";
+
+const lift = useLift({ onSelect: (item) => act(item.dataset.action) });
+</script>
+
+<template>
+  <img :ref="lift.element" :src="src" alt="" />
+  <div>
+    <div :ref="lift.menu" role="menu" hidden>…</div>
+  </div>
+</template>
+```
+
+| Member | Description |
+| --- | --- |
+| `element`, `menu`, `preview` | Function refs for the lifted element, the menu and a custom preview |
+| `opened` | Ref: `true` while open |
+| `open()`, `close()` | Open (focusing the first item) or close |
+| `lift` | Shallow ref to the underlying engine, once mounted |
+
+While open, the menu is moved into Lift's dialog. Wrap it in its own parent element, as above, so Vue doesn't get confused by the missing node. The parts do this for you. If the component unmounts while open, the lift closes first and everything goes back where Vue expects it.
+
+</Only>
 
 </Section>
 
@@ -474,6 +726,11 @@ The menu can be glass (`lb`): inside the dialog it blurs the dimmed page behind 
 <Only react>
 
 In React, pass the item from `onHighlight` to the indicator's `active`. See [Composition](#composition).
+
+</Only>
+<Only vue>
+
+In Vue, pass the item from `@highlight` to the indicator's `active`. See [Composition](#composition).
 
 </Only>
 

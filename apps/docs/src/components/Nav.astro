@@ -9,30 +9,90 @@ interface Props {
 }
 
 const { current } = Astro.props;
-const packages = (await getCollection("docs"))
-  .filter((p) => p.id !== "core")
-  .sort((a, b) => a.data.order - b.data.order);
+const packages = (await getCollection("docs")).sort((a, b) => a.data.order - b.data.order);
 const here = (id: string) => (current === id ? "page" : undefined);
+
+/** What each page is, in a few words, under its name in the Docs menu */
+const blurbs: Record<string, string> = {
+  blur: "Glass in plain CSS",
+  morph: "A button that grows into a panel",
+  indicator: "A highlight that follows the pointer",
+  drag: "Sheets, swipes and switches",
+  lift: "Long-press context menus",
+  edge: "Scrolling content that fades out",
+  text: "Labels and numbers that change",
+  core: "The spring behind the kit",
+};
 ---
 
 <header class="nav">
   <div class="nav__bar lb">
     <a class="brand" href="/" aria-label="Fluid Kit, home">
       <span class="mark"><span class="lb"></span></span>
-      Fluid Kit <span class="brand__by">by Mikhail Mogilnikov</span>
+      <span class="brand__name">Fluid Kit</span> <span class="brand__by">by Mikhail Mogilnikov</span>
     </a>
-    <nav class="nav__links" aria-label="Packages">
-      {packages.map((p) => <a href={`/${p.id}`} aria-current={here(p.id)}>{p.data.name}</a>)}
-      <a href="/playground" aria-current={here("playground")}>Playground</a>
-    </nav>
+    <div class="nav__links">
+      <button
+        class="nav__docs"
+        type="button"
+        aria-haspopup="true"
+        aria-controls="nav-docs"
+        data-current={packages.some((p) => p.id === current) ? "" : undefined}
+        data-nav-docs
+      >
+        Docs<Icon name="chevron" size={15} />
+      </button>
+      <a class="nav__play" href="/playground" aria-current={here("playground")}>Playground</a>
+    </div>
     <div class="nav__end">
-      <a class="nav__docs" href="/blur" aria-current={packages.some((p) => p.id === current) ? "page" : undefined}>
-        Docs
-      </a>
       <ThemeSwitch />
       <a class="icon-link" href="https://github.com/mikhailmogilnikov/fluid-kit" aria-label="Fluid Kit on GitHub">
         <Icon name="github" size={19} />
       </a>
     </div>
   </div>
+
+  <!-- Docs, grown into the list of pages: outside the bar, so its glass blurs the page and not the bar -->
+  <nav class="nav__panel lb" id="nav-docs" aria-label="Docs" inert data-nav-panel>
+    <span class="nav__highlight" data-nav-highlight></span>
+    {
+      packages.map((p) => (
+        <a href={`/${p.id}`} aria-current={here(p.id)}>
+          <b>{p.data.name}</b>
+          <span>{blurbs[p.id]}</span>
+        </a>
+      ))
+    }
+    <hr />
+    <a href="/playground" aria-current={here("playground")}>
+      <b>Playground</b>
+      <span>The hard cases, live</span>
+    </a>
+  </nav>
 </header>
+
+<script>
+  import { createIndicator } from "@fluidkit/indicator";
+  import { disclosure } from "../scripts/disclosure";
+
+  const control = document.querySelector<HTMLElement>("[data-nav-docs]");
+  const panel = document.querySelector<HTMLElement>("[data-nav-panel]");
+  if (control && panel) {
+    const menu = disclosure(control, panel, {
+      // The shape flies in the header, not next to Docs: in the bar, its glass would blur only the bar
+      container: panel.parentElement!,
+      // Closed, its links are out of reach: the morph leaves a panel that had focus only transparent
+      onRest: (at) => (panel.inert = at !== panel),
+    });
+    control.addEventListener("click", () => {
+      panel.inert = false;
+      menu.toggle();
+    });
+    // The highlight follows the pointer over the pages, and rests on the one being read
+    createIndicator({
+      container: panel,
+      indicator: panel.querySelector<HTMLElement>("[data-nav-highlight]")!,
+      rest: panel.querySelector<HTMLElement>("[aria-current='page']"),
+    });
+  }
+</script>

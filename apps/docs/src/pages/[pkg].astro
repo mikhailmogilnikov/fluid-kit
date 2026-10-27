@@ -7,6 +7,12 @@ import Fence from "../components/docs/Fence.astro";
 import Icon from "../components/Icon.astro";
 import Playground from "../components/Playground.astro";
 import MorphDemo from "../components/MorphDemo.astro";
+import IndicatorExample from "../components/IndicatorExample.astro";
+import DragExample from "../components/DragExample.astro";
+import LiftExample from "../components/LiftExample.astro";
+import EdgeExample from "../components/EdgeExample.astro";
+import TextExample from "../components/TextExample.astro";
+import Hint from "../components/Hint.astro";
 import FrameworkSwitch from "../components/docs/FrameworkSwitch.astro";
 
 /** A package's documentation, from `src/content/docs/<package>.mdx` */
@@ -18,8 +24,8 @@ export async function getStaticPaths() {
 const { page } = Astro.props;
 const { Content } = await render(page);
 
-/** A package's own demo, under its opening */
-const Demo = ({ blur: Playground, morph: MorphDemo } as Record<string, typeof Playground>)[page.id];
+/** A package's own demo, under its opening: core, all code, has none */
+const demo = page.id !== "core";
 
 /** Its first case in the playground, where there is one */
 const play = (
@@ -34,7 +40,7 @@ const toc = [...(page.body ?? "").matchAll(/<Section\s([^>]*)>/g)].map(([, attrs
 });
 ---
 
-<Base title={`${page.data.name} — Fluid Kit`} description={page.data.description}>
+<Base title={`${page.data.name} — Fluid Kit`} description={page.data.description} frameworks={page.data.frameworks}>
   <Nav current={page.id} />
 
   <main>
@@ -45,20 +51,43 @@ const toc = [...(page.body ?? "").matchAll(/<Section\s([^>]*)>/g)].map(([, attrs
         <span class="rise">{page.data.name}</span>
       </h1>
       <p class="docs-head__lead rise" style="--i: 1" set:html={page.data.intro} />
-      <div class="rise" style="--i: 1"><FrameworkSwitch note={page.data.react} /></div>
+      <div class="rise" style="--i: 1"><FrameworkSwitch /></div>
     </section>
 
     {
-      Demo && (
+      demo && (
         <section class="docs-demo rise" style="--i: 2" aria-label="Demo">
-          <Demo />
+          {page.id === "blur" && <Playground />}
+          {page.id === "morph" && <MorphDemo />}
+          {page.id === "indicator" && (
+            <IndicatorExample kind="menu" card />
+          )}
+          {page.id === "drag" && (
+            <DragExample kind="pip" card>
+              <Hint text="throw it" light style="top: 124px; left: 96px" />
+            </DragExample>
+          )}
+          {page.id === "lift" && (
+            <LiftExample kind="photos" card>
+              <Hint text="hold it" light style="bottom: 30px; left: 50%" />
+            </LiftExample>
+          )}
+          {page.id === "edge" && (
+            <EdgeExample card>
+              <Hint text="scroll it" light style="bottom: 30px; left: 50%" />
+            </EdgeExample>
+          )}
+          {page.id === "text" && (
+            <TextExample kind="tabs" card>
+              <Hint text="tap them" light style="top: calc(50% + 70px); left: 50%" />
+            </TextExample>
+          )}
         </section>
       )
     }
 
     <div class="docs">
       <aside class="toc" aria-label="On this page" data-toc>
-        <FrameworkSwitch place="toc" />
         <span class="toc__title">On this page</span>
         <span class="toc__mark" aria-hidden="true" data-toc-mark></span>
         {
@@ -78,7 +107,6 @@ const toc = [...(page.body ?? "").matchAll(/<Section\s([^>]*)>/g)].map(([, attrs
           <Icon name="plus" size={18} />
         </summary>
         <nav aria-label="On this page">
-          <FrameworkSwitch place="fold" />
           {
             toc.map(([id, label, only]) => (
               <a href={`#${id}`} data-only={only}>

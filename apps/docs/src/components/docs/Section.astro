@@ -1,20 +1,28 @@
 ---
 /**
  * A section of a package's page, under a heading of its own; the page's contents list these. With
- * `only`, it's written for one framework and shows only with that one chosen
+ * `only`, it's written for some frameworks (`"js"`, `"react"`, `"vue"`, or `"react vue"`) and shows
+ * only while the page shows one of them, its title saying which
  */
 interface Props {
   id: string;
   title: string;
-  only?: "js" | "react";
+  only?: string;
 }
 
 const { id, title, only } = Astro.props;
+const names: Record<string, string> = { js: "TypeScript", react: "React", vue: "Vue" };
 ---
 
 <section class="doc reveal" id={id} data-only={only}>
   <h2 class="doc__title">
-    <a class="anchor" href={`#${id}`}>{title}</a>{only && <span class="doc__only">{only === "react" ? "React" : "JavaScript"}</span>}
+    <a class="anchor" href={`#${id}`}>{title}</a>{
+      only?.split(" ").map((framework) => (
+        <span class="doc__only" data-only={framework}>
+          {names[framework]}
+        </span>
+      ))
+    }
   </h2>
   <slot />
 </section>

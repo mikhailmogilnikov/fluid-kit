@@ -4,7 +4,7 @@ name: Liquid Blur
 order: 1
 description: "A glass material for the web: backdrop blur, fill, rims, springy press effects, and glass that merges between shapes. Plain CSS classes plus optional scripts. No refraction."
 intro: "Glass for the web. One class to add it, two variables to tune it."
-react: "<code>Glass</code> and <code>Glass.Group</code> from <code>@fluidkit/blur/react</code>: variants as props, press effects set up automatically. The CSS classes below work with <code>className</code> too."
+frameworks: ["react", "vue"]
 ---
 
 import Section from "../../components/docs/Section.astro";
@@ -104,6 +104,46 @@ The classes are plain CSS, so `className="lb lb-interactive"` also works. In tha
 </Steps>
 
 </Only>
+<Only vue>
+
+<Steps>
+<Step>
+
+**Install.** The Vue components are included in the package (Vue 3.5+).
+
+<Install pkg="@fluidkit/blur" />
+
+</Step>
+<Step>
+
+**Import the stylesheet** once, in your app's entry (`main.ts`, or Nuxt's `css` option).
+
+```ts
+import "@fluidkit/blur/style.css";
+```
+
+</Step>
+<Step>
+
+**Use `Glass`.** Variants are props, and `as-child` lets you use your own element. Press props (`interactive`, `highlight`, `swell`, `stretch`) set up press effects automatically.
+
+```vue
+<script setup lang="ts">
+import { Glass } from "@fluidkit/blur/vue";
+</script>
+
+<template>
+  <Glass as-child><nav>…</nav></Glass>
+  <Glass interactive as-child><button type="button">Follow</button></Glass>
+</template>
+```
+
+The classes are plain CSS, so `class="lb lb-interactive"` also works. In that case, call `usePress()` once in your root component.
+
+</Step>
+</Steps>
+
+</Only>
 
 <Only js>
 
@@ -154,6 +194,11 @@ Sets up press effects on import, for pages without a build step. Doesn't set up 
 The React entry, `@fluidkit/blur/react`, provides `Glass`, `Glass.Group` and a few hooks. See [Components](#components). It sets up press effects and groups for you.
 
 </Only>
+<Only vue>
+
+The Vue entry, `@fluidkit/blur/vue`, provides `Glass`, `Glass.Group` and a few composables. See [Components](#components). It sets up press effects and groups for you.
+
+</Only>
 
 To animate a button into a panel of the same glass, use [Morph](/morph). It works inside glass groups.
 
@@ -190,6 +235,20 @@ Set the shape with `border-radius`. The default is a capsule.
 <Glass clear>Over a photo</Glass>
 <Glass lens>A lens</Glass>
 <Glass style={{ borderRadius: 24, padding: 16 }}>Card</Glass>
+```
+
+</Only>
+<Only vue>
+
+`Glass` adds the classes based on its props. `tint` also accepts a color.
+
+```vue
+<Glass interactive as-child><button>Press me</button></Glass>
+<Glass highlight stretch>A bar: lights and stretches, doesn't swell</Glass>
+<Glass tint="#ff3b30" highlight as-child><button>Tinted</button></Glass>
+<Glass clear>Over a photo</Glass>
+<Glass lens>A lens</Glass>
+<Glass :style="{ borderRadius: '24px', padding: '16px' }">Card</Glass>
 ```
 
 </Only>
@@ -343,6 +402,11 @@ The press classes need `installPress()` (see [Get started](#start)). Without it,
 `Glass` with a press prop sets this up automatically. If you write the classes by hand, call `usePress()` in your root component.
 
 </Only>
+<Only vue>
+
+`Glass` with a press prop sets this up automatically. If you write the classes by hand, call `usePress()` in your root component.
+
+</Only>
 
 <Rows>
 <Row>
@@ -423,6 +487,22 @@ import { Glass } from "@fluidkit/blur/react";
 ```
 
 </Only>
+<Only vue>
+
+```vue
+<script setup lang="ts">
+import { Glass } from "@fluidkit/blur/vue";
+</script>
+
+<template>
+  <Glass.Group class="toolbar">
+    <Glass>…</Glass>
+    <Glass interactive as-child><button>…</button></Glass>
+  </Glass.Group>
+</template>
+```
+
+</Only>
 
 <Rows>
 <Row>
@@ -478,6 +558,11 @@ export function Toolbar() {
 **Server rendering.** `Glass.Group` renders `lb lb-group` on the server and sets up the group after hydration. It cleans up on unmount. The group adds its own elements to the root, so select children by class (`.toolbar > .lb`), not with `> *`.
 
 </Only>
+<Only vue>
+
+**Server rendering.** `Glass.Group` renders `lb lb-group` on the server, including in Nuxt, and sets up the group after hydration. It cleans up on unmount. The group adds its own elements to the root, so select children by class (`.toolbar > .lb`), not with `> *`.
+
+</Only>
 
 </Section>
 
@@ -487,7 +572,9 @@ Scrolling content can fade out at its edges, like under iOS bars: add `lb-edge` 
 
 </Section>
 
-<Section id="components" title="Components" only="react">
+<Section id="components" title="Components" only="react vue">
+
+<Only react>
 
 **`Glass`** renders a `div`, or your own element with `render` (as in Base UI). Your classes and styles are kept.
 
@@ -528,6 +615,54 @@ const { className, style } = glass({ interactive: true, tint: "#0a84ff" });
 const { root, group } = useGlassGroup();
 <div ref={root} className="lb lb-group">…</div>;
 ```
+
+</Only>
+<Only vue>
+
+**`Glass`** renders a `div`, or with `as-child` the element in its slot. Your classes and styles are kept.
+
+| Prop | Description |
+| --- | --- |
+| `clear?: boolean` | Clearer glass for photos and video (`lb-clear`) |
+| `tint?: boolean \| string` | Fill with a color. Pass a color, or `tint` alone to use the inherited `--lb-tint` (`lb-tinted`) |
+| `lens?: boolean` | Glass without blur (`lb-lens`) |
+| `transparency?: number` | `0` opaque, `0.5` default, `1` clear (`--lb-transparency`) |
+| `depth?: number` | `0` flat, `0.5` default, `1` pronounced (`--lb-depth`) |
+| `interactive?: boolean` | Highlight, swell and stretch (`lb-interactive`) |
+| `highlight?`, `swell?: boolean` | Individual press effects (`lb-highlight`, `lb-swell`) |
+| `stretch?: boolean \| "x" \| "y"` | Stretch, optionally along one axis (`lb-stretch`, `--lb-stretch-axis`) |
+
+Press props set up press effects automatically, including inside iframes.
+
+**`Glass.Group`** renders a `div` with `lb lb-group`, or the element in its slot, and turns it into a [glass group](#groups). `merge` sets how close children get before merging, in px (default `18`). `transparency` and `depth` work like on `Glass` and apply to all children.
+
+```vue
+<Glass.Group class="toolbar" :merge="24">
+  <Glass interactive as-child><button aria-label="Back"><BackIcon /></button></Glass>
+  <Glass interactive as-child><button aria-label="Share"><ShareIcon /></button></Glass>
+</Glass.Group>
+```
+
+**Composables and helpers.**
+
+- `glass(variants)` returns `{ class, style }` for the same props, to bind to elements that aren't `Glass`: `v-bind="glass({ interactive: true })"`.
+- `usePress()` sets up press effects, if you write the press classes by hand.
+- `useGlassGroup()` returns a function ref for a group root (with `lb lb-group`) and the group itself, so you can call `update()`.
+
+```vue
+<script setup lang="ts">
+import { glass, useGlassGroup } from "@fluidkit/blur/vue";
+
+const { root, group } = useGlassGroup();
+</script>
+
+<template>
+  <RouterLink v-bind="glass({ interactive: true, tint: '#0a84ff' })" to="/follow">Follow</RouterLink>
+  <div :ref="root" class="lb lb-group">…</div>
+</template>
+```
+
+</Only>
 
 </Section>
 
@@ -599,7 +734,7 @@ No. The material is plain CSS. The optional scripts add press effects and glass 
 </Question>
 <Question q="How do I use it with React, Vue or Svelte?">
 
-In React, use [`Glass`](/blur?framework=react#components). Elsewhere, use the classes and set up press effects once in your root component; `installPress()` returns its own cleanup.
+In React and Vue, use `Glass` (see [Components](#components) with your framework chosen). Elsewhere, use the classes and set up press effects once in your root component; `installPress()` returns its own cleanup.
 
 <Only js>
 

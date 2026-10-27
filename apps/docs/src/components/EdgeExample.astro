@@ -25,7 +25,7 @@ const genres = ["All", "Ambient", "Electronic", "Indie", "Jazz", "R&B", "Soul", 
 ---
 
 <div class:list={["ex-edge", { "ex-edge--card": card }]} data-hints={card ? "" : undefined}>
-  <div class="bd bd-aurora"></div>
+  <div class="bd bd-aurora" data-silk="edge"></div>
   <div class="ex-edge__card lb">
     <div class="ex-edge__chips lb-edge-x" role="group" aria-label="Genres">
       {genres.map((g, i) => <span class:list={["ex-edge__chip", { "is-on": i === 0 }]}>{g}</span>)}
@@ -62,7 +62,7 @@ const genres = ["All", "Ambient", "Electronic", "Indie", "Jazz", "R&B", "Soul", 
     padding-top: 24px;
     border-radius: var(--radius);
   }
-  .ex-edge--card .ex-edge__card { height: 212px; }
+  .ex-edge--card .ex-edge__card { height: calc(var(--mdemo-height) - 128px); }
   .ex-edge__card {
     width: min(340px, calc(100% - 32px));
     height: 320px;

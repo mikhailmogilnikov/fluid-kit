@@ -6,16 +6,18 @@ import ogImage from "../assets/og.png";
 interface Props {
   title: string;
   description: string;
+  /** The frameworks a package's page has docs of its own for, besides plain JavaScript */
+  frameworks?: string[];
 }
 
-const { title, description } = Astro.props;
+const { title, description, frameworks } = Astro.props;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const socialImageURL = new URL(ogImage.src, Astro.site);
 const socialImageAlt = "Fluid Kit. Fluid interfaces for the web. A blurred glass capsule over pink and blue circles.";
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-frameworks={frameworks?.join(" ")}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -49,12 +51,18 @@ const socialImageAlt = "Fluid Kit. Fluid interfaces for the web. A blurred glass
         const theme = localStorage.getItem("lb-theme");
         if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
       } catch {}
-      // The framework the docs are written for: from a link (?framework=react), else the one chosen last
+      // The framework chosen: from a link (?framework=vue), else the one chosen last. The page shows
+      // its docs for that framework where it has them (`data-view`), its JavaScript docs where not
       try {
+        const root = document.documentElement;
+        const known = ["js", "react", "vue"];
         const asked = new URLSearchParams(location.search).get("framework");
-        const framework = asked === "react" || asked === "js" ? asked : localStorage.getItem("fk-framework");
-        if (framework === "react") document.documentElement.dataset.framework = "react";
-        if (asked) localStorage.setItem("fk-framework", asked);
+        const framework = known.includes(asked) ? asked : localStorage.getItem("fk-framework");
+        if (framework === "react" || framework === "vue") {
+          root.dataset.framework = framework;
+          if ((root.dataset.frameworks || "").split(" ").includes(framework)) root.dataset.view = framework;
+        }
+        if (known.includes(asked)) localStorage.setItem("fk-framework", asked);
       } catch {}
       document.documentElement.classList.add("js");
     </script>

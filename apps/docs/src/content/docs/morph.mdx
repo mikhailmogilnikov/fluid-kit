@@ -4,7 +4,7 @@ name: Morph
 order: 2
 description: "Animate one element into another with a single continuous shape, on springs you can interrupt. Works with any element, and with Liquid Blur glass."
 intro: "Turn a button into a panel and back with one continuous shape. Springs can be interrupted and reversed at any point. Works with any element, and with <a href=\"/blur\">Liquid Blur</a> glass."
-react: "Components and a hook from <code>@fluidkit/morph/react</code>. Code, props and API on this page are for React."
+frameworks: ["react", "vue"]
 ---
 
 import Section from "../../components/docs/Section.astro";
@@ -169,6 +169,69 @@ Components are marked `"use client"`. On the server they render plain markup, an
 </Steps>
 
 </Only>
+<Only vue>
+
+<Steps>
+<Step>
+
+**Install.** The Vue components are included in the package (Vue 3.5+).
+
+<Install pkg="@fluidkit/morph" />
+
+</Step>
+<Step>
+
+**Add the states.** Each `Morph.State` has a `value`. A `Morph.Trigger` switches to its `value` when clicked. A state can also be a trigger, with `as-child`: here the button opens the panel.
+
+```vue
+<script setup lang="ts">
+import "@fluidkit/blur/style.css"; // the glass, if the states are glass
+import { Morph } from "@fluidkit/morph/vue";
+</script>
+
+<template>
+  <div class="morph-scene">
+    <Morph.Root>
+      <Morph.State value="button" as-child>
+        <Morph.Trigger id="more" class="lb" value="panel">More</Morph.Trigger>
+      </Morph.State>
+      <Morph.State value="panel" id="panel" class="lb">
+        <p>Panel content</p>
+        <Morph.Trigger value="button">Close</Morph.Trigger>
+      </Morph.State>
+    </Morph.Root>
+  </div>
+</template>
+```
+
+</Step>
+<Step>
+
+**Lay out both states** where they should appear. Hide the panel with `visibility: hidden` in CSS, not in `style`: the morph manages inline `opacity` and `visibility`. Put the panel above the button with `z-index: 2`.
+
+```css
+.morph-scene { position: relative; min-height: 240px; }
+#more { width: 88px; height: 44px; border-radius: 22px; }
+#panel {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: min(280px, 100%);
+  height: 220px;
+  box-sizing: border-box;
+  padding: 20px;
+  border-radius: 28px;
+  visibility: hidden;
+  z-index: 2;
+}
+```
+
+On the server, including Nuxt, the components render plain markup, and the panel stays hidden by your CSS.
+
+</Step>
+</Steps>
+
+</Only>
 
 </Section>
 
@@ -269,6 +332,47 @@ function useEscape(back: () => void) {
     return () => document.removeEventListener("keydown", onKey);
   }, [back]);
 }
+```
+
+</Fragment>
+<Fragment slot="vue">
+
+```vue
+<script setup lang="ts">
+import { onMounted, onUnmounted, ref } from "vue";
+import { Morph } from "@fluidkit/morph/vue";
+
+const items = ["Messages", "Copy Link", "Add to Favorites"];
+const value = ref("share");
+// Escape closes the panel
+const onKey = (e: KeyboardEvent) => e.key === "Escape" && (value.value = "share");
+onMounted(() => document.addEventListener("keydown", onKey));
+onUnmounted(() => document.removeEventListener("keydown", onKey));
+</script>
+
+<template>
+  <div class="scene">
+    <Morph.Root v-model="value">
+      <!-- The pill is also a trigger: clicking it opens the panel -->
+      <Morph.State value="share" as-child>
+        <Morph.Trigger
+          id="share"
+          :value="value === 'panel' ? 'share' : 'panel'"
+          aria-haspopup="menu"
+          :aria-expanded="value === 'panel'"
+        >
+          <ShareIcon /> Share
+        </Morph.Trigger>
+      </Morph.State>
+      <Morph.State value="panel" id="share-panel" role="menu" aria-label="Share">
+        <!-- Choosing an item closes the panel -->
+        <Morph.Trigger v-for="label in items" :key="label" value="share" role="menuitem">
+          <Icon :name="label" /> {{ label }}
+        </Morph.Trigger>
+      </Morph.State>
+    </Morph.Root>
+  </div>
+</template>
 ```
 
 </Fragment>
@@ -416,6 +520,49 @@ function useEscape(back: () => void) {
     return () => document.removeEventListener("keydown", onKey);
   }, [back]);
 }
+```
+
+</Fragment>
+<Fragment slot="vue">
+
+```vue
+<script setup lang="ts">
+import "@fluidkit/blur/style.css";
+import { onMounted, onUnmounted, ref } from "vue";
+import { Morph } from "@fluidkit/morph/vue";
+
+const items = ["Messages", "Copy Link", "Add to Favorites"];
+const value = ref("share");
+// Escape closes the panel
+const onKey = (e: KeyboardEvent) => e.key === "Escape" && (value.value = "share");
+onMounted(() => document.addEventListener("keydown", onKey));
+onUnmounted(() => document.removeEventListener("keydown", onKey));
+</script>
+
+<template>
+  <div class="scene">
+    <Morph.Root v-model="value">
+      <!-- The pill is also a trigger: clicking it opens the panel -->
+      <Morph.State value="share" as-child>
+        <Morph.Trigger
+          id="share"
+          class="lb"
+          :value="value === 'panel' ? 'share' : 'panel'"
+          aria-haspopup="menu"
+          :aria-expanded="value === 'panel'"
+        >
+          <ShareIcon /> Share
+        </Morph.Trigger>
+      </Morph.State>
+      <Morph.State value="panel" id="share-panel" class="lb" role="menu" aria-label="Share">
+        <!-- Choosing an item closes the panel -->
+        <Morph.Trigger v-for="label in items" :key="label" value="share" role="menuitem">
+          <Icon :name="label" /> {{ label }}
+        </Morph.Trigger>
+      </Morph.State>
+    </Morph.Root>
+  </div>
+</template>
 ```
 
 </Fragment>
@@ -584,6 +731,56 @@ function useEscape(back: () => void) {
     return () => document.removeEventListener("keydown", onKey);
   }, [back]);
 }
+```
+
+</Fragment>
+<Fragment slot="vue">
+
+```vue
+<script setup lang="ts">
+import "@fluidkit/blur/style.css";
+import { Glass } from "@fluidkit/blur/vue";
+import { onMounted, onUnmounted, ref } from "vue";
+import { Morph } from "@fluidkit/morph/vue";
+
+const items = ["Messages", "Copy Link", "Add to Favorites"];
+const value = ref("share");
+// Escape closes the panel
+const onKey = (e: KeyboardEvent) => e.key === "Escape" && (value.value = "share");
+onMounted(() => document.addEventListener("keydown", onKey));
+onUnmounted(() => document.removeEventListener("keydown", onKey));
+</script>
+
+<template>
+  <div class="scene">
+    <Morph.Root v-model="value">
+      <!-- Merges the toolbar buttons into one piece of glass, including the moving shape -->
+      <Glass.Group class="toolbar">
+        <Glass interactive as-child><button type="button" aria-label="Back"><BackIcon /></button></Glass>
+        <Glass interactive as-child><button type="button" aria-label="Play"><PlayIcon /></button></Glass>
+        <!-- The button is also a trigger: clicking it opens the panel -->
+        <Morph.State value="share" as-child>
+          <Morph.Trigger
+            id="share"
+            class="lb lb-interactive"
+            :value="value === 'panel' ? 'share' : 'panel'"
+            aria-label="Share"
+            aria-haspopup="menu"
+            :aria-expanded="value === 'panel'"
+          >
+            <ShareIcon />
+          </Morph.Trigger>
+        </Morph.State>
+      </Glass.Group>
+      <Morph.State value="panel" id="share-panel" class="lb" role="menu" aria-label="Share">
+        <!-- Choosing an item closes the panel -->
+        <Morph.Trigger v-for="label in items" :key="label" value="share" role="menuitem">
+          <Icon :name="label" /> {{ label }}
+        </Morph.Trigger>
+      </Morph.State>
+    </Morph.Root>
+  </div>
+</template>
 ```
 
 </Fragment>
@@ -764,6 +961,59 @@ function useEscape(back: () => void) {
     return () => document.removeEventListener("keydown", onKey);
   }, [back]);
 }
+```
+
+</Fragment>
+<Fragment slot="vue">
+
+```vue
+<script setup lang="ts">
+import "@fluidkit/blur/style.css";
+import { onMounted, onUnmounted, ref } from "vue";
+import { Morph } from "@fluidkit/morph/vue";
+
+const options = ["Newest", "Oldest", "Most Popular", "A–Z"];
+const sort = ref("Newest");
+const value = ref("pill");
+// Escape closes the menu
+const onKey = (e: KeyboardEvent) => e.key === "Escape" && (value.value = "pill");
+onMounted(() => document.addEventListener("keydown", onKey));
+onUnmounted(() => document.removeEventListener("keydown", onKey));
+</script>
+
+<template>
+  <div class="scene">
+    <Morph.Root v-model="value">
+      <Morph.State value="pill" as-child>
+        <Morph.Trigger
+          id="sort"
+          class="lb lb-interactive"
+          value="panel"
+          aria-haspopup="menu"
+          :aria-expanded="value === 'panel'"
+        >
+          <Morph.Match name="sort-icon" as-child><SortIcon /></Morph.Match>
+          <Morph.Match name="sort">{{ sort }}</Morph.Match>
+        </Morph.Trigger>
+      </Morph.State>
+      <Morph.State value="panel" id="sort-panel" class="lb" role="menu" aria-label="Sort by">
+        <p><Morph.Match name="sort-icon" as-child><SortIcon /></Morph.Match> Sort by</p>
+        <!-- Picking an option updates the pill label and moves the match to it, then closes -->
+        <Morph.Trigger
+          v-for="option in options"
+          :key="option"
+          value="pill"
+          role="menuitemradio"
+          :aria-checked="option === sort"
+          @click="sort = option"
+        >
+          <Morph.Match :name="option === sort ? 'sort' : undefined">{{ option }}</Morph.Match>
+          <CheckIcon class="check" />
+        </Morph.Trigger>
+      </Morph.State>
+    </Morph.Root>
+  </div>
+</template>
 ```
 
 </Fragment>
@@ -973,6 +1223,67 @@ export function NowPlaying() {
 ```
 
 </Fragment>
+<Fragment slot="vue">
+
+```vue
+<script setup lang="ts">
+import "@fluidkit/blur/style.css";
+import { onMounted, onUnmounted, ref } from "vue";
+import { Morph } from "@fluidkit/morph/vue";
+
+const steps = ["dot", "bar", "card"];
+const value = ref("dot");
+// Click a state to go one step in, press Escape to go one step out
+const onKey = (e: KeyboardEvent) => {
+  if (e.key === "Escape") value.value = steps[Math.max(0, steps.indexOf(value.value) - 1)];
+};
+onMounted(() => document.addEventListener("keydown", onKey));
+onUnmounted(() => document.removeEventListener("keydown", onKey));
+</script>
+
+<template>
+  <div class="scene">
+    <Morph.Root v-model="value">
+      <Morph.State value="dot" as-child>
+        <Morph.Trigger id="dot" class="lb lb-interactive" value="bar" aria-label="Now playing">
+          <Morph.Match name="play" as-child><PlayIcon /></Morph.Match>
+        </Morph.Trigger>
+      </Morph.State>
+
+      <Morph.State value="bar" id="bar" class="lb">
+        <Morph.Trigger id="expand" value="card" aria-label="Open player">
+          <Morph.Match name="art" class="art" />
+          <span class="meta">
+            <Morph.Match name="title" as-child><strong>Surface Tension</strong></Morph.Match>
+            <span>Lumen</span>
+          </span>
+        </Morph.Trigger>
+        <button class="icon" type="button" aria-label="Play">
+          <Morph.Match name="play" as-child><PlayIcon /></Morph.Match>
+        </button>
+      </Morph.State>
+
+      <Morph.State value="card" id="card" class="lb" role="dialog" aria-label="Now playing">
+        <Morph.Trigger id="collapse" class="icon" value="bar" aria-label="Minimize"><ChevronIcon /></Morph.Trigger>
+        <Morph.Match name="art" class="art" />
+        <span class="meta">
+          <Morph.Match name="title" as-child><strong>Surface Tension</strong></Morph.Match>
+          <span>Lumen — Neon Tides</span>
+        </span>
+        <div class="controls">
+          <button class="icon" type="button" aria-label="Previous"><PreviousIcon /></button>
+          <button class="icon" type="button" aria-label="Play">
+            <Morph.Match name="play" as-child><PlayIcon /></Morph.Match>
+          </button>
+          <button class="icon" type="button" aria-label="Next"><NextIcon /></button>
+        </div>
+      </Morph.State>
+    </Morph.Root>
+  </div>
+</template>
+```
+
+</Fragment>
 <Fragment slot="css">
 
 ```css
@@ -1119,7 +1430,9 @@ The morph follows scrolling, window resizes and size changes of the states on it
 
 </Section>
 
-<Section id="parts" title="Parts" only="react">
+<Section id="parts" title="Parts" only="react vue">
+
+<Only react>
 
 | Part | Renders | Description |
 | --- | --- | --- |
@@ -1150,9 +1463,45 @@ const [value, setValue] = useState("button");
 
 **Adding and removing states.** States rendered later, like new list items, are picked up automatically. Removed states are released and get their styles back. Changing props never recreates the morph.
 
+</Only>
+<Only vue>
+
+| Part | Renders | Description |
+| --- | --- | --- |
+| `Morph.Root` | nothing | Holds the props below and connects the parts inside it |
+| `Morph.State` | `div` | A state with a `value`. Has `data-current` while it's the target |
+| `Morph.Trigger` | `button` | Switches to its `value` on click. `instant` skips the animation. Call `event.preventDefault()` in your own `@click` to cancel |
+| `Morph.Match` | `span` | A shared element: moves to the `Morph.Match` with the same `name` in the other state. No `name`, no match |
+
+Every part also takes `as-child`, see [Composition](#composition).
+
+`Morph.Root` props and events:
+
+| Prop or event | Description |
+| --- | --- |
+| `v-model` | The current state. Without it, the root keeps its own, starting at `defaultValue` |
+| `defaultValue?: string` | The initial state, for uncontrolled use. Default: the first state rendered |
+| `@start="(to, from) => …"` | An animation started, including when it reversed or changed target mid-way |
+| `@rest="(at) => …"` | The animation finished |
+| `@progress="(progress, to, from) => …"` | Every frame, with progress toward `to` from `0` to `1`. `from` is `null` if the animation was redirected mid-way |
+| `spring?: { grow?, shrink? }` | Springs for growing and shrinking, per channel (`x`, `y`, `width`, `height`, `progress`). Default: `defaultMorphSprings`. See [core](/core#spring) |
+| `container?: HTMLElement \| Ref` | Where to put the shape while it animates, if a parent with `overflow: hidden` would clip it |
+
+**Controlled.** With `v-model`, triggers update your ref, and the animation starts after the new value renders, so anything the same click changed (a label, a match) is already in place. To accept or refuse a change yourself, pass `:model-value` and handle `@update:model-value`.
+
+```vue
+<Morph.Root v-model="state">…</Morph.Root>
+```
+
+**Adding and removing states.** States rendered later, like new list items, are picked up automatically. Removed states are released and get their styles back. Changing props never recreates the morph.
+
+</Only>
+
 </Section>
 
-<Section id="composition" title="Composition" only="react">
+<Section id="composition" title="Composition" only="react vue">
+
+<Only react>
 
 **Render as your own element.** Every part accepts `render`, as in Base UI: pass an element and our props are merged into it, or pass a function that receives the props and state. To make a state a trigger, render it as one:
 
@@ -1178,9 +1527,39 @@ import { Glass } from "@fluidkit/blur/react";
 
 **Accessibility.** `aria-expanded`, Escape and focus are up to you. Use `value` to know the current state, and `onStart` / `onRest` to know when an animation starts and ends.
 
+</Only>
+<Only vue>
+
+**Render as your own element.** Every part accepts `as-child`, as in Reka UI: instead of its own element, the part renders the first element in its slot, with our attributes, classes, styles, listeners and refs merged in. To make a state a trigger, put the trigger in it with `as-child`:
+
+```vue
+<Morph.State value="button" as-child>
+  <Morph.Trigger value="panel">More</Morph.Trigger>
+</Morph.State>
+```
+
+**Glass.** Make a state glass with `class="lb"`, or render it as [`Glass`](/blur#components). Inside a [`Glass.Group`](/blur#groups), the shape merges with neighboring glass as it moves.
+
+```vue
+<Glass.Group class="toolbar">
+  <Glass interactive as-child><button aria-label="Back"><BackIcon /></button></Glass>
+  <Morph.State value="button" as-child>
+    <Glass interactive as-child><Morph.Trigger value="panel"><ShareIcon /></Morph.Trigger></Glass>
+  </Morph.State>
+</Glass.Group>
+```
+
+**Shared elements.** `Morph.Match` can also render as your own element with `as-child`. Give the `name` to whichever element is shared right now, as the sort menu above does with the selected option.
+
+**Accessibility.** `aria-expanded`, Escape and focus are up to you. Use the `v-model` value to know the current state, and `@start` / `@rest` to know when an animation starts and ends.
+
+</Only>
+
 </Section>
 
-<Section id="hook" title="The hook" only="react">
+<Section id="hook" title="The hook" only="react vue">
+
+<Only react>
 
 Use `useMorph(options)` when the parts don't fit your markup. It takes the same options as `Morph.Root` and returns a ref for each state.
 
@@ -1202,6 +1581,36 @@ const morph = useMorph({ defaultValue: "button" });
 | `moving` | `true` while animating |
 | `to(value, move?)` | Switches to a state. Returns a `Promise<boolean>`: `true` when it arrives, `false` if it was redirected first. `{ instant: true }` skips the animation |
 | `morph` | The underlying engine, once a state is mounted |
+
+</Only>
+<Only vue>
+
+Use `useMorph(options)` when the parts don't fit your markup. Options can be an object, a ref or a getter; a getter is read again when what it uses changes. It returns a function ref for each state.
+
+```vue
+<script setup lang="ts">
+import { useMorph } from "@fluidkit/morph/vue";
+
+const morph = useMorph({ defaultValue: "button" });
+</script>
+
+<template>
+  <button :ref="morph.state('button')" class="lb" @click="morph.to('panel')">More</button>
+  <div :ref="morph.state('panel')" class="lb panel">
+    <button @click="morph.to('button')">Close</button>
+  </div>
+</template>
+```
+
+| Member | Description |
+| --- | --- |
+| `state(value)` | Function ref for the state with this value, the same one each time |
+| `value` | Computed: the current state |
+| `moving` | Ref: `true` while animating |
+| `to(value, move?)` | Switches to a state. Returns a `Promise<boolean>`: `true` when it arrives, `false` if it was redirected first. `{ instant: true }` skips the animation |
+| `morph` | Shallow ref to the underlying engine, once a state is mounted |
+
+</Only>
 
 </Section>
 
@@ -1295,6 +1704,40 @@ const dialogRef = useMergedRefs(dialog, morph.state("dialog"));
 <dialog ref={dialogRef}>
   <button onClick={async () => (await morph.to("button")) && dialog.current!.close()}>Close</button>
 </dialog>
+```
+
+</Only>
+
+<Only vue>
+
+In Vue, open the dialog in the click handler, before switching, and close it when `to()` resolves:
+
+```vue
+<script setup lang="ts">
+import { shallowRef } from "vue";
+import { useMorph } from "@fluidkit/morph/vue";
+
+const morph = useMorph({ defaultValue: "button" });
+const dialog = shallowRef<HTMLDialogElement | null>(null);
+// One ref for both: the dialog element, and the morph's state
+const toDialog = morph.state("dialog");
+const dialogRef = (el: unknown) => {
+  dialog.value = el as HTMLDialogElement | null;
+  toDialog(el);
+};
+const open = () => {
+  dialog.value!.showModal();
+  morph.to("dialog");
+};
+const close = async () => (await morph.to("button")) && dialog.value!.close();
+</script>
+
+<template>
+  <button :ref="morph.state('button')" @click="open">Open</button>
+  <dialog :ref="dialogRef">
+    <button @click="close">Close</button>
+  </dialog>
+</template>
 ```
 
 </Only>
