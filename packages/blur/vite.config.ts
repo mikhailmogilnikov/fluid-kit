@@ -5,7 +5,7 @@ const source = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
 export default defineConfig({
   pack: {
-    entry: ["src/press.ts", "src/melt.ts", "src/auto.ts", "src/styles.ts", "src/liquid-blur.css"],
+    entry: ["src/press.ts", "src/melt.ts", "src/auto.ts", "src/styles.ts", "src/liquid-blur.css", "src/react.tsx"],
     format: "esm",
     platform: "browser",
     target: "es2022",
@@ -21,6 +21,9 @@ export default defineConfig({
   test: {
     environment: "happy-dom",
     // Core from its source: tests don't wait on a build
-    alias: { "@fluidkit/core": source("../core/src/index.ts") },
+    alias: [
+      { find: /^@fluidkit\/core$/, replacement: source("../core/src/index.ts") },
+      { find: /^@fluidkit\/core\/react$/, replacement: source("../core/src/react.ts") },
+    ],
   },
 });
