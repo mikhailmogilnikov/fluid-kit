@@ -1,6 +1,6 @@
 {
   "name": "@fluidkit/morph",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "One element flows into another: one shape the whole way, on interruptible springs. Works on any element.",
   "keywords": [
     "animation",
