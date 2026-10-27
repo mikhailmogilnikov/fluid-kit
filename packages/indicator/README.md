@@ -84,6 +84,27 @@ const tab = ref("overview");
 
 More in the [documentation](https://fluidkit.mogilnikov.dev/indicator?framework=vue#parts).
 
+## Svelte
+
+`@fluidkit/indicator/svelte` has the same components (each part can render an element of yours with
+a `child` snippet) and a `useIndicator()` function. Svelte 5.29+.
+
+```svelte
+<script lang="ts">
+  import { Indicator } from "@fluidkit/indicator/svelte";
+
+  let tab = $state("overview");
+</script>
+
+<Indicator.Root bind:value={tab} trigger="press">
+  <Indicator.Thumb class="thumb" />
+  <Indicator.Item value="overview">Overview</Indicator.Item>
+  <Indicator.Item value="releases">Releases</Indicator.Item>
+</Indicator.Root>
+```
+
+More in the [documentation](https://fluidkit.mogilnikov.dev/indicator?framework=svelte#parts).
+
 ## License
 
 MIT © Mikhail Mogilnikov. See [LICENSE](LICENSE).

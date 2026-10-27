@@ -3,3 +3,5 @@ dist
 .astro
 .DS_Store
 *.log
+# svelte-package stages its output here
+.svelte-kit

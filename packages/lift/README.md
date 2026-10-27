@@ -76,6 +76,29 @@ import { Lift } from "@fluidkit/lift/vue";
 
 More in the [documentation](https://fluidkit.mogilnikov.dev/lift?framework=vue#parts).
 
+## Svelte
+
+`@fluidkit/lift/svelte` has the same components (each part can render an element of yours with a
+`child` snippet) and a `useLift()` function. Svelte 5.29+.
+
+```svelte
+<script lang="ts">
+  import { Lift } from "@fluidkit/lift/svelte";
+</script>
+
+<Lift.Root onSelect={(value) => act(value)}>
+  <Lift.Target>
+    {#snippet child({ props })}<img {...props} {src} alt="" />{/snippet}
+  </Lift.Target>
+  <Lift.Menu class="menu">
+    <Lift.Item value="copy">Copy</Lift.Item>
+    <Lift.Item value="share">Share</Lift.Item>
+  </Lift.Menu>
+</Lift.Root>
+```
+
+More in the [documentation](https://fluidkit.mogilnikov.dev/lift?framework=svelte#parts).
+
 ## License
 
 MIT © Mikhail Mogilnikov. See [LICENSE](LICENSE).

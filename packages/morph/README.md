@@ -62,6 +62,24 @@ with `as-child`) and a `useMorph()` composable. Vue 3.5+.
 
 More in the [documentation](https://fluidkit.mogilnikov.dev/morph?framework=vue#parts).
 
+## Svelte
+
+`@fluidkit/morph/svelte` has the same components (each part can render an element of yours with a
+`child` snippet) and a `useMorph()` function. Svelte 5.29+.
+
+```svelte
+<Morph.Root bind:value={shown}>
+  <Morph.State value="button">
+    {#snippet child({ props })}<Morph.Trigger {...props} class="lb" value="panel">More</Morph.Trigger>{/snippet}
+  </Morph.State>
+  <Morph.State value="panel" class="lb panel">
+    <Morph.Trigger value="button">Close</Morph.Trigger>
+  </Morph.State>
+</Morph.Root>
+```
+
+More in the [documentation](https://fluidkit.mogilnikov.dev/morph?framework=svelte#parts).
+
 ## License
 
 MIT © Mikhail Mogilnikov. See [LICENSE](LICENSE).

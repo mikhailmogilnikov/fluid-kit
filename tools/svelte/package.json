@@ -1,0 +1,17 @@
+{
+  "name": "@fluidkit/svelte-tools",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Svelte's packaging and type check for the packages, on a TypeScript of their own",
+  "bin": {
+    "fk-svelte-check": "./bin/check.js",
+    "fk-svelte-package": "./bin/package.js"
+  },
+  "type": "module",
+  "dependencies": {
+    "@sveltejs/package": "3.0.1",
+    "svelte": "5.57.3",
+    "svelte-check": "4.7.7",
+    "typescript": "^6.0.3"
+  }
+}

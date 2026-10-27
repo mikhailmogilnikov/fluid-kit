@@ -19,6 +19,9 @@ const allowed: Record<string, string[]> = {
   variants: [],
   react: ["./group", "./interaction", "./variants", "@fluidkit/core/react", "react"],
   vue: ["./group", "./interaction", "./variants", "@fluidkit/core/vue", "vue"],
+  // Svelte's, packaged apart: the same modules, by path from its folder
+  "svelte/helpers.svelte": ["../group", "../interaction", "../variants", "svelte", "svelte/attachments"],
+  "svelte/index": ["../variants", "./Glass.svelte", "./Group.svelte", "./helpers.svelte"],
 };
 
 const root = join(__dirname, "..");
@@ -28,7 +31,10 @@ const importsOf = (file: string) =>
     .sort();
 
 describe("module boundaries", () => {
-  const files = readdirSync(join(root, "src")).filter((f) => /\.tsx?$/.test(f));
+  const files = [
+    ...readdirSync(join(root, "src")),
+    ...readdirSync(join(root, "src", "svelte")).map((f) => `svelte/${f}`),
+  ].filter((f) => /\.tsx?$/.test(f));
 
   it("knows every source file", () => {
     expect(files.map((f) => f.replace(/\.tsx?$/, "")).sort()).toEqual(Object.keys(allowed).sort());

@@ -1,9 +1,12 @@
 packages:
   - "apps/*"
   - "packages/*"
+  - "tools/*"
 allowBuilds:
   esbuild: true
 # Vite+ ships its own Vite core under the `vite` name; Vitest inside it is built against it
+minimumReleaseAgeExclude:
+  - svelte@5.57.3
 peerDependencyRules:
   allowedVersions:
     "vitest>vite": "*"

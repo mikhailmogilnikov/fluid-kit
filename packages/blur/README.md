@@ -35,6 +35,7 @@ installPress();
 | `@fluidkit/blur/auto` | Sets up press effects on import |
 | `@fluidkit/blur/react` | `Glass` and `Glass.Group` components |
 | `@fluidkit/blur/vue` | The same components for Vue |
+| `@fluidkit/blur/svelte` | The same components for Svelte |
 
 See the [documentation](https://fluidkit.mogilnikov.dev/blur) for classes, variables, theming,
 accessibility, groups and the API.
@@ -70,6 +71,23 @@ More in the [documentation](https://fluidkit.mogilnikov.dev/blur?framework=react
 ```
 
 More in the [documentation](https://fluidkit.mogilnikov.dev/blur?framework=vue#components).
+
+## Svelte
+
+`@fluidkit/blur/svelte` has the same `Glass` and `Glass.Group` (render an element of yours with a
+`child` snippet), plus `glass()`, `usePress()` and `useGlassGroup()`. Svelte 5.29+.
+
+```svelte
+<Glass interactive tint="#0a84ff">
+  {#snippet child({ props })}<button {...props}>Follow</button>{/snippet}
+</Glass>
+<Glass.Group class="toolbar">
+  <Glass interactive>Back</Glass>
+  <Glass interactive>Share</Glass>
+</Glass.Group>
+```
+
+More in the [documentation](https://fluidkit.mogilnikov.dev/blur?framework=svelte#components).
 
 ## License
 

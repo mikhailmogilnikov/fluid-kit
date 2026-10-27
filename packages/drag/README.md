@@ -62,6 +62,22 @@ More in the [documentation](https://fluidkit.mogilnikov.dev/drag?framework=react
 
 More in the [documentation](https://fluidkit.mogilnikov.dev/drag?framework=vue#parts).
 
+## Svelte
+
+`@fluidkit/drag/svelte` has the same components (each part can render an element of yours with a
+`child` snippet) and a `useDrag()` function. Svelte 5.29+.
+
+```svelte
+<Drag.Root bind:snap axis="y" snaps={({ height }) => [0, height / 2, height - 76]}>
+  <Drag.Handle class="grabber" />
+  <Drag.Scroll>
+    {#snippet child({ props })}<ul {...props}>…</ul>{/snippet}
+  </Drag.Scroll>
+</Drag.Root>
+```
+
+More in the [documentation](https://fluidkit.mogilnikov.dev/drag?framework=svelte#parts).
+
 ## License
 
 MIT © Mikhail Mogilnikov. See [LICENSE](LICENSE).
