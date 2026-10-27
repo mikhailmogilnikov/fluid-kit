@@ -53,8 +53,8 @@ const ITEM = "data-fk-indicator-item";
 export type UseIndicatorOptions<V extends string = string> = Omit<IndicatorSettings, "items" | "onChange"> & {
   /** The item chosen, from the parent: where it rests. Without it, the choice is its own */
   value?: V | null;
-  /** Chosen at first, when the choice is its own */
-  defaultValue?: V | null;
+  /** Chosen at first, when the choice is its own. Not what the items' type is read from */
+  defaultValue?: NoInfer<V> | null;
   /** An item chosen: by a click on it, or a press let go on it */
   onValueChange?: (value: V) => void;
   /** An item pointed at by something else, followed; `null`, back to rest */

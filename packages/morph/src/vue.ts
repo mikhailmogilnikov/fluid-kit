@@ -41,8 +41,11 @@ import { createMorph, type Morph as MorphEngine, type MorphMove, type MorphSetti
 export type UseMorphOptions<V extends string = string> = Pick<MorphSettings, "spring"> & {
   /** The state asked for, from the parent. Without it, it's its own */
   value?: V;
-  /** The state shown at first, when it's its own; the first one in the page unless given */
-  defaultValue?: V;
+  /**
+   * The state shown at first, when it's its own; the first one in the page unless given. Not what
+   * the states' type is read from: `useMorph({ defaultValue: "a" })` still takes `to("b")`
+   */
+  defaultValue?: NoInfer<V>;
   /** A state asked for: by a trigger, or `to()` */
   onValueChange?: (value: V) => void;
   /** Where the shape goes instead of next to the state it sets off from: out of a parent that would clip it */
