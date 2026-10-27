@@ -5,7 +5,15 @@ const source = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
 export default defineConfig({
   pack: {
-    entry: ["src/press.ts", "src/melt.ts", "src/auto.ts", "src/styles.ts", "src/liquid-blur.css", "src/react.tsx"],
+    entry: [
+      "src/press.ts",
+      "src/melt.ts",
+      "src/auto.ts",
+      "src/styles.ts",
+      "src/liquid-blur.css",
+      "src/react.tsx",
+      "src/vue.ts",
+    ],
     format: "esm",
     platform: "browser",
     target: "es2022",
@@ -24,6 +32,7 @@ export default defineConfig({
     alias: [
       { find: /^@fluidkit\/core$/, replacement: source("../core/src/index.ts") },
       { find: /^@fluidkit\/core\/react$/, replacement: source("../core/src/react.ts") },
+      { find: /^@fluidkit\/core\/vue$/, replacement: source("../core/src/vue.ts") },
     ],
   },
 });

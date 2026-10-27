@@ -2,7 +2,7 @@ import { defineConfig } from "vite-plus";
 
 export default defineConfig({
   pack: {
-    entry: ["src/index.ts", "src/react.ts"],
+    entry: ["src/index.ts", "src/react.ts", "src/vue.ts"],
     format: "esm",
     platform: "browser",
     target: "es2022",

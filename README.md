@@ -1,6 +1,6 @@
 # Fluid Kit
 
-A family of small libraries for fluid interfaces on the web, for plain JavaScript or React. Each
+A family of small libraries for fluid interfaces on the web, for plain JavaScript, React or Vue. Each
 package works on its own. When two are used together, they coordinate through DOM attributes
 (`data-fk-*`, see [the contract](https://fluidkit.mogilnikov.dev/core#contract)) instead of
 importing each other.

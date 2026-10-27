@@ -15,6 +15,10 @@ const allowed: Record<string, string[]> = {
   melt: ["./group"],
   auto: ["./interaction"],
   styles: [],
+  // Framework adapters: the same variants, press and groups, as components
+  variants: [],
+  react: ["./group", "./interaction", "./variants", "@fluidkit/core/react", "react"],
+  vue: ["./group", "./interaction", "./variants", "@fluidkit/core/vue", "vue"],
 };
 
 const root = join(__dirname, "..");
@@ -24,14 +28,14 @@ const importsOf = (file: string) =>
     .sort();
 
 describe("module boundaries", () => {
-  const files = readdirSync(join(root, "src")).filter((f) => f.endsWith(".ts"));
+  const files = readdirSync(join(root, "src")).filter((f) => /\.tsx?$/.test(f));
 
   it("knows every source file", () => {
-    expect(files.map((f) => f.replace(/\.ts$/, "")).sort()).toEqual(Object.keys(allowed).sort());
+    expect(files.map((f) => f.replace(/\.tsx?$/, "")).sort()).toEqual(Object.keys(allowed).sort());
   });
 
   for (const file of files) {
-    const name = file.replace(/\.ts$/, "");
+    const name = file.replace(/\.tsx?$/, "");
     it(`${name} imports only what it may`, () => {
       expect(importsOf(file)).toEqual([...new Set(allowed[name])].sort());
     });

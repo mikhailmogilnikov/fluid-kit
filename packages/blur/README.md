@@ -34,6 +34,7 @@ installPress();
 | `@fluidkit/blur/melt` | Glass groups: glass that merges between shapes |
 | `@fluidkit/blur/auto` | Sets up press effects on import |
 | `@fluidkit/blur/react` | `Glass` and `Glass.Group` components |
+| `@fluidkit/blur/vue` | The same components for Vue |
 
 See the [documentation](https://fluidkit.mogilnikov.dev/blur) for classes, variables, theming,
 accessibility, groups and the API.
@@ -54,6 +55,21 @@ import { Glass } from "@fluidkit/blur/react";
 ```
 
 More in the [documentation](https://fluidkit.mogilnikov.dev/blur?framework=react#components).
+
+## Vue
+
+`@fluidkit/blur/vue` has the same `Glass` and `Glass.Group` (render your own element with
+`as-child`), plus `glass()`, `usePress()` and `useGlassGroup()`. Vue 3.5+.
+
+```vue
+<Glass interactive tint="#0a84ff" as-child><button>Follow</button></Glass>
+<Glass.Group class="toolbar">
+  <Glass interactive as-child><button>Back</button></Glass>
+  <Glass interactive as-child><button>Share</button></Glass>
+</Glass.Group>
+```
+
+More in the [documentation](https://fluidkit.mogilnikov.dev/blur?framework=vue#components).
 
 ## License
 

@@ -60,6 +60,30 @@ import { Indicator } from "@fluidkit/indicator/react";
 
 More in the [documentation](https://fluidkit.mogilnikov.dev/indicator?framework=react#parts).
 
+## Vue
+
+`@fluidkit/indicator/vue` has the same components (each part can render as the element in its slot
+with `as-child`) and a `useIndicator()` composable. Vue 3.5+.
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { Indicator } from "@fluidkit/indicator/vue";
+
+const tab = ref("overview");
+</script>
+
+<template>
+  <Indicator.Root v-model="tab" trigger="press">
+    <Indicator.Thumb class="thumb" />
+    <Indicator.Item value="overview">Overview</Indicator.Item>
+    <Indicator.Item value="releases">Releases</Indicator.Item>
+  </Indicator.Root>
+</template>
+```
+
+More in the [documentation](https://fluidkit.mogilnikov.dev/indicator?framework=vue#parts).
+
 ## License
 
 MIT © Mikhail Mogilnikov. See [LICENSE](LICENSE).

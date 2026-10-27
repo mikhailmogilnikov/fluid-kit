@@ -44,6 +44,24 @@ import { Morph } from "@fluidkit/morph/react";
 
 More in the [documentation](https://fluidkit.mogilnikov.dev/morph?framework=react#parts).
 
+## Vue
+
+`@fluidkit/morph/vue` has the same components (each part can render as the element in its slot
+with `as-child`) and a `useMorph()` composable. Vue 3.5+.
+
+```vue
+<Morph.Root v-model="state">
+  <Morph.State value="button" as-child>
+    <Morph.Trigger class="lb" value="panel">More</Morph.Trigger>
+  </Morph.State>
+  <Morph.State value="panel" class="lb panel">
+    <Morph.Trigger value="button">Close</Morph.Trigger>
+  </Morph.State>
+</Morph.Root>
+```
+
+More in the [documentation](https://fluidkit.mogilnikov.dev/morph?framework=vue#parts).
+
 ## License
 
 MIT © Mikhail Mogilnikov. See [LICENSE](LICENSE).

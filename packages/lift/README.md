@@ -53,6 +53,29 @@ import { Lift } from "@fluidkit/lift/react";
 
 More in the [documentation](https://fluidkit.mogilnikov.dev/lift?framework=react#parts).
 
+## Vue
+
+`@fluidkit/lift/vue` has the same components (each part can render as the element in its slot with
+`as-child`) and a `useLift()` composable. Vue 3.5+.
+
+```vue
+<script setup lang="ts">
+import { Lift } from "@fluidkit/lift/vue";
+</script>
+
+<template>
+  <Lift.Root @select="(value) => act(value)">
+    <Lift.Target as-child><img :src="src" alt="" /></Lift.Target>
+    <Lift.Menu class="menu">
+      <Lift.Item value="copy">Copy</Lift.Item>
+      <Lift.Item value="share">Share</Lift.Item>
+    </Lift.Menu>
+  </Lift.Root>
+</template>
+```
+
+More in the [documentation](https://fluidkit.mogilnikov.dev/lift?framework=vue#parts).
+
 ## License
 
 MIT © Mikhail Mogilnikov. See [LICENSE](LICENSE).

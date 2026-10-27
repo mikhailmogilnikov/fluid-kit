@@ -28,6 +28,7 @@ import {
 import { useAttach, useMergedRefs, renderPart, type RenderProp } from "@fluidkit/core/react";
 import { createGlassGroup, type GlassGroup } from "./group";
 import { installPress } from "./interaction";
+import { groupStyle, presses, variants, type GlassVariants } from "./variants";
 
 /** Press installed on the document from an effect: the same install however many ask for it */
 export function usePress() {
@@ -36,49 +37,13 @@ export function usePress() {
   }, []);
 }
 
-export type GlassVariants = {
-  /** Clear, for glass over photos and video: at least transparency 1 (`lb-clear`) */
-  clear?: boolean;
-  /** Its fill is a color: this one, or `--lb-tint` as inherited with `true` (`lb-tinted`) */
-  tint?: boolean | string;
-  /** A lens: the same glass with no blur, as a held thumb is in iOS (`lb-lens`) */
-  lens?: boolean;
-  /** 0 opaque, 0.5 the default, 1 clear: fill and blur together (`--lb-transparency`) */
-  transparency?: number;
-  /** 0 flat, 0.5 the default, 1 pronounced: shade, glow and rims (`--lb-depth`) */
-  depth?: number;
-  /** Highlight, swell and stretch, the usual set for a button, chip or icon (`lb-interactive`) */
-  interactive?: boolean;
-  /** Lights up where it's pressed (`lb-highlight`) */
-  highlight?: boolean;
-  /** Grows while it's pressed, more the smaller it is (`lb-swell`) */
-  swell?: boolean;
-  /** Pulls toward the finger and stretches along the drag; along `x` or `y` alone if given (`lb-stretch`) */
-  stretch?: boolean | "x" | "y";
-};
+export type { GlassVariants };
 
 /** The classes and custom properties for these variants: for glass that isn't `<Glass>` */
-export function glass(variants: GlassVariants = {}): { className: string; style: CSSProperties } {
-  const { clear, tint, lens, transparency, depth, interactive, highlight, swell, stretch } = variants;
-  const classes = ["lb"];
-  if (clear) classes.push("lb-clear");
-  if (tint) classes.push("lb-tinted");
-  if (lens) classes.push("lb-lens");
-  if (interactive) classes.push("lb-interactive");
-  if (highlight) classes.push("lb-highlight");
-  if (swell) classes.push("lb-swell");
-  if (stretch) classes.push("lb-stretch");
-  const style: Record<string, string | number> = {};
-  if (typeof tint === "string") style["--lb-tint"] = tint;
-  if (transparency !== undefined) style["--lb-transparency"] = transparency;
-  if (depth !== undefined) style["--lb-depth"] = depth;
-  if (stretch === "x" || stretch === "y") style["--lb-stretch-axis"] = stretch;
-  return { className: classes.join(" "), style };
+export function glass(given: GlassVariants = {}): { className: string; style: CSSProperties } {
+  const { classes, style } = variants(given);
+  return { className: classes, style: style as CSSProperties };
 }
-
-/** Whether any of these needs press */
-const presses = ({ interactive, highlight, swell, stretch }: GlassVariants) =>
-  !!(interactive || highlight || swell || stretch);
 
 type PartProps = Omit<HTMLAttributes<HTMLElement>, "children"> & {
   /** Render as an element of yours, or a function of the props; a `div` unless given */
@@ -150,10 +115,7 @@ const Group = forwardRef<HTMLElement, GlassGroupProps>(function GlassGroupRoot(
 ) {
   const { root } = useGlassGroup();
   const merged = useMergedRefs(root, ref);
-  const style: Record<string, string | number> = {};
-  if (transparency !== undefined) style["--lb-transparency"] = transparency;
-  if (depth !== undefined) style["--lb-depth"] = depth;
-  if (merge !== undefined) style["--lb-merge"] = `${merge}px`;
+  const style = groupStyle(transparency, depth, merge);
   return renderPart(
     "div",
     {

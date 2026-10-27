@@ -48,6 +48,20 @@ import { Drag } from "@fluidkit/drag/react";
 
 More in the [documentation](https://fluidkit.mogilnikov.dev/drag?framework=react#parts).
 
+## Vue
+
+`@fluidkit/drag/vue` has the same components (each part can render as the element in its slot with
+`as-child`) and a `useDrag()` composable. Vue 3.5+.
+
+```vue
+<Drag.Root v-model:snap="snap" axis="y" :snaps="({ height }) => [0, height / 2, height - 76]">
+  <Drag.Handle class="grabber" />
+  <Drag.Scroll as-child><ul>…</ul></Drag.Scroll>
+</Drag.Root>
+```
+
+More in the [documentation](https://fluidkit.mogilnikov.dev/drag?framework=vue#parts).
+
 ## License
 
 MIT © Mikhail Mogilnikov. See [LICENSE](LICENSE).

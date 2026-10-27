@@ -19,6 +19,7 @@ import {
   type Ref,
   type RefCallback,
 } from "react";
+import { changed } from "./settings";
 
 /** A layout effect in the browser, an effect on the server (where neither runs, and React says so) */
 export const useIsomorphicLayoutEffect = typeof document === "undefined" ? useEffect : useLayoutEffect;
@@ -154,16 +155,6 @@ export function renderPart<State>(
 /** A data attribute that's there or not: `data-x=""` when on, none when off */
 export const flag = (on: boolean | undefined) => (on ? "" : undefined);
 
-/** The same, for settings: plain objects and arrays by what's in them, the rest by identity */
-const same = (a: unknown, b: unknown) =>
-  Object.is(a, b) ||
-  (typeof a === "object" &&
-    typeof b === "object" &&
-    a !== null &&
-    b !== null &&
-    (Array.isArray(a) || Object.getPrototypeOf(a) === Object.prototype) &&
-    JSON.stringify(a) === JSON.stringify(b));
-
 /**
  * Settings kept in step with an engine made once: only those that changed since it last took them
  * are handed to its `set()`, after each render. `taken` is what it was made with
@@ -175,16 +166,8 @@ export function useSettings<S extends object>(
 ) {
   useIsomorphicLayoutEffect(() => {
     if (!engine) return;
-    const before = taken.current;
-    const changed: Partial<S> = {};
-    let any = false;
-    for (const key of Object.keys(settings) as Array<keyof S>) {
-      if (!before || !same(before[key], settings[key])) {
-        changed[key] = settings[key];
-        any = true;
-      }
-    }
-    if (any) engine.set(changed);
+    const next = changed(taken.current, settings);
+    if (next) engine.set(next);
     taken.current = settings;
   });
 }
