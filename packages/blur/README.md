@@ -1,8 +1,8 @@
 # @fluidkit/blur
 
-A glass material for the web: backdrop blur, fill, rims, springy press behaviors, and glass that
-melts between shapes. Plain CSS classes and optional, framework-agnostic scripts. No refraction: a
-calm, blurred surface built only from what every engine renders the same way.
+A glass material for the web: backdrop blur, fill, rims, springy press effects, and glass that
+merges between shapes. Plain CSS classes plus optional scripts. No refraction, only features that
+render the same in every browser.
 
 **[Documentation](https://fluidkit.mogilnikov.dev/blur)** · [Changelog](CHANGELOG.md) · Part of
 [Fluid Kit](https://fluidkit.mogilnikov.dev)
@@ -19,7 +19,7 @@ import "@fluidkit/blur/style.css";
 <button class="lb">Glass</button>
 ```
 
-Press behaviors (`lb-highlight`, `lb-swell`, `lb-stretch`, `lb-interactive`) need one call:
+Press effects (`lb-highlight`, `lb-swell`, `lb-stretch`, `lb-interactive`) need one call:
 
 ```js
 import { installPress } from "@fluidkit/blur/press";
@@ -31,11 +31,29 @@ installPress();
 | --- | --- |
 | `@fluidkit/blur/style.css` | The material |
 | `@fluidkit/blur/press` | Highlight, swell and stretch on springs |
-| `@fluidkit/blur/melt` | Glass groups: glass that melts between shapes |
-| `@fluidkit/blur/auto` | Installs press on import |
+| `@fluidkit/blur/melt` | Glass groups: glass that merges between shapes |
+| `@fluidkit/blur/auto` | Sets up press effects on import |
+| `@fluidkit/blur/react` | `Glass` and `Glass.Group` components |
 
-Classes, variables, theming, accessibility, groups, the API and the limitations are in the
-[documentation](https://fluidkit.mogilnikov.dev/blur).
+See the [documentation](https://fluidkit.mogilnikov.dev/blur) for classes, variables, theming,
+accessibility, groups and the API.
+
+## React
+
+`@fluidkit/blur/react` has `Glass`, with variants as props and `render` for your own element, and
+`Glass.Group` for merging glass. Press effects are set up automatically.
+
+```tsx
+import { Glass } from "@fluidkit/blur/react";
+
+<Glass interactive tint="#0a84ff" render={<button />}>Follow</Glass>
+<Glass.Group className="toolbar">
+  <Glass interactive render={<button />}>Back</Glass>
+  <Glass interactive render={<button />}>Share</Glass>
+</Glass.Group>
+```
+
+More in the [documentation](https://fluidkit.mogilnikov.dev/blur?framework=react#components).
 
 ## License
 

@@ -1760,3 +1760,51 @@ code {
 .docs-play:hover { background: var(--pill); color: var(--ink); }
 .docs-play b { display: block; color: var(--ink); font-weight: 600; }
 .docs-play svg { flex: none; }
+
+/*
+ * Docs for one framework: what's written for JavaScript (`data-only="js"`) or React
+ * (`data-only="react"`) shows only with that one chosen (`data-framework` on the root, JavaScript
+ * unless React is chosen, set before the page is first painted)
+ */
+:root:not([data-framework="react"]) [data-only="react"],
+:root[data-framework="react"] [data-only="js"] {
+  display: none !important;
+}
+.only { display: contents; }
+/* No box of its own: what's in it is spaced as the section's own blocks are */
+.doc > * + .only > :first-child,
+.doc > .only > * + * { margin-top: 20px; }
+.doc > .doc__title + .only > :first-child { margin-top: 16px; }
+
+/* The framework the page is written for: under its opening, in the contents, in the folded contents */
+.framework {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 22px;
+  color: var(--ink-3);
+  font-size: 14px;
+}
+/* Under the opening: the switch in a row, what React gets on this page on a row of its own under it */
+.framework--head { display: grid; grid-template-columns: max-content max-content 1fr; }
+.framework__note { grid-column: 1 / -1; max-width: 62ch; margin: 2px 0 0; color: var(--ink-2); }
+.framework__note a { color: var(--ink); }
+/* In the contents: over them, the switch a column wide */
+.framework--toc { display: grid; gap: 8px; margin: 0 0 28px; }
+.framework--toc .seg { justify-self: start; }
+/* Folded: a row at the top of the opened contents */
+.framework--fold { margin: 0 0 6px; padding: 4px 10px 10px; border-bottom: 1px solid var(--hair); }
+
+/* A section written for one framework says so beside its title */
+.doc__only {
+  margin-left: 10px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--pill);
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  vertical-align: middle;
+}

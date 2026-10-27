@@ -2,8 +2,9 @@
 package: "@fluidkit/lift"
 name: Lift
 order: 5
-description: "A long press lifts any element above everything, the page dimmed and blurred behind it, and opens your menu beside it: iOS's context menu, for the web."
-intro: "Held for a moment, any element lifts above everything, the page dimmed and blurred behind it, and your menu opens beside it; the same finger slides onto an item to choose it. iOS's context menu, for the web; with <a href=\"/blur\">Liquid Blur</a>, a glass menu."
+description: "Long-press any element to lift it above the page, with the background dimmed and blurred, and open your menu next to it. The iOS context menu, for the web."
+intro: "Long-press any element and it lifts above the page, with the background dimmed and blurred, and your menu opens next to it. Slide the same finger onto an item to pick it. The iOS context menu, for the web; with <a href=\"/blur\">Liquid Blur</a>, the menu can be glass."
+react: "Components and a hook from <code>@fluidkit/lift/react</code>. Code, props and API on this page are for React."
 ---
 
 import Section from "../../components/docs/Section.astro";
@@ -15,10 +16,13 @@ import Step from "../../components/docs/Step.astro";
 import Install from "../../components/docs/Install.astro";
 import Example from "../../components/docs/Example.astro";
 import LiftExample from "../../components/LiftExample.astro";
+import Only from "../../components/docs/Only.astro";
 
 <Section id="start" title="Get started">
 
-A lift takes an element of yours and a menu of yours. Held for half a second, or right clicked, the element rises above everything in a modal layer, the rest of the page dimmed and blurred, and the menu opens under it, or over it with no room under. The menu is yours from the markup up: Lift places it, opens it and closes it.
+Lift takes an element and your menu. Hold the element for half a second (or right-click it), and it rises above the page in a modal layer, with the rest of the page dimmed and blurred. The menu opens below it, or above it if there's no room below. You write the menu; Lift positions, opens and closes it.
+
+<Only js>
 
 <Steps>
 <Step>
@@ -30,7 +34,7 @@ A lift takes an element of yours and a menu of yours. Held for half a second, or
 </Step>
 <Step>
 
-**Have a menu, hidden**, anywhere in the page. Its items are its buttons, links and `role="menuitem"` elements.
+**Add a hidden menu** anywhere on the page. Its buttons, links and `role="menuitem"` elements are the items.
 
 ```html
 <img class="photo" src="…" alt="…" tabindex="0" />
@@ -45,7 +49,7 @@ A lift takes an element of yours and a menu of yours. Held for half a second, or
 </Step>
 <Step>
 
-**Create the lift** after the elements are in the DOM.
+**Create the lift** once the elements are in the DOM.
 
 ```ts
 import { createLift } from "@fluidkit/lift";
@@ -63,13 +67,52 @@ const lift = createLift({
 </Step>
 </Steps>
 
+</Only>
+<Only react>
+
+<Steps>
+<Step>
+
+**Install.** The React components are included in the package (React 18+).
+
+<Install pkg="@fluidkit/lift" />
+
+</Step>
+<Step>
+
+**Add the parts.** Put the target, the menu and its items inside `Lift.Root`. The menu stays hidden until the target is lifted, and `onSelect` receives the `value` of the chosen item.
+
+```tsx
+import { Lift } from "@fluidkit/lift/react";
+
+export function Photo({ src }: { src: string }) {
+  return (
+    <Lift.Root onSelect={(value) => console.log(value)}>
+      <Lift.Target render={<img className="photo" src={src} alt="" tabIndex={0} />} />
+      <Lift.Menu className="menu" aria-label="Photo">
+        <Lift.Item value="copy">Copy</Lift.Item>
+        <Lift.Item value="share">Share</Lift.Item>
+        <Lift.Item value="delete">Delete</Lift.Item>
+      </Lift.Menu>
+    </Lift.Root>
+  );
+}
+```
+
+Components are marked `"use client"`. On the server they render plain markup. A component that passes callbacks to them must be a client component too.
+
+</Step>
+</Steps>
+
+</Only>
+
 </Section>
 
 <Section id="examples" title="Examples">
 
 ### Photos
 
-Hold a photo, or right click it. It gives a little while it's held (`data-lifting`), then lifts, and the menu opens under it, or over it near the bottom. Keep the finger down and slide onto an item to choose it as you let go; the highlight is an [Indicator](/indicator), moved by `onHighlight`. Six photos share one menu.
+Hold a photo, or right-click it. It shrinks slightly while held (`data-lifting`), then lifts, and the menu opens below it (or above, near the bottom of the screen). Keep your finger down and slide onto an item to pick it on release. The highlight is an [Indicator](/indicator) driven by `onHighlight`. In the JavaScript version, six photos share one menu; in React, each photo has its own.
 
 <Example>
 <LiftExample kind="photos" />
@@ -88,10 +131,42 @@ for (const photo of document.querySelectorAll<HTMLElement>(".photo")) {
   createLift({
     element: photo,
     menu,
-    // The finger that lifted it slides over the items: the highlight follows
+    // The highlight follows the finger as it slides over the items
     onHighlight: (item) => highlight.to(item),
     onClose: () => highlight.to(null, { instant: true }),
   });
+}
+```
+
+</Fragment>
+<Fragment slot="react">
+
+```tsx
+import "@fluidkit/blur/style.css";
+import { useState } from "react";
+import { Indicator } from "@fluidkit/indicator/react";
+import { Lift } from "@fluidkit/lift/react";
+
+const items = ["Copy", "Share", "Favorite", "Delete"];
+
+export function Photo({ src }: { src: string }) {
+  // The item under the finger, where the highlight goes
+  const [pointed, setPointed] = useState<string | null>(null);
+  return (
+    <Lift.Root onHighlight={(item) => setPointed(item?.dataset.value ?? null)} onSelect={(value) => act(value, src)}>
+      <Lift.Target render={<img className="photo" src={src} alt="" tabIndex={0} />} />
+      <Lift.Menu className="menu lb" aria-label="Photo">
+        <Indicator.Root active={pointed}>
+          <Indicator.Thumb className="menu__highlight" />
+          {items.map((label) => (
+            <Lift.Item key={label} value={label} render={<Indicator.Item value={label} />}>
+              {label}
+            </Lift.Item>
+          ))}
+        </Indicator.Root>
+      </Lift.Menu>
+    </Lift.Root>
+  );
 }
 ```
 
@@ -100,10 +175,10 @@ for (const photo of document.querySelectorAll<HTMLElement>(".photo")) {
 
 ```css
 .photo { border-radius: 14px; user-select: none; transition: scale 0.4s; }
-/* Held: it gives a little before it lifts */
+/* Shrinks slightly while held, before it lifts */
 .photo[data-lifting] { scale: 0.96; }
 
-/* `hidden` keeps it hidden until it's lifted: a display of its own would undo it */
+/* Keep `hidden` working: a `display` of its own would override it */
 .menu[hidden] { display: none; }
 .menu { width: 230px; display: grid; padding: 6px; border-radius: 24px; }
 ```
@@ -113,7 +188,7 @@ for (const photo of document.querySelectorAll<HTMLElement>(".photo")) {
 
 ### A message
 
-A chat bubble lifts with a row of reactions over its actions: the menu is one element, so it can hold any layout. A reaction chosen lands on the bubble, from `onSelect`.
+A chat bubble with a row of reactions above its actions. The menu is a single element, so it can have any layout. The chosen reaction appears on the bubble via `onSelect`.
 
 <Example>
 <LiftExample kind="message" />
@@ -149,70 +224,64 @@ createLift({
 ```
 
 </Fragment>
+<Fragment slot="react">
+
+```tsx
+const reactions = ["❤️", "👍", "😂", "😮", "😢", "🔥"];
+
+export function Bubble({ text }: { text: string }) {
+  const [reaction, setReaction] = useState<string | null>(null);
+  return (
+    <Lift.Root onSelect={(value) => reactions.includes(value) && setReaction((r) => (r === value ? null : value))}>
+      <Lift.Target className="bubble" tabIndex={0}>
+        {text}
+        {reaction && <span className="bubble__reaction">{reaction}</span>}
+      </Lift.Target>
+      <Lift.Menu className="stack" aria-label="Message">
+        <div className="reactions lb" role="group" aria-label="React">
+          {reactions.map((r) => (
+            <Lift.Item key={r} value={r} aria-label={`React ${r}`}>
+              {r}
+            </Lift.Item>
+          ))}
+        </div>
+        <div className="menu lb">
+          <Lift.Item value="reply">Reply</Lift.Item>
+          <Lift.Item value="copy">Copy</Lift.Item>
+          <Lift.Item value="delete">Delete</Lift.Item>
+        </div>
+      </Lift.Menu>
+    </Lift.Root>
+  );
+}
+```
+
+</Fragment>
 </Example>
 
 ### An app icon
 
-Icons on a home screen, each with quick actions. A copy of the icon is what lifts, dressed as it's drawn, so it looks the same out of its place.
+Home screen icons with quick actions. What lifts is a copy of the icon with all its styles, so it looks the same outside its place.
 
 <Example>
 <LiftExample kind="icon" />
-</Example>
 
-</Section>
-
-<Section id="options" title="Options">
-
-`createLift(options: LiftOptions): Lift`
-
-| Option | Meaning |
-| --- | --- |
-| `element: HTMLElement` | What's held and lifted |
-| `menu?: HTMLElement` | Your menu, opened beside it; hidden otherwise (`hidden`). Without one, only the element is lifted |
-| `items?: string` | Its items, as a selector in the menu: `[role="menuitem"], button, a[href]` by default |
-| `preview?: HTMLElement \| (element) => HTMLElement` | What's lifted instead of a copy: something live, or a bigger preview, as iOS shows. It keeps its own size, centered on the element and kept on screen; one from the page goes back where it was after |
-| `delay?: number` | How long a press is held, ms: `500` by default |
-| `scale?: number` | How much bigger it's lifted: `1.04` by default |
-| `dim?: number` | How dark the page goes behind it, 0 to 1: `0.2` by default |
-| `blur?: number` | How blurred the page goes behind it, px: `12` by default |
-| `placement?: "auto" \| "below" \| "above"` | Where the menu goes: by the room there, `auto` by default |
-| `spring?: SpringParams` | The spring it rises on: `defaultLiftSpring` by default. As in [core](/core#spring) |
-| `onOpen?: () => void` | It's lifting |
-| `onClose?: () => void` | It's closed and back in place |
-| `onHighlight?: (item) => void` | The finger that lifted it is over this item, or `null` off them |
-| `onSelect?: (item) => void \| boolean` | This item was chosen, by a click, a key or a finger let go on it; the menu closes after, unless it gives back `false` (a toggle in the menu, say). Never a disabled one (`:disabled`, `aria-disabled="true"`) |
-
-</Section>
-
-<Section id="api" title="API">
-
-| Member | Meaning |
-| --- | --- |
-| `opened` | Lifted, its menu open |
-| `open()` | Lifts it and opens the menu, its first item focused: for a button that opens it, say. Another lift open in the page closes at once |
-| `close()` | Settles it back and closes the menu |
-| `set(settings)` | Takes new options, all but `element` and `menu`, the rest kept: a component's props as they change, without a lift made again. Open, it takes them as it goes (dim, blur, callbacks) or the next time it opens |
-| `destroy()` | Closes it at once and removes its listeners. Later calls do nothing |
-
-</Section>
-
-<Section id="react" title="React">
-
-The same package, from `@fluidkit/lift/react` (React 18 or later): components made of parts by default, and a hook for markup of your own. They're client components (`"use client"`), rendered on the server as plain markup, the menu hidden.
+<Fragment slot="react">
 
 ```tsx
-import { Lift } from "@fluidkit/lift/react";
-
-export function Photo({ src }: { src: string }) {
+export function AppIcon({ app }: { app: App }) {
   return (
-    <Lift.Root onSelect={(value) => act(value)}>
-      <Lift.Target render={<img className="photo" src={src} alt="" tabIndex={0} />} />
-      <Lift.Menu className="menu lb" aria-label="Photo">
-        <Lift.Item value="copy">Copy</Lift.Item>
-        <Lift.Item value="share">Share</Lift.Item>
+    <Lift.Root onSelect={(value) => run(app, value)}>
+      <Lift.Target className="icon" style={{ background: app.gradient }} aria-label={app.name} tabIndex={0}>
+        {app.glyph}
+      </Lift.Target>
+      <Lift.Menu className="menu lb" aria-label={app.name}>
+        <Lift.Item value="new">New Item</Lift.Item>
+        <Lift.Item value="search">Search</Lift.Item>
         <Lift.Separator />
-        <Lift.Item value="delete" disabled>
-          Delete
+        <Lift.Item value="edit">Edit Home Screen</Lift.Item>
+        <Lift.Item value="remove" className="danger">
+          Remove App
         </Lift.Item>
       </Lift.Menu>
     </Lift.Root>
@@ -220,32 +289,95 @@ export function Photo({ src }: { src: string }) {
 }
 ```
 
-| Part | Renders | What it's for |
+</Fragment>
+</Example>
+
+</Section>
+
+<Section id="options" title="Options" only="js">
+
+`createLift(options: LiftOptions): Lift`
+
+| Option | Description |
+| --- | --- |
+| `element: HTMLElement` | The element to hold and lift |
+| `menu?: HTMLElement` | Your menu, hidden with `hidden` until opened. Without it, only the element lifts |
+| `items?: string` | Selector for items inside the menu. Default: `[role="menuitem"], button, a[href]` |
+| `preview?: HTMLElement \| (element) => HTMLElement` | Lifted instead of a copy, like a live or larger preview in iOS. Keeps its own size, centered on the element. An element from the page goes back to its place afterwards |
+| `delay?: number` | How long to hold, in ms. Default: `500` |
+| `scale?: number` | How much larger the lifted element gets. Default: `1.04` |
+| `dim?: number` | How dark the page gets, `0` to `1`. Default: `0.2` |
+| `blur?: number` | How much the page is blurred, in px. Default: `12` |
+| `placement?: "auto" \| "below" \| "above"` | Where the menu opens. Default: `auto`, based on available space |
+| `spring?: SpringParams` | The lift animation spring. Default: `defaultLiftSpring`. See [core](/core#spring) |
+| `onOpen?: () => void` | Called when it starts lifting |
+| `onClose?: () => void` | Called when it's closed and back in place |
+| `onHighlight?: (item) => void` | Called when the finger that lifted it moves over an item, or `null` when it leaves the items |
+| `onSelect?: (item) => void \| boolean` | Called when an item is chosen by click, keyboard or releasing the finger on it. The menu then closes, unless you return `false` (for a toggle, say). Never called for disabled items (`:disabled`, `aria-disabled="true"`) |
+
+</Section>
+
+<Section id="api" title="API" only="js">
+
+| Member | Description |
+| --- | --- |
+| `opened` | `true` while lifted and the menu is open |
+| `open()` | Lifts the element and opens the menu, focusing the first item. Useful for a "more" button. Closes any other open lift on the page |
+| `close()` | Closes the menu and puts the element back |
+| `set(settings)` | Updates any option except `element` and `menu` without recreating the lift. While open, `dim`, `blur` and callbacks apply right away; the rest on next open |
+| `destroy()` | Closes it immediately and removes its listeners |
+
+</Section>
+
+<Section id="parts" title="Parts" only="react">
+
+| Part | Renders | Description |
 | --- | --- | --- |
-| `Lift.Root` | nothing of its own | The lift: every option of `createLift` but `element`, `menu` and `preview` as props, and `open` / `defaultOpen` / `onOpenChange`. `onSelect(value, item)` is told the item chosen |
-| `Lift.Target` | `div` | What's held and lifted. `data-state="open"` while it's lifted |
-| `Lift.Menu` | `div role="menu" hidden` | The menu, opened beside it |
-| `Lift.Item` | `button role="menuitem"` | An item. `value` is what the root's `onSelect` is given; `disabled` keeps it from being chosen (`aria-disabled`, `data-disabled`); its own `onSelect(event)` hears of it first, and `event.preventDefault()` keeps the menu open |
-| `Lift.Separator` | `div role="separator"` | A line between items, passed over by the finger and the keys |
-| `Lift.Preview` | `div`, hidden | Lifted instead of a copy, at its own size: something live, or bigger |
+| `Lift.Root` | nothing | Holds the props below and connects the parts inside it |
+| `Lift.Target` | `div` | The element to hold and lift. Has `data-state="open"` while lifted |
+| `Lift.Menu` | `div role="menu" hidden` | The menu, hidden until opened |
+| `Lift.Item` | `button role="menuitem"` | A menu item. `value` is passed to the root's `onSelect`. `disabled` prevents choosing it. Its own `onSelect(event)` runs first; call `event.preventDefault()` to keep the menu open |
+| `Lift.Separator` | `div role="separator"` | A divider, skipped by the finger and the keyboard |
+| `Lift.Preview` | `div`, hidden | Lifted instead of a copy, at its own size: something live, or larger |
 
-**Your elements.** Every part renders as an element of yours with `render`, as in Base UI: an element, our props merged into it (classes joined, styles and handlers both kept, refs both set), or a function of the props and the part's state.
+`Lift.Root` props:
 
-```tsx
-<Lift.Target render={<img src={src} alt="" />} />
-<Lift.Target render={(props, { opened }) => <img {...props} src={opened ? large : src} alt="" />} />
-```
+| Prop | Description |
+| --- | --- |
+| `onSelect?: (value, item) => void` | Called with the `value` and element of the chosen item. The menu then closes, unless the item's own `onSelect` prevented it. Never called for disabled items |
+| `open?: boolean` | Whether it's open, for controlled use |
+| `defaultOpen?: boolean` | Whether it starts open, for uncontrolled use |
+| `onOpenChange?: (open) => void` | Called when it opens or closes |
+| `onHighlight?: (item) => void` | Called when the finger that lifted it moves over an item, or `null` when it leaves the items |
+| `delay?: number` | How long to hold, in ms. Default: `500` |
+| `scale?: number` | How much larger the lifted element gets. Default: `1.04` |
+| `dim?: number` | How dark the page gets, `0` to `1`. Default: `0.2` |
+| `blur?: number` | How much the page is blurred, in px. Default: `12` |
+| `placement?: "auto" \| "below" \| "above"` | Where the menu opens. Default: `auto` |
+| `spring?: SpringParams` | The lift animation spring. Default: `defaultLiftSpring`. See [core](/core#spring) |
+| `items?: string` | Selector for items inside the menu. Default: `Lift.Item`s, buttons and links |
 
-**Controlled.** Without `open` it's its own; with `open` and `onOpenChange`, it follows the parent's state, and asks to change it when it's held, chosen from, or closed by the dim or Escape.
+**Controlled.** Pass `open` and `onOpenChange` to keep the open state in your component.
 
 ```tsx
 const [open, setOpen] = useState(false);
 <Lift.Root open={open} onOpenChange={setOpen}>…</Lift.Root>
 ```
 
-**New props, the same lift.** It's made once its target is in the page and handed new props with `set()`, never made again for them; callbacks are always the latest, so arrows written in the JSX are fine. A new target or menu element makes it again.
+Changing props never recreates the lift, and callbacks always see the latest values, so inline arrow functions are fine. A new target or menu element recreates it.
 
-**With an indicator.** The highlight under the finger is an [Indicator](/indicator#react), told by `onHighlight` which item it's over (`active`); the two parts become one element through `render`.
+</Section>
+
+<Section id="composition" title="Composition" only="react">
+
+**Render as your own element.** Every part accepts `render`, as in Base UI: pass an element and our props are merged into it (classes joined, styles, handlers and refs combined), or a function that receives the props and state.
+
+```tsx
+<Lift.Target render={<img src={src} alt="" />} />
+<Lift.Target render={(props, { opened }) => <img {...props} src={opened ? large : src} alt="" />} />
+```
+
+**With an indicator.** The highlight under the finger is an [Indicator](/indicator). `onHighlight` tells it which item is under the finger (`active`), and `render` makes each lift item an indicator item too.
 
 ```tsx
 const [pointed, setPointed] = useState<string | null>(null);
@@ -262,16 +394,33 @@ const [pointed, setPointed] = useState<string | null>(null);
 </Lift.Root>
 ```
 
-**The hook.** `useLift(options)` takes the same props as the root and gives refs for your elements, `opened`, `open()`, `close()` and the engine (`lift`), for markup the parts don't fit.
+**Styling.** Parts expose state as data attributes: `data-state="open"` on the target and menu, `data-lifting` while held, `data-highlighted` on the item under the finger, `data-disabled` on disabled items.
+
+</Section>
+
+<Section id="hook" title="The hook" only="react">
+
+Use `useLift(options)` when the parts don't fit your markup. It takes the same options as `Lift.Root` (except `onSelect` receives the item element) and returns refs.
 
 ```tsx
+import { useLift } from "@fluidkit/lift/react";
+
 const lift = useLift({ onSelect: (item) => act(item.dataset.action) });
 
 <img ref={lift.element} src={src} alt="" />
-<div ref={lift.menu} role="menu" hidden>…</div>
+<div>
+  <div ref={lift.menu} role="menu" hidden>…</div>
+</div>
 ```
 
-With the hook, the menu is your element and is moved into the lift's dialog while it's open: give it a parent of its own, so nothing React adds next to it then looks for it there. The parts do this for you. Unmounted while it's open, the lift is let go first and everything goes back where React expects it.
+| Member | Description |
+| --- | --- |
+| `element`, `menu`, `preview` | Refs for the lifted element, the menu and a custom preview |
+| `opened` | `true` while open |
+| `open()`, `close()` | Open (focusing the first item) or close |
+| `lift` | The underlying engine, once mounted |
+
+While open, the menu is moved into Lift's dialog. Wrap it in its own parent element, as above, so React doesn't get confused by the missing node. The parts do this for you. If the component unmounts while open, the lift closes first and everything goes back where React expects it.
 
 </Section>
 
@@ -281,36 +430,36 @@ With the hook, the menu is your element and is moved into the lift's dialog whil
 <Row>
 <Cell title="The press">
 
-Held still for `delay`, it lifts; moved more than 8px, or taken by a scroll, it doesn't. While it's held the element is marked `data-lifting` and no text on the page is selected; iOS shows no callout. A right click, or the menu key on a focused element, opens it at once. The click a long press would end in is dropped.
+Hold still for `delay` and it lifts. Move more than 8px, or start scrolling, and it doesn't. While held, the element has `data-lifting` and page text can't be selected. Right-click or the context menu key opens it immediately. The click at the end of a long press is cancelled.
 
 </Cell>
-<Cell title="A copy, lifted">
+<Cell title="A copy">
 
-What lifts is a copy of the element, every computed style written on it, so it looks the same out of its place; the element itself is hidden where it is and keeps its room. Moving it would reload a frame and stop a video, so the copy is a picture: its frames are empty boxes, not loaded again; its videos, their frame as it was; its form controls, in no form or radio group, so a checked radio in it doesn't uncheck the page's. For something live, or bigger, give `preview` an element of your own.
+What lifts is a copy of the element with all its computed styles, so it looks the same outside its place. The original stays hidden in place, keeping its space. The copy is a snapshot: iframes become empty boxes, videos show their current frame, and form controls are detached so they don't affect the page's forms. For something live or larger, use `preview`.
 
 </Cell>
 </Row>
 <Row>
-<Cell title="A modal layer">
+<Cell title="Modal layer">
 
-They sit in a modal `<dialog>`, in the top layer, over any `overflow`, `z-index` and transform of the page's: the rest is inert, the page doesn't scroll under it by wheel, touch or keys, Escape closes it and focus goes back. The arrow keys go through the items, past disabled ones, Home and End to the ends. The dialog is the dim and the blur; the menu is moved into it while it's open and put back after, its listeners kept. One lift is open at a time in a page: another opening closes it at once.
+The copy and menu sit in a modal `<dialog>` in the top layer, above any `overflow`, `z-index` or transform on the page. The rest of the page is inert and doesn't scroll. Escape closes it and returns focus. Arrow keys move between items (skipping disabled ones), Home and End jump to the ends. Only one lift can be open at a time.
 
 </Cell>
-<Cell title="The same finger">
+<Cell title="One finger">
 
-The finger that lifted it can stay down and slide onto an item: each item it's over is marked `data-highlighted` and given to `onHighlight`; let go there, the item is clicked. No text is selected on the way. Let go without moving, the menu stays open for a tap. Opened by a key, its first item is focused.
+The finger that lifted the element can stay down and slide onto an item. The item under it gets `data-highlighted` and is passed to `onHighlight`; releasing there clicks it. If you release without moving, the menu stays open for a tap. When opened with the keyboard, the first item is focused.
 
 </Cell>
 </Row>
 <Row>
 <Cell title="Placement">
 
-Under the element, or over it with no room under; on the element's side of the screen, kept 12px in from the edges. With room neither way, the element moves up for the menu, as in iOS. A window made narrower or wider closes it; a shorter one (a phone's bars, its keyboard) doesn't.
+The menu opens below the element, or above it if there's no room, aligned to the element's side of the screen and 12px from the edges. If there's no room either way, the element moves up to make space, like in iOS. Changing the window width closes it; changing the height (mobile toolbars, the keyboard) doesn't.
 
 </Cell>
-<Cell title="Springs">
+<Cell title="Animation">
 
-The copy rises from where the element is drawn (given a little under the press, say) to a little bigger, the dim and the menu coming in with it. Closing, it settles exactly back on the element, wherever the element is by then (its page scrolled by a dragged scrollbar, say), before the element is shown. With reduced motion it's all at once.
+The copy rises from where the element is drawn to slightly larger, with the dim and the menu fading in. On close, it lands exactly on the element, even if the page scrolled meanwhile. With reduced motion, everything is instant.
 
 </Cell>
 </Row>
@@ -320,22 +469,28 @@ The copy rises from where the element is drawn (given a little under the press, 
 
 <Section id="glass" title="With Liquid Blur">
 
-The menu can be glass (`lb`): in the dialog it blurs the dimmed page under it. A menu's highlight can be an [Indicator](/indicator): under a mouse it follows by itself, and `onHighlight` moves it for the finger that lifted the menu.
+The menu can be glass (`lb`): inside the dialog it blurs the dimmed page behind it. For a highlight that follows the pointer, use an [Indicator](/indicator): it follows the mouse on its own, and `onHighlight` moves it for the finger that lifted the menu.
+
+<Only react>
+
+In React, pass the item from `onHighlight` to the indicator's `active`. See [Composition](#composition).
+
+</Only>
 
 </Section>
 
 <Section id="support" title="Browser support">
 
-Any browser with `<dialog>` and its `showModal()`, Pointer Events and `backdrop-filter`.
+Any browser with `<dialog>` and `showModal()`, Pointer Events and `backdrop-filter`.
 
 </Section>
 
 <Section id="limitations" title="Limitations">
 
-- A copy is a picture of the element as it was: a video in it shows its frame, a frame an empty box, a form its values as they were. Use `preview` for something live.
-- A copy's pseudo-elements are dressed only if the page's rules for them still match it out of its place.
-- Every computed style of every element in the copy is written on it as it lifts: a few dozen elements take a few milliseconds; hundreds take a frame or more on a phone, and the lift starts late. For a big element, give `preview` something smaller.
-- The menu is moved into the dialog, out of its place: style it by its own classes, not by where it sits (`.card .menu`), and give it the custom properties it needs on itself or the root, not on an ancestor.
-- So the finger that lifted it can slide onto the menu, a lifted element takes touch moves itself (a non-passive `touchmove`): a scroll that starts on it waits for the page's main thread.
+- The copy is a snapshot: videos show one frame, iframes are empty, forms show their values at the time. Use `preview` for something live.
+- Pseudo-elements in the copy are only styled if the page's selectors still match it outside its place.
+- Copying styles takes time: a few dozen elements take a few milliseconds, hundreds can take a frame or more on a phone and delay the lift. For large elements, use a smaller `preview`.
+- While open, the menu is moved into the dialog. Style it by its own classes, not by its position (`.card .menu`), and set the CSS variables it needs on the menu itself or on the root.
+- To let the finger slide onto the menu, a lifted element listens to `touchmove` non-passively, so a scroll that starts on it waits for the main thread.
 
 </Section>

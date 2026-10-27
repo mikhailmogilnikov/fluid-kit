@@ -49,6 +49,13 @@ const socialImageAlt = "Fluid Kit. Fluid interfaces for the web. A blurred glass
         const theme = localStorage.getItem("lb-theme");
         if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
       } catch {}
+      // The framework the docs are written for: from a link (?framework=react), else the one chosen last
+      try {
+        const asked = new URLSearchParams(location.search).get("framework");
+        const framework = asked === "react" || asked === "js" ? asked : localStorage.getItem("fk-framework");
+        if (framework === "react") document.documentElement.dataset.framework = "react";
+        if (asked) localStorage.setItem("fk-framework", asked);
+      } catch {}
       document.documentElement.classList.add("js");
     </script>
   </head>

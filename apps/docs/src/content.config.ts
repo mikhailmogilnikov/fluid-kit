@@ -16,6 +16,8 @@ const docs = defineCollection({
     intro: z.string(),
     /** Order in the nav */
     order: z.number(),
+    /** What React gets on this page, in a line under the framework switch; inline HTML */
+    react: z.string().optional(),
   }),
 });
 

@@ -2,8 +2,9 @@
 package: "@fluidkit/blur"
 name: Scroll Edge
 order: 6
-description: "Content that scrolls fades out toward the edges, as under the bars in iOS. An edge shows only while there's content past it. Pure CSS, on any element that scrolls."
-intro: "Content that scrolls fades out toward its edges, as it does under the bars in iOS, instead of stopping at a hard line. An edge shows only while there's content past it. Pure CSS, on any element that scrolls; part of <a href=\"/blur\">Liquid Blur</a>."
+description: "Scrolling content fades out at its edges, like under iOS bars. Each edge appears only when there's more content past it. Pure CSS, on any scrolling element."
+intro: "Scrolling content fades out at its edges instead of being cut off by a hard line, like under iOS bars. Each edge appears only when there's more content past it. Pure CSS, on any scrolling element; part of <a href=\"/blur\">Liquid Blur</a>."
+react: "Pure CSS: just add <code>className=\"lb-edge\"</code>."
 ---
 
 import Section from "../../components/docs/Section.astro";
@@ -14,10 +15,13 @@ import Steps from "../../components/docs/Steps.astro";
 import Step from "../../components/docs/Step.astro";
 import Install from "../../components/docs/Install.astro";
 import EdgeExample from "../../components/EdgeExample.astro";
+import Only from "../../components/docs/Only.astro";
 
 <Section id="start" title="Get started">
 
-Scroll Edge comes with [Liquid Blur](/blur): it's in its stylesheet, so there's nothing else to install. It doesn't need glass: it works on any element that scrolls, with or without `.lb` around it.
+Scroll Edge is part of the [Liquid Blur](/blur) stylesheet, so there's nothing else to install. It doesn't need glass: it works on any scrolling element.
+
+<Only js>
 
 <Steps>
 <Step>
@@ -29,7 +33,7 @@ Scroll Edge comes with [Liquid Blur](/blur): it's in its stylesheet, so there's 
 </Step>
 <Step>
 
-**Import its stylesheet**, once, before your own styles.
+**Import the stylesheet** once, before your own styles.
 
 ```ts
 import "@fluidkit/blur/style.css";
@@ -38,7 +42,7 @@ import "@fluidkit/blur/style.css";
 </Step>
 <Step>
 
-**Add `lb-edge` to the element that scrolls.** No script and no extra markup.
+**Add `lb-edge` to the scrolling element.** No script or extra markup.
 
 ```html
 <ol class="songs lb-edge">…</ol>
@@ -51,13 +55,41 @@ import "@fluidkit/blur/style.css";
 </Step>
 </Steps>
 
+</Only>
+<Only react>
+
+<Steps>
+<Step>
+
+**Install Liquid Blur** and import the stylesheet once in your app's root.
+
+<Install pkg="@fluidkit/blur" />
+
+```tsx
+import "@fluidkit/blur/style.css";
+```
+
+</Step>
+<Step>
+
+**Add `lb-edge` to the scrolling element.** No script or component.
+
+```tsx
+<ul className="list lb-edge">{rows}</ul>
+```
+
+</Step>
+</Steps>
+
+</Only>
+
 </Section>
 
 <Section id="examples" title="Examples">
 
 ### A list and a row of chips
 
-The list fades out toward its top and bottom, the chips toward their sides. Scroll either: at the start there's no edge on that side, and it comes in as the content goes under it; at the end, the last edge goes, so the last row is never covered.
+The list fades at the top and bottom, the chips at the sides. At the start of a scroll there's no fade on that side; it appears as content goes under the edge. At the end, the last fade disappears, so the last item is never covered.
 
 <EdgeExample />
 
@@ -73,27 +105,27 @@ The list fades out toward its top and bottom, the chips toward their sides. Scro
 .chips { overflow-x: auto; --lb-edge-size: 20px; }
 ```
 
-### Under a sheet's title
+### Under a sheet title
 
-The list in [Drag's sheet](/drag#examples) has `lb-edge`: its places fade out under the title as they scroll, and the first one, at the top, isn't faded.
+The list in [Drag's sheet](/drag#examples) uses `lb-edge`: rows fade out under the title as they scroll, and the first row isn't faded at the top.
 
 </Section>
 
 <Section id="options" title="Options">
 
-| Class or variable | Meaning |
+| Class or variable | Description |
 | --- | --- |
-| `lb-edge` | The content fades out toward the top and bottom, for an element that scrolls up and down |
-| `lb-edge-x` | The same toward the left and right, for an element that scrolls sideways |
-| `--lb-edge-size` | How far the fade reaches, and how much scroll an edge comes in over: `28px` by default. Inherited, so it can be set on any ancestor |
-| `--lb-edge-start`, `--lb-edge-end` | The same for one side: the top (or left) and the bottom (or right). `--lb-edge-size` unless set; `0px` turns that side's edge off |
-| `--lb-edge-strength` | How transparent the content gets at the edge: `1`, all the way, by default; `0.5`, half |
+| `lb-edge` | Fades the top and bottom, for vertical scrolling |
+| `lb-edge-x` | Fades the left and right, for horizontal scrolling |
+| `--lb-edge-size` | Length of the fade, and how much scrolling it takes to appear. Default: `28px`. Inherited |
+| `--lb-edge-start`, `--lb-edge-end` | The same for one side: top (or left) and bottom (or right). Default: `--lb-edge-size`. `0px` turns that side off |
+| `--lb-edge-strength` | How transparent content gets at the edge. Default: `1` (fully); `0.5` is half |
 
 ```css
-/* A chat: newest at the bottom, so only the top fades, and further */
+/* A chat: newest messages at the bottom, so only the top fades, and further */
 .messages { --lb-edge-start: 48px; --lb-edge-end: 0px; }
 
-/* Text that should stay a little readable under the edge */
+/* Keep text slightly readable under the edge */
 .notes { --lb-edge-strength: 0.6; }
 ```
 
@@ -105,29 +137,29 @@ The list in [Drag's sheet](/drag#examples) has `lb-edge`: its places fade out un
 <Row>
 <Cell title="A mask">
 
-The fade is a `mask` on the element that scrolls: the content goes from opaque to transparent at the edge itself, on a smooth curve, so where it's cut off it's never seen. It fades rather than paints, so it works over glass, a photo or a plain background alike.
+The fade is a `mask` on the scrolling element: content goes from opaque to transparent right at the edge. Since it fades rather than paints over, it works on glass, photos and plain backgrounds alike.
 
 </Cell>
-<Cell title="Driven by the scroll">
+<Cell title="Driven by scroll">
 
-Each fade is as long as the content past its edge, up to `--lb-edge-size`: it grows as the content goes under the edge and shrinks to nothing at the end. Scroll-driven animations do it as it scrolls, momentum included, with no script. With nothing to scroll there are no edges.
+Each fade is as long as the content hidden past that edge, up to `--lb-edge-size`. It grows as content scrolls under the edge and shrinks to nothing at the end. Scroll-driven animations handle this, momentum included, with no script. If there's nothing to scroll, there's no fade.
 
 </Cell>
 </Row>
 </Rows>
 
-Put it on what scrolls, not on glass itself, which it would fade too: on a list inside the glass. It uses the element's `mask` and `animation`; your own would replace it.
+Put it on the scrolling element, not on glass itself (it would fade the glass too). For example, on a list inside the glass. It uses the element's `mask` and `animation`, so your own values for those would override it.
 
 </Section>
 
 <Section id="support" title="Browser support">
 
-Any browser with scroll-driven animations and `@property`: Chrome and Edge 115, Safari 26. Elsewhere (Firefox) there are no edges, and nothing is faded.
+Any browser with scroll-driven animations and `@property`: Chrome and Edge 115, Safari 26. Elsewhere (Firefox) there's simply no fade.
 
 </Section>
 
 <Section id="limitations" title="Limitations">
 
-- The element that scrolls loses its own `mask` and `animation` to the edges.
+- The scrolling element's own `mask` and `animation` are replaced.
 
 </Section>

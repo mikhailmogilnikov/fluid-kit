@@ -2,8 +2,9 @@
 package: "@fluidkit/indicator"
 name: Indicator
 order: 3
-description: "One element that flies onto whatever is hovered, pressed or chosen: the highlight of a menu, the thumb of tabs. On interruptible springs, blurred by its own speed."
-intro: "The highlight of a menu, the thumb of tabs: one element that flies onto whatever is hovered, pressed or chosen. Any element; with <a href=\"/blur\">Liquid Blur</a>, over glass."
+description: "A single element that moves to whatever is hovered, pressed or selected: a menu highlight, a tab thumb. Uses interruptible springs and motion blur."
+intro: "Menu highlights and tab thumbs: one element that moves to whatever is hovered, pressed or selected. Works with any element, and on <a href=\"/blur\">Liquid Blur</a> glass."
+react: "Components and a hook from <code>@fluidkit/indicator/react</code>. Code, props and API on this page are for React."
 ---
 
 import Section from "../../components/docs/Section.astro";
@@ -14,11 +15,14 @@ import Steps from "../../components/docs/Steps.astro";
 import Step from "../../components/docs/Step.astro";
 import Install from "../../components/docs/Install.astro";
 import IndicatorExample from "../../components/IndicatorExample.astro";
+import Only from "../../components/docs/Only.astro";
 import Example from "../../components/docs/Example.astro";
 
 <Section id="start" title="Get started">
 
-An indicator is one element of your own, in a container of items. It flies onto the item under the pointer, the item a finger presses, the item with keyboard focus or the item you choose. The items don't move; only the indicator does, its center, size and corners on springs that keep their speed when it's sent elsewhere.
+An indicator is an element you add to a container of items. It moves to the item under the pointer, the item being pressed, the focused item, or the selected one. The items stay put; only the indicator moves, with its position, size and corners on springs that keep their speed when redirected.
+
+<Only js>
 
 <Steps>
 <Step>
@@ -30,7 +34,7 @@ An indicator is one element of your own, in a container of items. It flies onto 
 </Step>
 <Step>
 
-**Put the indicator in the container**, positioned and under the items. The container needs a position of its own and a stacking context (`isolation: isolate`, or glass, which has one), so the indicator at `z-index: -1` lies over the container's surface and under its items. Style it as you like: the script only places it.
+**Add the indicator to the container**, absolutely positioned and behind the items. The container needs its own positioning and stacking context (`isolation: isolate`, or glass, which already has one), so an indicator with `z-index: -1` sits above the container's background and below the items. Style it however you like; the script only positions it.
 
 ```html
 <div class="menu" role="menu">
@@ -49,7 +53,7 @@ An indicator is one element of your own, in a container of items. It flies onto 
     z-index: -1;
     background: color-mix(in srgb, currentColor 8%, transparent);
   }
-  /* While a pointer is down on its item */
+  /* While the pointer is down on its item */
   .menu__highlight[data-pressed] {
     background: color-mix(in srgb, currentColor 14%, transparent);
   }
@@ -59,7 +63,7 @@ An indicator is one element of your own, in a container of items. It flies onto 
 </Step>
 <Step>
 
-**Create the indicator** after the elements are in the DOM. The container's children are its items, but for the indicator itself and separators.
+**Create the indicator** once the elements are in the DOM. By default, the container's children are the items, except the indicator itself and separators.
 
 ```ts
 import { createIndicator } from "@fluidkit/indicator";
@@ -76,13 +80,57 @@ const highlight = createIndicator({
 </Step>
 </Steps>
 
+</Only>
+<Only react>
+
+<Steps>
+<Step>
+
+**Install.** The React components are included in the package (React 18+).
+
+<Install pkg="@fluidkit/indicator" />
+
+</Step>
+<Step>
+
+**Add the parts.** The root is the container, the thumb is the element that moves, and each item has a `value`. The parts handle positioning and put the thumb behind the items; the look is up to you.
+
+```tsx
+import { Indicator } from "@fluidkit/indicator/react";
+
+export function Tabs() {
+  const [tab, setTab] = useState("overview");
+  return (
+    <Indicator.Root value={tab} onValueChange={setTab} trigger="press" className="tabs">
+      <Indicator.Thumb className="tabs__thumb" />
+      <Indicator.Item value="overview">Overview</Indicator.Item>
+      <Indicator.Item value="releases">Releases</Indicator.Item>
+    </Indicator.Root>
+  );
+}
+```
+
+```css
+.tabs { isolation: isolate; display: flex; padding: 3px; border-radius: 999px; }
+.tabs__thumb { background: #fff; }
+/* The selected tab, and the one under the thumb */
+.tabs [data-selected] { font-weight: 600; }
+```
+
+Components are marked `"use client"`. On the server they render plain markup.
+
+</Step>
+</Steps>
+
+</Only>
+
 </Section>
 
 <Section id="examples" title="Examples">
 
 ### A menu
 
-The highlight follows a mouse, and deepens while it's pressed (`data-pressed`); it follows a finger dragged across the items too: released over another item than it went down on, that item is clicked. Over the separator it stays on the last item, then crosses in a few frames, blurred by its own speed, as iOS menus do. It doesn't stop on the disabled item.
+The highlight follows the mouse and gets darker while pressed (`data-pressed`). It also follows a finger dragged across the items; releasing on a different item than where you started clicks it. Over the separator it stays on the last item, then jumps across in a few frames with a slight motion blur, like iOS menus. It skips the disabled item.
 
 <Example>
 <IndicatorExample kind="menu" />
@@ -115,17 +163,40 @@ createIndicator({
 ```
 
 </Fragment>
+<Fragment slot="react">
+
+```tsx
+import "@fluidkit/blur/style.css";
+import { Indicator } from "@fluidkit/indicator/react";
+
+// Default trigger: hover for mouse, press and drag for touch
+export function AlbumMenu() {
+  return (
+    <Indicator.Root className="menu lb" role="menu" aria-label="Album">
+      <Indicator.Thumb className="highlight" />
+      <Indicator.Item value="library" role="menuitem"><PlusIcon />Add to Library</Indicator.Item>
+      <Indicator.Item value="love" role="menuitem"><HeartIcon />Love</Indicator.Item>
+      <Indicator.Item value="share" role="menuitem"><ArrowIcon />Share Album</Indicator.Item>
+      <hr />
+      <Indicator.Item value="link" role="menuitem"><CopyIcon />Copy Link</Indicator.Item>
+      <Indicator.Item value="store" role="menuitem" aria-disabled><EyeIcon />Show in Store</Indicator.Item>
+    </Indicator.Root>
+  );
+}
+```
+
+</Fragment>
 <Fragment slot="css">
 
 ```css
-/* Glass is positioned here and a stacking context of its own: no `isolation` needed */
+/* Glass is already positioned and has its own stacking context, so no `isolation` needed */
 .menu {
   position: relative;
   width: 248px;
   display: grid;
   padding: 8px;
   border-radius: 32px;
-  /* A press drags across the items: no page scrolling, no text selection */
+  /* Dragging a press across the items shouldn't scroll the page or select text */
   touch-action: none;
   user-select: none;
 }
@@ -145,7 +216,7 @@ createIndicator({
   z-index: -1;
   background: color-mix(in srgb, currentColor 8%, transparent);
 }
-/* While a pointer is down on its item */
+/* While the pointer is down on its item */
 .highlight[data-pressed] {
   background: color-mix(in srgb, currentColor 14%, transparent);
 }
@@ -156,7 +227,7 @@ createIndicator({
 
 ### Tabs
 
-Tabs as iOS draws them: a thumb resting on the chosen tab (`rest`). Pressed and dragged across the tabs it follows the pointer, and the tab it's released on is chosen (`trigger: "press"`). The switches above every example's code work the same way.
+iOS-style tabs: the thumb sits on the selected tab (`rest`; in React, `value`). Press and drag across the tabs and it follows the pointer; the tab you release on is selected (`trigger: "press"`). The code switchers on this page work the same way.
 
 <Example>
 <IndicatorExample kind="tabs" />
@@ -186,7 +257,7 @@ const thumb = createIndicator({
   indicator: list.querySelector(".tabs__thumb")!,
   trigger: "press",
   rest: tabs.find((tab) => tab.getAttribute("aria-selected") === "true")!,
-  // It shows the choice; keyboard focus keeps its own ring
+  // Shows the selection only; keyboard focus keeps its own ring
   focus: false,
 });
 
@@ -195,6 +266,31 @@ for (const tab of tabs) {
     for (const t of tabs) t.setAttribute("aria-selected", String(t === tab));
     thumb.rest = tab;
   });
+}
+```
+
+</Fragment>
+<Fragment slot="react">
+
+```tsx
+import { useState } from "react";
+import { Indicator } from "@fluidkit/indicator/react";
+
+const tabs = { overview: "Overview", releases: "Releases", audience: "Audience" };
+
+export function ArtistTabs() {
+  const [tab, setTab] = useState("overview");
+  return (
+    // Shows the selection only; keyboard focus keeps its own ring
+    <Indicator.Root value={tab} onValueChange={setTab} trigger="press" focus={false} className="tabs" role="tablist" aria-label="Artist">
+      <Indicator.Thumb className="tabs__thumb" />
+      {Object.entries(tabs).map(([value, label]) => (
+        <Indicator.Item key={value} value={value} role="tab" aria-selected={tab === value}>
+          {label}
+        </Indicator.Item>
+      ))}
+    </Indicator.Root>
+  );
 }
 ```
 
@@ -209,13 +305,13 @@ for (const tab of tabs) {
   padding: 3px;
   border-radius: 999px;
   background: color-mix(in srgb, currentColor 9%, transparent);
-  /* A press drags the thumb across: no page scrolling, no text selection */
+  /* Dragging the thumb shouldn't scroll the page or select text */
   touch-action: none;
   user-select: none;
 }
 .tabs button { flex: 1; height: 32px; border-radius: 999px; }
 
-/* Capsule tabs make a capsule thumb: white in the light, a light veil in the dark */
+/* Capsule tabs give a capsule thumb: white in light mode, a light veil in dark mode */
 .tabs__thumb {
   position: absolute;
   z-index: -1;
@@ -234,164 +330,179 @@ for (const tab of tabs) {
 
 <Section id="triggers" title="Triggers">
 
-`trigger` says what moves it. Whatever it is, when nothing points at an item the indicator goes back to `rest`, or away if there's none.
+`trigger` sets what moves the indicator. When nothing points at an item, it goes back to `rest`, or hides if there's none.
 
 <Rows>
 <Row>
-<Cell title="<code>auto</code>, the default">
+<Cell title="<code>auto</code> (default)">
 
-Hover for a mouse or a pen, press for a finger, decided per event, so a tablet with a trackpad and a touchscreen gets both.
+Hover for mouse and pen, press for touch, decided per event. A device with both a trackpad and a touchscreen gets both.
 
 </Cell>
 <Cell title="<code>hover</code>">
 
-The item under a hovering pointer, until the pointer leaves the container. Over a gap or a separator it stays on the last item. Touch is ignored.
+Follows the hovered item until the pointer leaves the container. Over a gap or separator it stays on the last item. Ignores touch.
 
 </Cell>
 </Row>
 <Row>
 <Cell title="<code>press</code>">
 
-The item under a pressing pointer, followed across items while it's down. On touch it shows after 70ms, so a finger that lands to scroll shows nothing. Released over another item than it went down on, that item is clicked; the browser's own click, if any, is dropped. `click: false` leaves clicks alone.
+Follows the pressed item, across items while the pointer is down. On touch it appears after 70ms, so starting a scroll shows nothing. Releasing on a different item than where you started clicks that item. Set `click: false` to turn that off.
 
 </Cell>
 <Cell title="<code>manual</code>">
 
-Nothing but `to()` and `rest`: for an indicator driven by your own state, such as the current section of a page.
+Only `to()` and `rest` move it (in React, `value` and `active`). For an indicator driven by your own state, like the current section of a page.
 
 </Cell>
 </Row>
 </Rows>
 
-Unless it's manual, keyboard focus that shows (`:focus-visible`) on an item moves it too; `focus: false` turns that off, for an indicator that shows a choice. Arrow keys, roving focus and ARIA states are yours: the indicator only shows where things are.
+Except with `manual`, visible keyboard focus (`:focus-visible`) also moves it. Set `focus: false` to turn that off, for an indicator that only shows the selection. Arrow keys, roving focus and ARIA states are up to you; the indicator only shows where things are.
 
 </Section>
 
-<Section id="options" title="Options">
+<Section id="options" title="Options" only="js">
 
 `createIndicator(options: IndicatorOptions): Indicator`
 
-| Option | Meaning |
+| Option | Description |
 | --- | --- |
-| `container: HTMLElement` | Where its items are; the indicator is positioned in it, so it needs a position of its own |
+| `container: HTMLElement` | The element containing the items. Needs its own positioning |
 | `indicator: HTMLElement` | Your element that moves, inside the container |
-| `items?: string` | The items, as a selector in the container. By default the container's children, but for the indicator and separators (`hr`, `[role="separator"]`) |
-| `trigger?: "auto" \| "hover" \| "press" \| "manual"` | What moves it; `auto` by default |
-| `rest?: HTMLElement \| null` | Where it stays when nothing points, such as the chosen tab. Away by default |
-| `click?: boolean` | With press, an item it's released over is clicked; `true` by default |
-| `focus?: boolean` | Keyboard focus that shows moves it; `true` by default, unless manual |
-| `spring?: Partial<IndicatorSprings>` | Springs for `x`, `y`, `width`, `height` and `presence` (going away); anything left out uses `defaultIndicatorSprings` |
-| `onChange?: (item) => void` | Called when it heads for another item, or away (`null`) |
+| `items?: string` | Selector for the items. Default: the container's children, except the indicator and separators (`hr`, `[role="separator"]`) |
+| `trigger?: "auto" \| "hover" \| "press" \| "manual"` | What moves it. Default: `auto` |
+| `rest?: HTMLElement \| null` | Where it stays when nothing points at an item, like the selected tab. Default: hidden |
+| `click?: boolean` | With press, click the item where the pointer is released. Default: `true` |
+| `focus?: boolean` | Move to items with visible keyboard focus. Default: `true`, except with `manual` |
+| `spring?: Partial<IndicatorSprings>` | Springs for `x`, `y`, `width`, `height` and `presence` (fading out). Default: `defaultIndicatorSprings` |
+| `onChange?: (item) => void` | Called when it moves to another item, or hides (`null`) |
 
-The defaults are quick and don't overshoot: most of the way from one item to the next in three or four frames, as iOS menus are. Slower reads as lagging the pointer. A spring is `{ duration, bounce, settle? }`, as in [core](/core#spring).
+The default springs are fast and don't overshoot: the indicator covers most of the distance to the next item in three or four frames, like iOS menus. Slower springs feel like lag. A spring is `{ duration, bounce, settle? }`, see [core](/core#spring).
 
 </Section>
 
-<Section id="api" title="API">
+<Section id="api" title="API" only="js">
 
-| Member | Meaning |
+| Member | Description |
 | --- | --- |
-| `current` | The item it's on or headed for; `null` while away |
-| `rest` | Where it stays when nothing points. Set it when the choice changes, and it goes there unless something points at it now |
-| `to(item, move?)` | Onto `item`, or away with `null`. `{ instant: true }` puts it there at once |
-| `update()` | Measures the items again and follows them |
-| `set(settings)` | Takes new options, all but `container`, `indicator` and `rest` (a property of its own), the rest kept: a component's props as they change, without an indicator made again. A new `trigger` takes over at once |
-| `destroy()` | Stops it, removes its listeners and gives the indicator its own inline styles back. Later calls do nothing |
+| `current` | The item it's on or moving to. `null` while hidden |
+| `rest` | Where it stays when nothing points at an item. Update it when the selection changes |
+| `to(item, move?)` | Moves to `item`, or hides with `null`. `{ instant: true }` skips the animation |
+| `update()` | Re-measures the items |
+| `set(settings)` | Updates any option except `container`, `indicator` and `rest` (which is a property) without recreating it. A new `trigger` applies immediately |
+| `destroy()` | Stops it, removes its listeners and restores the indicator's inline styles |
 
 </Section>
 
-<Section id="react" title="React">
+<Section id="parts" title="Parts" only="react">
 
-The same package, from `@fluidkit/indicator/react` (React 18 or later): components made of parts by default, and a hook for markup of your own. They're client components (`"use client"`), rendered on the server as plain markup.
-
-```tsx
-import { Indicator } from "@fluidkit/indicator/react";
-
-export function Tabs() {
-  const [tab, setTab] = useState("overview");
-  return (
-    <Indicator.Root value={tab} onValueChange={setTab} trigger="press" className="tabs" role="tablist">
-      <Indicator.Thumb className="thumb" />
-      <Indicator.Item value="overview" role="tab" aria-selected={tab === "overview"}>Overview</Indicator.Item>
-      <Indicator.Item value="releases" role="tab" aria-selected={tab === "releases"}>Releases</Indicator.Item>
-    </Indicator.Root>
-  );
-}
-```
-
-| Part | Renders | What it's for |
+| Part | Renders | Description |
 | --- | --- | --- |
-| `Indicator.Root` | `div`, positioned | The container: every option of `createIndicator` but its elements, `items` and `rest` as props, and `value` / `defaultValue` / `onValueChange`, `active`, `onActiveChange` |
-| `Indicator.Thumb` | `span aria-hidden`, absolute, under the items | The one element that flies onto the items |
-| `Indicator.Item` | `button` | An item, known by its `value`. `data-selected` when it's chosen, `data-active` while the indicator is on it |
+| `Indicator.Root` | `div`, positioned | The container for the items and thumb. Takes the props below |
+| `Indicator.Thumb` | `span aria-hidden`, absolute, behind the items | The element that moves |
+| `Indicator.Item` | `button` | An item with a `value`. Has `data-selected` when selected and `data-active` while the indicator is on it |
 
-**Chosen, and pointed at.** `value` is the item chosen, where the indicator rests: a click on an item chooses it, and a press dragged across the items chooses the one it's let go on (`trigger="press"`). `active` is an item pointed at by something else, followed as it changes, and back to rest on `null`: the finger on a [lift's](/lift#react) menu, say. `onActiveChange` hears of the item it's on, whatever put it there.
+`Indicator.Root` props:
 
-**Controlled.** Without `value` the choice is its own, from `defaultValue`; with `value` and `onValueChange`, it follows the parent, and a click only asks to change it.
+| Prop | Description |
+| --- | --- |
+| `value?: string \| null` | The selected item, for controlled use |
+| `defaultValue?: string \| null` | The initially selected item, for uncontrolled use |
+| `onValueChange?: (value) => void` | Called when an item is selected by a click, or by pressing, dragging and releasing on it |
+| `active?: string \| null` | An item pointed at by something else, like the finger on a [Lift](/lift) menu. `null` goes back to the selected item |
+| `onActiveChange?: (value) => void` | Called when the indicator moves to another item, or hides (`null`) |
+| `trigger?: "auto" \| "hover" \| "press" \| "manual"` | What moves it, see [Triggers](#triggers). Default: `auto` |
+| `click?: boolean` | With press, click (and select) the item where the pointer is released. Default: `true` |
+| `focus?: boolean` | Move to items with visible keyboard focus. Default: `true`, except with `manual` |
+| `spring?: Partial<IndicatorSprings>` | Springs for `x`, `y`, `width`, `height` and `presence`. Default: `defaultIndicatorSprings`, fast and without overshoot |
 
-**Your elements.** Every part renders as an element of yours with `render`, as in Base UI: an element, our props merged into it, or a function of the props and the part's state (`{ selected, active }` for an item).
+**Controlled.** Pass `value` and `onValueChange` to keep the selection in your state. Clicks then only call `onValueChange`.
+
+**Nesting.** A root only tracks its own items, not those of a nested root, so a menu with its own indicator can sit inside tabs with another.
+
+Changing props never recreates the indicator; a new `trigger` applies immediately. Callbacks always see the latest values.
+
+</Section>
+
+<Section id="composition" title="Composition" only="react">
+
+**Render as your own element.** Every part accepts `render`, as in Base UI: pass an element and our props are merged into it, or a function that receives the props and state (`{ selected, active }` for items).
 
 ```tsx
 <Indicator.Item value="inbox" render={<a href="/inbox" />}>Inbox</Indicator.Item>
 <Indicator.Item value="sent" render={(props, { selected }) => <Tab {...props} bold={selected} />} />
 ```
 
-**Its own items only.** A root knows the items made inside it, not a nested root's: a menu with an indicator of its own can sit in tabs with another.
-
-**New props, the same indicator.** It's made once its container and thumb are in the page and handed new props with `set()`, never made again for them: a new `trigger` takes over at once. Callbacks are always the latest.
-
-**The hook.** `useIndicator(options)` takes the same props as the root and gives refs for the container, the indicator and each item (`item(value)`), with `value`, `active`, `select(value)` and the engine.
-
-```tsx
-const tabs = useIndicator({ value: tab, onValueChange: setTab });
-
-<nav ref={tabs.container} className="tabs">
-  <span ref={tabs.indicator} className="thumb" />
-  <a ref={tabs.item("home")} href="/">Home</a>
-  <a ref={tabs.item("docs")} href="/docs">Docs</a>
-</nav>
-```
-
-With the hook the styles are yours too: the container positioned and the indicator absolute under the items, as in [Layout](#layout). The parts set both.
+**With Lift.** In a [Lift](/lift#composition) menu, pass the item under the finger as `active`, and use `render` to make each lift item an indicator item too.
 
 </Section>
 
-<Section id="layout" title="Layout">
+<Section id="hook" title="The hook" only="react">
+
+Use `useIndicator(options)` when the parts don't fit your markup. It takes the same options as `Indicator.Root` and returns refs.
+
+```tsx
+import { useIndicator } from "@fluidkit/indicator/react";
+
+const nav = useIndicator({ value: page, onValueChange: setPage });
+
+<nav ref={nav.container} className="tabs">
+  <span ref={nav.indicator} className="thumb" />
+  <a ref={nav.item("home")} href="/">Home</a>
+  <a ref={nav.item("docs")} href="/docs">Docs</a>
+</nav>
+```
+
+| Member | Description |
+| --- | --- |
+| `container`, `indicator` | Refs for the container and the moving element |
+| `item(value)` | Ref for the item with this value |
+| `value`, `active` | The selected item, and the item the indicator is on now |
+| `select(value)` | Selects an item, like a click |
+| `engine` | The underlying engine, once mounted |
+
+With the hook, styling is up to you: position the container, and make the indicator absolute and behind the items, as described in [Layout](#layout). The parts do this for you.
+
+</Section>
+
+<Section id="layout" title="How it works">
 
 <Rows>
 <Row>
 <Cell title="The indicator">
 
-Your own element, absolutely positioned in the container and under the items. While it runs, its inline position, size, corners, opacity, filter and visibility are the script's, and its own transitions are off: they'd lag behind the springs. It's marked `data-fk-part` and `aria-hidden`, so press behaviors don't press it and a morph doesn't count it as a neighbor. While a pointer is down on its item (a press, or a click on the hovered one) it's marked `data-pressed`: style that, a deeper shade, to show the press.
+Your own element, absolutely positioned inside the container and behind the items. While running, the script owns its inline position, size, corners, opacity, filter and visibility, and turns off its transitions (they'd lag behind the springs). It gets `data-fk-part` and `aria-hidden`. While the pointer is down on its item, it gets `data-pressed`; style that to show the press.
 
 </Cell>
 <Cell title="Item to item">
 
-It goes from item to item, never in between. Coming, it's on its item at once; going away, it fades as it lands on the item it was headed for, so a pointer swept past leaves it on the last item it was over. On the way it's blurred and a little fainter by its own speed.
+It moves from item to item, never stopping in between. When appearing, it starts on its item. When hiding, it fades out on the item it was heading to, so sweeping the pointer past leaves it on the last item. While moving fast, it gets a slight motion blur.
 
 </Cell>
 </Row>
 <Row>
 <Cell title="Corners">
 
-Each item lends it its corners, circular and fitted as the browser draws them: a capsule button makes a capsule indicator. An item with square corners lends it the indicator's own. Where `corner-shape` is supported, the shape comes along.
+It takes each item's corner radius: a capsule button gives a capsule indicator. Items with square corners keep the indicator's own radius. Where `corner-shape` is supported, that's used too.
 
 </Cell>
 <Cell title="Measuring">
 
-Items are measured at rest, without their own inline transforms, in the indicator's own pixels, so a container that's scaled (a menu flying in through a morph) works. They're measured again when anything in the container is resized or changed; resting on an item that grows or shrinks (its [text animating](/text), say), it keeps to it frame by frame. A pointer is hit-tested against those boxes: nothing is laid out while it moves.
+Items are measured without their inline transforms, so scaled containers work (like a menu animating in with Morph). They're re-measured when anything in the container changes size or content, and the indicator follows an item that resizes, like [animated text](/text). Nothing is measured while the pointer moves.
 
 </Cell>
 </Row>
 <Row>
 <Cell title="Disabled items">
 
-An item that's `:disabled` or `aria-disabled="true"` isn't pointed at: over it the indicator goes away, and it doesn't take focus there.
+Items with `:disabled` or `aria-disabled="true"` are skipped: the indicator hides over them and doesn't follow focus there.
 
 </Cell>
 <Cell title="Mounting">
 
-Can be imported on the server. Create it in the browser after mounting or hydration, and call `destroy()` on unmount. With reduced motion it moves at once.
+Safe to import on the server. Create it in the browser after mount, and call `destroy()` on unmount. With reduced motion, it moves instantly.
 
 </Cell>
 </Row>
@@ -401,7 +512,7 @@ Can be imported on the server. Create it in the browser after mounting or hydrat
 
 <Section id="glass" title="With Liquid Blur">
 
-The container can be glass: glass is positioned and a stacking context of its own, so the indicator at `z-index: -1` lies over the glass and under the items. The indicator can be glass too, as a lens. Inside a [glass group](/blur#groups) it would melt with the items, as any glass child does; keep a glass indicator out of a group's direct children.
+The container can be glass. Glass already has positioning and its own stacking context, so an indicator with `z-index: -1` sits above the glass and below the items. The indicator can be glass too, as a lens. Don't put a glass indicator directly inside a [glass group](/blur#groups), or it will merge with the items.
 
 </Section>
 
@@ -414,7 +525,7 @@ Any browser with ES2022, `ResizeObserver` and `MutationObserver`. Corner shapes 
 <Section id="limitations" title="Limitations">
 
 - Rotated ancestors aren't supported; scaled ones are.
-- For a press to drag across items, give the container `touch-action: none`, so a finger doesn't scroll the page. While a press goes across them no text on the page is selected. A press the browser takes over all the same ends without a choice.
-- An item moved by something the container doesn't see, such as a transform animated on an ancestor, needs `update()`.
+- To drag a press across items on touch, give the container `touch-action: none` so the page doesn't scroll.
+- If something the container can't detect moves an item, like a transform animated on an ancestor, call `update()`.
 
 </Section>

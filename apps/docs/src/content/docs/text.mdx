@@ -2,8 +2,9 @@
 package: "torph"
 name: Text
 order: 7
-description: "Labels and numbers that change in place: letters moving to where they go, digits rolling. With torph, on glass, tabs and morphs of the kit."
-intro: "A label that changes in place, its letters moving to where they go, and numbers whose digits roll: SwiftUI's content transitions, for the web. That's <a href=\"https://github.com/lochie/torph\">torph</a>'s, not a Fluid Kit package; here it is with the kit, which keeps up with text that grows and shrinks."
+description: "Labels and numbers that change in place: letters slide to their new positions, digits roll. Using torph, with Fluid Kit's glass, tabs and morphs."
+intro: "Labels that change in place, with letters sliding to their new positions, and numbers whose digits roll, like SwiftUI's content transitions. This is <a href=\"https://github.com/lochie/torph\">torph</a>, not a Fluid Kit package; this page shows how it works with the kit."
+react: "torph has its own React component, see <a href=\"#start\">Get started</a>."
 ---
 
 import Section from "../../components/docs/Section.astro";
@@ -15,10 +16,13 @@ import Step from "../../components/docs/Step.astro";
 import Install from "../../components/docs/Install.astro";
 import Example from "../../components/docs/Example.astro";
 import TextExample from "../../components/TextExample.astro";
+import Only from "../../components/docs/Only.astro";
 
 <Section id="start" title="Get started">
 
-Animated text is a library of its own, and a good one already exists: [torph](https://github.com/lochie/torph) by Lochie Axon, dependency-free, with React, Vue and Svelte components and plain JavaScript. It morphs text by its letters, the ones the old and new text share moving to their new places, and numbers by their places, digits sliding up or down. Fluid Kit doesn't wrap it: you use torph as it is, and the kit's pieces keep up with the text it animates.
+There's already a great library for animated text: [torph](https://github.com/lochie/torph) by Lochie Axon. It has no dependencies and comes with React, Vue and Svelte components. It animates text letter by letter (shared letters slide to their new positions) and numbers digit by digit. Fluid Kit doesn't wrap it: use torph directly, and the kit's components follow the size changes it causes.
+
+<Only js>
 
 <Steps>
 <Step>
@@ -30,14 +34,14 @@ Animated text is a library of its own, and a good one already exists: [torph](ht
 </Step>
 <Step>
 
-**Morph an element's text.** Give it the element, then the text it changes to.
+**Animate an element's text.** Pass the element, then the new text.
 
 ```ts
 import { TextMorph } from "torph";
 
 const label = new TextMorph({
   element: document.querySelector(".label")!,
-  // On a spring, as the kit moves
+  // Use a spring, like the rest of the kit
   ease: { stiffness: 260, damping: 30 },
 });
 
@@ -47,7 +51,40 @@ label.update("Following");
 </Step>
 </Steps>
 
-For money, percentages and digits that spin through the numbers between, as iOS's counters do, there's [NumberFlow](https://number-flow.barvian.me): numbers only, formatted with `Intl`.
+</Only>
+<Only react>
+
+<Steps>
+<Step>
+
+**Install.**
+
+<Install pkg="torph" />
+
+</Step>
+<Step>
+
+**Animate a label.** torph has its own React component: its children are the text.
+
+```tsx
+import { TextMorph } from "torph/react";
+
+export function FollowButton() {
+  const [on, setOn] = useState(false);
+  return (
+    <button className="lb lb-interactive" onClick={() => setOn(!on)}>
+      <TextMorph ease={{ stiffness: 260, damping: 30 }}>{on ? "Following" : "Follow"}</TextMorph>
+    </button>
+  );
+}
+```
+
+</Step>
+</Steps>
+
+</Only>
+
+For prices, percentages and counters where digits spin through intermediate values, try [NumberFlow](https://number-flow.barvian.me). It's for numbers only, formatted with `Intl`.
 
 </Section>
 
@@ -55,7 +92,7 @@ For money, percentages and digits that spin through the numbers between, as iOS'
 
 ### On glass
 
-A label grows or shrinks over its letters, and torph animates its width with them: the glass around it is CSS, so it follows on its own, its press and highlight too. Follow, or get the app.
+When the label changes, torph animates its width along with the letters. The glass around it is CSS, so it follows automatically, including press effects. Try Follow, or Get the app.
 
 <Example>
 <TextExample kind="buttons" />
@@ -88,7 +125,7 @@ button.addEventListener("click", () => {
 
 ### Tabs with counts
 
-Tabs as wide as their labels, a count in each. New mail comes in and the count rolls; its tab grows with it, and the [Indicator](/indicator) thumb resting on it keeps to it frame by frame, not a spring behind.
+Tabs sized to their labels, each with a count. When new mail arrives, the count rolls, the tab grows, and the [Indicator](/indicator) thumb on it follows exactly, frame by frame.
 
 <Example>
 <TextExample kind="tabs" />
@@ -102,7 +139,7 @@ import { TextMorph } from "torph";
 const thumb = createIndicator({ container: tabs, indicator, trigger: "manual", rest: tabs.children[1] });
 const unread = new TextMorph({ element: tabs.querySelector(".unread")! });
 
-// The tab grows with its label; the thumb on it follows
+// The tab grows with its label, and the thumb follows
 unread.update(`Unread ${count}`);
 ```
 
@@ -111,7 +148,7 @@ unread.update(`Unread ${count}`);
 
 ### A total
 
-A quantity and a total in a glass card, their digits rolling the way the number goes: up for more, down for less. Only the places that change move; `$` and `.` stay put.
+A quantity and total in a glass card. Digits roll up when the number grows and down when it shrinks. Only the digits that change move; `$` and `.` stay put.
 
 <Example>
 <TextExample kind="cart" />
@@ -139,19 +176,19 @@ function set(n: number) {
 <Row>
 <Cell title="Glass">
 
-Glass is CSS on the element: a button whose label grows is wider glass the same frame, highlight, press and corners included. Glass in a [group](/blur#groups) is redrawn the frame its child is resized, melted or not.
+Glass is CSS on the element, so when a label grows, the glass grows in the same frame, highlight and corners included. A [glass group](/blur#groups) redraws in the same frame its child resizes.
 
 </Cell>
 <Cell title="Indicator">
 
-Resting on an item that grows or shrinks, an [Indicator](/indicator) keeps to it exactly, frame by frame. Flying to it, it lands on the item as it is when it gets there.
+An [Indicator](/indicator) resting on an item that resizes follows it exactly. When moving to it, it lands on the item's final size.
 
 </Cell>
 </Row>
 <Row>
 <Cell title="Morph">
 
-A [Morph](/morph) state that resizes during a flight (a label changing as a panel opens) is followed: the shape lands on it as it ends up.
+If a [Morph](/morph) state resizes during the animation (a label changing as a panel opens), the shape lands on its final size.
 
 </Cell>
 </Row>
@@ -161,8 +198,8 @@ A [Morph](/morph) state that resizes during a flight (a label changing as a pane
 
 <Section id="notes" title="Notes">
 
-- torph changes the element's children while it animates; give it an element of its own, a `<span>` in the button, not the button itself.
-- It respects reduced motion by default: the text changes at once.
-- For a value someone types into, pass the caret's position to `update()`, so a typed digit is inserted rather than every place renumbered. torph's [README](https://github.com/lochie/torph#editable-fields) has the details.
+- torph changes the element's children while animating, so give it its own element, like a `<span>` inside the button, not the button itself.
+- It respects reduced motion by default: the text changes instantly.
+- For an editable value, pass the caret position to `update()` so a typed digit is inserted instead of all digits shifting. See torph's [README](https://github.com/lochie/torph#editable-fields).
 
 </Section>

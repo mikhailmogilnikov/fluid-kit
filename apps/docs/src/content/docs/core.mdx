@@ -2,8 +2,9 @@
 package: "@fluidkit/core"
 name: Core
 order: 8
-description: "What the Fluid Kit packages share: an interruptible, velocity-keeping spring, boxes read as the browser draws them, and the DOM contract they meet by."
-intro: "The spring every moving part runs on, boxes read as the browser draws them, and the attributes the packages recognize each other by."
+description: "Shared building blocks of the Fluid Kit packages: an interruptible spring that keeps its velocity, element measurement, and the DOM attributes the packages use to work together."
+intro: "The spring behind every animation, element measurement, and the DOM attributes the packages use to work together."
+react: "React helpers used by the packages' components are in the <a href=\"#react\">React</a> section."
 ---
 
 import Section from "../../components/docs/Section.astro";
@@ -11,7 +12,7 @@ import Install from "../../components/docs/Install.astro";
 
 <Section id="spring" title="Spring">
 
-`SpringAnimator` animates several numbers at once with springs set by a duration in seconds and a bounce from 0 to 1. It's exact at any frame rate. Changing the target keeps the current velocity, so reversing mid-way stays smooth, which CSS transitions can't do.
+`SpringAnimator` animates several numbers at once. Each spring is set by a duration in seconds and a bounce from 0 to 1, and is exact at any frame rate. Changing the target keeps the current velocity, so reversing mid-way stays smooth, which CSS transitions can't do.
 
 <Install pkg="@fluidkit/core" />
 
@@ -29,15 +30,15 @@ const spring = new SpringAnimator(
 );
 
 spring.to({ width: 240, radius: 24 });
-spring.to({ width: 100, radius: 12 }, { duration: 0.6, bounce: 0 }); // new springs are optional
-spring.retarget({ width: 110, radius: 12 }); // adjust the current movement, no new bounce
-spring.jump({ width: 120 }); // move a channel at once, keeping its velocity and target
-spring.values(); // where it is now
-spring.velocities(); // how fast each channel moves, units per second: hand it on with to()'s third argument
+spring.to({ width: 100, radius: 12 }, { duration: 0.6, bounce: 0 }); // optionally with new springs
+spring.retarget({ width: 110, radius: 12 }); // change the target of the current movement, no new bounce
+spring.jump({ width: 120 }); // set a value instantly, keeping its velocity and target
+spring.values(); // current values
+spring.velocities(); // current speed per channel, units/s (can be passed as to()'s third argument)
 spring.stop();
 ```
 
-Each channel can have a spring of its own:
+Each channel can have its own spring:
 
 ```ts
 new SpringAnimator(
@@ -52,9 +53,15 @@ new SpringAnimator(
 );
 ```
 
-`SpringParams` is `{ duration, bounce, settle? }`. `duration` is how long the motion feels, in seconds; it isn't a hard deadline. `bounce` runs from `0` (no overshoot) to `1`; below `1` the spring comes to rest. `settle` is the bounce after the first overshoot, `bounce` by default: a bouncy spring with a low `settle` overshoots once and then comes back without swinging. `to()` starts a new movement, with its bounce; `retarget()` changes the target of the current one without a new bounce.
+`SpringParams` is `{ duration, bounce, settle? }`:
 
-`SpringAnimator.timeScale` slows every spring down at once, or speeds it up: `0.25` is four times slower. Every package's springs are core's, so one setting slows morph, indicator, drag and lift together, as the [playground](/playground)'s speed does.
+- `duration` is how long the motion feels, in seconds. It's not a hard deadline.
+- `bounce` goes from `0` (no overshoot) to `1`.
+- `settle` is the bounce after the first overshoot (default: same as `bounce`). A bouncy spring with a low `settle` overshoots once, then comes back without wobbling.
+
+`to()` starts a new movement with a new bounce; `retarget()` changes the target of the current movement without one.
+
+`SpringAnimator.timeScale` slows down or speeds up all springs at once: `0.25` is four times slower. All packages use these springs, so one setting slows down Morph, Indicator, Drag and Lift together, like the speed control in the [playground](/playground).
 
 ```ts
 SpringAnimator.timeScale = 0.25; // slow motion
@@ -65,51 +72,81 @@ SpringAnimator.timeScale = 1; // back to real time
 
 <Section id="box" title="Boxes">
 
-What morph and indicator read an element by: where it is, its size, and its corners as the browser draws them, so something else can take its shape. Corners are circular, never an oval: a percent resolves against the box, and an elliptical corner takes the smaller of its two radii. Where two corners on a side ask for more than the side has, all of them shrink by the same factor, so a capsule's `9999px` comes out as half its height.
+Morph and Indicator measure elements with these: position, size, and corner radii as the browser draws them. Corners are always circular: percentages resolve against the box, and elliptical corners use the smaller radius. When corners on one side add up to more than the side's length, all of them shrink proportionally, so a capsule's `9999px` becomes half its height.
 
 ```ts
 import { measureBox, radiiCss, still } from "@fluidkit/core";
 
-// Its box on screen, without the inline transforms a press left on it
+// Its box on screen, ignoring inline transforms (like a press effect's)
 const box = still(el, () => measureBox(el, true));
 // { x, y, width, height, radii: [tl, tr, br, bl], shape }
 
 other.style.borderRadius = radiiCss(box.radii);
 ```
 
-| Export | Meaning |
+| Export | Description |
 | --- | --- |
-| `measureBox(el, cornerShapes)` | Its box on screen, its corners' radii, and the top-left corner's shape as a superellipse exponent (round `1`, squircle `2`); `1` unless `cornerShapes` |
-| `radiiOf(style, width, height)` | The four corners from a computed style, in a box of that size, fitted |
-| `cornerOf(value, width, height)` | One computed corner (`10px`, `10%`, `10px 20px`) as one circular radius |
-| `fitRadii(radii, width, height)` | Radii shrunk as the browser shrinks them where they don't fit |
-| `cornerShapeOf(style)` | The top-left corner's `corner-shape` as a superellipse exponent, so it interpolates |
-| `drawsCornerShape(window)` | Whether that browser draws `corner-shape` |
-| `radiiCss(radii, scale?)` | Radii as CSS, one value when they're all the same |
-| `still(el, read, to?)` | Reads with the element's inline transforms off, put back in the same task, so nothing in between is painted |
-| `px(value)` | A length to a hundredth of a pixel |
+| `measureBox(el, cornerShapes)` | The element's box on screen, its corner radii, and the top-left `corner-shape` as a superellipse exponent (`1` round, `2` squircle; always `1` unless `cornerShapes`) |
+| `radiiOf(style, width, height)` | The four corner radii from a computed style, fitted to that size |
+| `cornerOf(value, width, height)` | One computed corner (`10px`, `10%`, `10px 20px`) as a single circular radius |
+| `fitRadii(radii, width, height)` | Shrinks radii the way the browser does when they don't fit |
+| `cornerShapeOf(style)` | The top-left `corner-shape` as a superellipse exponent, so it can be animated |
+| `drawsCornerShape(window)` | Whether the browser supports `corner-shape` |
+| `radiiCss(radii, scale?)` | Radii as a CSS value, collapsed to one value when all are equal |
+| `still(el, read, to?)` | Runs `read` with the element's inline transforms removed, then restores them in the same task, so nothing flickers |
+| `px(value)` | Rounds a length to a hundredth of a pixel |
 
 </Section>
 
 <Section id="clicks" title="Clicks and selection">
 
-A gesture that ends where it started a click makes one the page didn't mean: a drag let go over the button it began on, a press that already clicked the item it was released over. Drag and indicator drop it. And a pointer pulling something around would select the page's text on its way: drag, a stretch and a press across items hold the selection off while they're held.
+Gestures can cause unwanted side effects. Releasing a drag over the button where it started fires a click; dragging a pointer across the page selects text. Drag, Indicator and Liquid Blur's stretch use these helpers to prevent that.
 
-| Export | Meaning |
+| Export | Description |
 | --- | --- |
-| `swallowClick(document, except?, ms?)` | Drops the next click in the document within `ms` (400 by default), but for one on `except`, which passes. Returns a function that stops waiting: call it before waiting again, and on destroy |
-| `holdSelection(document)` | No text is selected on the page until it's let go: the root's `user-select` is `none` (and iOS's touch callout off), and a selection already there is dropped. Holds count, so overlapping gestures share one. Returns a function that lets go; the root's own styles come back with the last |
+| `swallowClick(document, except?, ms?)` | Cancels the next click in the document within `ms` (default `400`), except on `except`. Returns a function that stops waiting; call it before waiting again and on destroy |
+| `holdSelection(document)` | Prevents text selection on the page until released: sets `user-select: none` on the root (and turns off the iOS callout) and clears any current selection. Nested calls are counted. Returns a release function; the root's styles come back after the last release |
+
+</Section>
+
+<Section id="react" title="React" only="react">
+
+`@fluidkit/core/react` has the helpers the packages' React components are built from. You can use them for your own components on top of an engine.
+
+| Export | Description |
+| --- | --- |
+| `renderPart(tag, props, render, state)` | Renders a part as `render` specifies, as in Base UI: your element with our props merged in, a function of props and state, or `tag` |
+| `mergeProps(ours, yours)` | Merges props: joins classes, merges styles (yours win), calls both handlers (yours first; ours skipped if yours called `preventDefault()`), sets both refs |
+| `useMergedRefs(...refs)` | Combines refs into one stable ref. A new ref each render would make React detach and reattach the element |
+| `useAttach(fn)` | A stable ref that calls `fn(el)` when the element mounts and its cleanup when it unmounts. Works the same in React 18 and 19 |
+| `useControllable(value, defaultValue, onChange)` | State that's controlled when `value` is given, uncontrolled otherwise |
+| `useSettings(engine, settings, taken)` | After each render, passes only the changed settings to the engine's `set()` |
+| `useLatest(value)`, `useBatched(fn)`, `useIsomorphicLayoutEffect` | The latest value for callbacks; runs `fn` once at the end of the current task; a layout effect that doesn't warn on the server |
+
+```tsx
+import { SpringAnimator } from "@fluidkit/core";
+import { renderPart, useAttach, type RenderProp } from "@fluidkit/core/react";
+
+function Spinner({ render }: { render?: RenderProp<{}> }) {
+  const ref = useAttach<HTMLElement>((el) => {
+    const spring = new SpringAnimator({ r: 0 }, { duration: 1, bounce: 0 }, ({ r }) => (el.style.rotate = `${r}deg`));
+    spring.to({ r: 360 });
+    return () => spring.stop();
+  });
+  return renderPart("span", { ref, className: "spinner" }, render, {});
+}
+```
 
 </Section>
 
 <Section id="contract" title="Contract">
 
-The packages never import each other. Instead, each marks what it does with attributes in the DOM and reads the attributes the others set, so each works alone and any two work together. The names are exported as constants and change only in a major version of every package.
+The packages never import each other. Instead, each one marks what it does with DOM attributes and reads the attributes set by the others, so each works alone and any combination works together. The attribute names are exported as constants and only change in a major version.
 
 | Attribute | Constant | Set by | Meaning |
 | --- | --- | --- | --- |
-| `data-fk-surface` | `SURFACE` | Liquid Blur's melt, on a group's root while it runs | Its children share one surface: a morph from one of them lifts its glass over the others or melts with them |
-| `data-fk-part` | `PART` | Melt and morph, on elements they create; indicator, on its indicator | Not content: a morph doesn't count it as a neighbor, press doesn't press it |
-| `data-fk-away` | `AWAY` | Morph, on states that stepped out for its shape | Not glass for now: melt leaves it out. One that kept focus is still focusable |
+| `data-fk-surface` | `SURFACE` | Liquid Blur's melt, on a group root | The children share one glass surface. A morph from one of them lifts its glass above the others or merges with them |
+| `data-fk-part` | `PART` | Melt and Morph on elements they create; Indicator on its indicator | Not content: Morph ignores it as a neighbor, press effects ignore it |
+| `data-fk-away` | `AWAY` | Morph, on hidden states | Temporarily not glass: melt skips it. A state that kept focus is still focusable |
 
 </Section>

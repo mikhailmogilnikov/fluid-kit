@@ -145,13 +145,15 @@ let tocFrame = 0;
 const markCurrent = () => {
   tocFrame = 0;
   const line = window.innerHeight * 0.3;
-  let current = sections[0];
-  for (const section of sections) {
+  // Those shown: a section written for another framework isn't
+  const shown = sections.filter((section) => section.checkVisibility());
+  let current = shown[0];
+  for (const section of shown) {
     if (section.getBoundingClientRect().top <= line) current = section;
   }
   // At the very bottom the last short sections can't reach the line
   if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) {
-    current = sections[sections.length - 1];
+    current = shown[shown.length - 1];
   }
   for (const a of links) a.setAttribute("aria-current", String(a.hash === `#${current?.id}`));
   // Only when it isn't there already: this runs on every frame of a scroll
@@ -168,4 +170,6 @@ if (sections.length) {
     { passive: true },
   );
   markCurrent();
+  // Another framework chosen: other sections, maybe another one being read
+  window.addEventListener("fk:framework", () => markCurrent());
 }

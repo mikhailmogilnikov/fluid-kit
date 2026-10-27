@@ -2,8 +2,9 @@
 package: "@fluidkit/blur"
 name: Liquid Blur
 order: 1
-description: "A glass material for the web: backdrop blur, fill, rims, springy press behaviors and glass that melts between shapes. Plain CSS classes and optional scripts. No refraction."
-intro: "Glass for the web. One class to make it, two numbers to tune it."
+description: "A glass material for the web: backdrop blur, fill, rims, springy press effects, and glass that merges between shapes. Plain CSS classes plus optional scripts. No refraction."
+intro: "Glass for the web. One class to add it, two variables to tune it."
+react: "<code>Glass</code> and <code>Glass.Group</code> from <code>@fluidkit/blur/react</code>: variants as props, press effects set up automatically. The CSS classes below work with <code>className</code> too."
 ---
 
 import Section from "../../components/docs/Section.astro";
@@ -19,10 +20,13 @@ import ClassTiles from "../../components/docs/ClassTiles.astro";
 import VarTable from "../../components/docs/VarTable.astro";
 import A11yGrid from "../../components/docs/A11yGrid.astro";
 import GroupTiles from "../../components/docs/GroupTiles.astro";
+import Only from "../../components/docs/Only.astro";
 
 <Section id="start" title="Get started">
 
-Install the package, import the stylesheet once, and put `lb` on anything.
+Install the package, import the stylesheet once, and add the `lb` class to any element.
+
+<Only js>
 
 <Steps>
 <Step>
@@ -34,7 +38,7 @@ Install the package, import the stylesheet once, and put `lb` on anything.
 </Step>
 <Step>
 
-**Import the stylesheet**, once, anywhere in your app.
+**Import the stylesheet** once, anywhere in your app.
 
 ```ts
 import "@fluidkit/blur/style.css";
@@ -52,7 +56,7 @@ import "@fluidkit/blur/style.css";
 </Step>
 <Step>
 
-**Install press** if you use the press classes (`lb-highlight`, `lb-swell`, `lb-stretch`, `lb-interactive`). It adds one listener to the document, so elements added later work too, with any framework. On the server it does nothing.
+**Set up press effects** if you use the press classes (`lb-highlight`, `lb-swell`, `lb-stretch`, `lb-interactive`). It adds a single listener to the document, so elements added later work too, in any framework. On the server it does nothing.
 
 ```ts
 import { installPress } from "@fluidkit/blur/press";
@@ -63,57 +67,107 @@ installPress();
 </Step>
 </Steps>
 
-No build step? Link the stylesheet and load the `auto` entry, which installs press itself. With a bundler, `import "@fluidkit/blur/auto"` does the same.
+</Only>
+<Only react>
+
+<Steps>
+<Step>
+
+**Install.** The React components are included in the package (React 18+).
+
+<Install pkg="@fluidkit/blur" />
+
+</Step>
+<Step>
+
+**Import the stylesheet** once, in your app's root (a layout or `main.tsx`).
+
+```tsx
+import "@fluidkit/blur/style.css";
+```
+
+</Step>
+<Step>
+
+**Use `Glass`.** Variants are props, and `render` lets you use your own element. Press props (`interactive`, `highlight`, `swell`, `stretch`) set up press effects automatically.
+
+```tsx
+import { Glass } from "@fluidkit/blur/react";
+
+<Glass render={<nav />}>…</Glass>
+<Glass interactive render={<button type="button" />}>Follow</Glass>
+```
+
+The classes are plain CSS, so `className="lb lb-interactive"` also works. In that case, call `usePress()` once in your root component.
+
+</Step>
+</Steps>
+
+</Only>
+
+<Only js>
+
+No build step? Link the stylesheet and load the `auto` entry, which sets up press effects for you. With a bundler, `import "@fluidkit/blur/auto"` does the same.
 
 ```html
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fluidkit/blur@1/dist/style.css" />
 <script type="module" src="https://cdn.jsdelivr.net/npm/@fluidkit/blur@1/dist/auto.js/+esm"></script>
 ```
 
+</Only>
+
 </Section>
 
 <Section id="entries" title="Entries">
 
-The material is plain CSS. Press and melt are optional scripts, each in its own entry: import only what you use. They work independently of each other.
+The material is plain CSS. Press effects and glass groups are optional scripts in separate entries, so you only load what you use.
 
 <Rows>
 <Row>
 <Cell title="Material <code>@fluidkit/blur/style.css</code>">
 
-The glass: `lb`, its variants, and the styles press and melt rely on.
+The glass: `lb`, its variants, and the styles the scripts rely on.
 
 </Cell>
 <Cell title="Press <code>@fluidkit/blur/press</code>">
 
-Exports `installPress`. Runs highlight, swell and stretch on springs.
+Exports `installPress`: animated highlight, swell and stretch.
 
 </Cell>
 </Row>
 <Row>
 <Cell title="Melt <code>@fluidkit/blur/melt</code>">
 
-Exports `installGlassGroups`, `createGlassGroup` and the type `GlassGroup`. Merges nearby glass into one surface; needs the stylesheet.
+Exports `installGlassGroups`, `createGlassGroup` and the `GlassGroup` type. Merges nearby glass into one surface. Needs the stylesheet.
 
 </Cell>
 <Cell title="Auto <code>@fluidkit/blur/auto</code>">
 
-Installs press on import. No named exports. For pages without a build step. Glass groups aren't installed: load `melt` too and call `installGlassGroups()`.
+Sets up press effects on import, for pages without a build step. Doesn't set up glass groups; for those, also load `melt` and call `installGlassGroups()`.
 
 </Cell>
 </Row>
 </Rows>
 
-To flow a control into a panel of the same glass, use [Morph](/morph). It works inside glass groups.
+<Only react>
+
+The React entry, `@fluidkit/blur/react`, provides `Glass`, `Glass.Group` and a few hooks. See [Components](#components). It sets up press effects and groups for you.
+
+</Only>
+
+To animate a button into a panel of the same glass, use [Morph](/morph). It works inside glass groups.
 
 </Section>
 
 <Section id="classes" title="Classes">
 
-`lb` is the material. `lb-clear`, `lb-tinted` and `lb-lens` change its look. `lb-edge` and `lb-edge-x` fade the edges of what scrolls: see [Scroll Edge](/edge). `lb-highlight`, `lb-swell` and `lb-stretch` react to presses, and `lb-interactive` turns on all three. Combine them freely.
+`lb` is the material. `lb-clear`, `lb-tinted` and `lb-lens` change how it looks. `lb-highlight`, `lb-swell` and `lb-stretch` react to presses; `lb-interactive` turns on all three. `lb-edge` and `lb-edge-x` fade the edges of scrolling content (see [Scroll Edge](/edge)). Combine them freely.
 
 <ClassTiles />
 
-Set the shape with `border-radius`; the default is a capsule.
+Set the shape with `border-radius`. The default is a capsule.
+
+<Only js>
 
 ```html
 <button class="lb lb-interactive">Press me</button>
@@ -124,9 +178,25 @@ Set the shape with `border-radius`; the default is a capsule.
 <div class="lb" style="border-radius: 24px; padding: 16px">Card</div>
 ```
 
-### A lens while it's held
+</Only>
+<Only react>
 
-A lens is the same glass with no blur, so what's under it shows sharp through it. `lb-lens` is one for good. To turn glass into one while something holds it and back, set `--lb-lens` from 0 to 1 instead: it's registered, so it transitions, and any selector can set it; so is `--lb-transparency`. A switch's thumb, solid white at rest, a clear lens over its track while it's pressed or dragged (by [Drag](/drag#examples), which marks it `data-dragging`), as in iOS:
+`Glass` adds the classes based on its props. `tint` also accepts a color.
+
+```tsx
+<Glass interactive render={<button />}>Press me</Glass>
+<Glass highlight stretch>A bar: lights and stretches, doesn't swell</Glass>
+<Glass tint="#ff3b30" highlight render={<button />}>Tinted</Glass>
+<Glass clear>Over a photo</Glass>
+<Glass lens>A lens</Glass>
+<Glass style={{ borderRadius: 24, padding: 16 }}>Card</Glass>
+```
+
+</Only>
+
+### A lens while held
+
+A lens is the same glass without blur, so what's underneath shows through sharply. `lb-lens` makes glass a lens permanently. To switch to a lens only while something is held, animate `--lb-lens` from 0 to 1 instead; it's a registered property, so it transitions, as does `--lb-transparency`. For example, a switch thumb that's solid white at rest and becomes a clear lens while pressed or dragged (with [Drag](/drag#examples), which adds `data-dragging`), like in iOS:
 
 ```css
 .switch__thumb {
@@ -148,26 +218,26 @@ A lens is the same glass with no blur, so what's under it shows sharp through it
 </button>
 ```
 
-The lens shows what's under it as it is: it doesn't magnify, which takes refraction. Solid glass (reduced transparency, more contrast) stays solid.
+The lens doesn't magnify; that would need refraction. With the system's reduced transparency or increased contrast settings, it stays solid.
 
 </Section>
 
 <Section id="layers" title="Layers">
 
-The glass is built from these layers, back to front. It uses only features that every browser engine renders the same way, and no pseudo-elements, so `::before` and `::after` stay free for you.
+The glass is made of these layers, from back to front. It only uses features that render the same in every browser engine, and no pseudo-elements, so `::before` and `::after` are free for you.
 
-1. **Backdrop**: blur and saturate.
-2. **Fill**: one color, or the tint, at a computed opacity.
-3. **Volume**: the surface darkens toward its edges on a smooth curve and catches a little light just under the top and bottom rims.
-4. **Rims**: light hairlines along the top and bottom; inset shadows, so on a capsule they fade toward the ends.
-5. **Edge**: a dark hairline just outside.
+1. **Backdrop**: blur and saturation.
+2. **Fill**: one color (or the tint) at a calculated opacity.
+3. **Volume**: the surface darkens toward the edges and catches a little light under the top and bottom rims.
+4. **Rims**: thin highlights along the top and bottom. On a capsule they fade toward the ends.
+5. **Edge**: a thin dark line just outside.
 6. **Drop shadow.**
 
 </Section>
 
 <Section id="customize" title="Customize">
 
-All variables inherit: set one on any ancestor and every glass element inside uses it.
+All variables are inherited: set one on any ancestor and all glass inside uses it.
 
 <VarTable />
 
@@ -182,22 +252,22 @@ All variables inherit: set one on any ancestor and every glass element inside us
 }
 ```
 
-Everything prefixed `--_` is internal calibration and may change without notice.
+Variables starting with `--_` are internal and may change without notice.
 
 </Section>
 
 <Section id="colors" title="Colors">
 
-Colors are resolved on each glass element, so they follow whichever theme applies there. Transparency and depth still control how strongly a color shows.
+Colors are resolved on each glass element, so they follow the theme that applies there. Transparency and depth still control how strong the color looks.
 
 ```css
-/* Your own neutral, per theme */
+/* Your own neutral color per theme */
 :root {
   --lb-fill-light: #f5f5f7;
   --lb-fill-dark: #1c1c1e;
 }
 
-/* Warm glass: fill, shading and rims all lean amber */
+/* Warm glass: amber fill, shading and rims */
 .warm {
   --lb-fill-light: #ffe08a;
   --lb-shade-color: #5a2a00;
@@ -216,13 +286,13 @@ Colors are resolved on each glass element, so they follow whichever theme applie
 }
 ```
 
-Glass picks a text color that contrasts with its fill. To override it, set `color` on the element, or `--lb-text`.
+Text color is picked automatically to contrast with the fill. To override it, set `color` on the element, or `--lb-text`.
 
 </Section>
 
 <Section id="theming" title="Theming">
 
-The theme is one inherited variable, `--lb-dark`: `0` is light, `1` is dark. By default it follows the system setting. `data-theme="light"` or `"dark"` on any element switches everything inside it.
+The theme is a single inherited variable, `--lb-dark`: `0` for light, `1` for dark. By default it follows the system setting. `data-theme="light"` or `"dark"` on any element switches everything inside it.
 
 ```html
 <html data-theme="dark">
@@ -232,7 +302,7 @@ The theme is one inherited variable, `--lb-dark`: `0` is light, `1` is dark. By 
 </html>
 ```
 
-To connect another theme switcher, set `--lb-dark` where it marks the dark theme:
+To connect another theme switcher, set `--lb-dark` on its dark-theme selector:
 
 ```css
 /* Tailwind, shadcn, next-themes with attribute="class" */
@@ -246,7 +316,7 @@ To connect another theme switcher, set `--lb-dark` where it marks the dark theme
 
 <Section id="tailwind" title="Tailwind & layers">
 
-All styles are in `@layer liquid-blur`, so your unlayered CSS overrides them without `!important`. Among layers, the one declared first has the lowest priority. Tailwind v4 declares its layers when imported, so glass imported after it would override utilities such as `rounded-xl`. Declare the layer order once, before both imports:
+All styles are in `@layer liquid-blur`, so your own unlayered CSS overrides them without `!important`. Tailwind v4 declares its layers on import, and the first declared layer has the lowest priority, so glass imported after Tailwind would override utilities like `rounded-xl`. Declare the layer order once, before both imports:
 
 ```css
 @layer liquid-blur, theme, base, components, utilities;
@@ -258,45 +328,51 @@ All styles are in `@layer liquid-blur`, so your unlayered CSS overrides them wit
 
 <Section id="accessibility" title="Accessibility">
 
-Glass follows the system's accessibility settings on its own; no code needed.
+Glass follows the system accessibility settings automatically. No code needed.
 
 <A11yGrid />
 
 </Section>
 
-<Section id="press" title="Press behaviors">
+<Section id="press" title="Press effects">
 
 The press classes need `installPress()` (see [Get started](#start)). Without it, highlight and swell fall back to `:active`, centered on the element.
+
+<Only react>
+
+`Glass` with a press prop sets this up automatically. If you write the classes by hand, call `usePress()` in your root component.
+
+</Only>
 
 <Rows>
 <Row>
 <Cell title="Pressed state">
 
-While pressed, the element has `data-lb-pressed`, which you can style. On touch it appears after a short delay, so starting a scroll doesn't trigger it; a quick tap still flashes briefly on release.
+While pressed, the element has `data-lb-pressed`, which you can style. On touch it appears after a short delay, so starting a scroll doesn't trigger it. A quick tap still flashes briefly.
 
 </Cell>
 <Cell title="Highlight">
 
-A soft glow under the finger. Its size grows with the element, up to a limit on large panels. `--lb-highlight-size` multiplies it.
+A soft glow under the finger. It grows with the element, up to a limit on large panels. `--lb-highlight-size` scales it.
 
 </Cell>
 </Row>
 <Row>
 <Cell title="Springs">
 
-Highlight and swell run on springs that can reverse mid-way. While they move, the script sets `scale`, the highlight strength and the press point (`--lb-press-x`, `--lb-press-y`) inline, and removes them at rest. Swell multiplies your own `scale`.
+Highlight and swell run on springs that can reverse mid-way. While animating, the script sets `scale`, the highlight strength and the press position (`--lb-press-x`, `--lb-press-y`) inline, and removes them when done. Swell multiplies your own `scale`.
 
 </Cell>
 <Cell title="Size">
 
-Larger glass swells and stretches less, moves slower and bounces less. `--lb-swell` and `--lb-stretch` adjust the strength, and `--lb-stretch-axis` (`x`, `y` or `both`) the direction: a switch's thumb stretches along its track only.
+Larger glass swells and stretches less, and moves slower. `--lb-swell` and `--lb-stretch` set the strength, and `--lb-stretch-axis` (`x`, `y` or `both`) the direction. A switch thumb, for example, should only stretch along its track.
 
 </Cell>
 </Row>
 <Row>
 <Cell title="Stretch">
 
-Writes only `transform`, once per frame, without reading layout. Your own transform is kept and the stretch is added after it; your inline `transform` and `will-change` are restored at rest. Stretch sets `touch-action: none` and disables text selection on the element, and while it's pulled no text on the page is selected either.
+Only writes `transform`, once per frame, without reading layout. Your own transform is kept, and your inline `transform` and `will-change` are restored afterwards. Stretch sets `touch-action: none` and disables text selection on the element.
 
 </Cell>
 <Cell title="Release outside">
@@ -307,17 +383,19 @@ Releasing more than 32px outside the element cancels the click.
 </Row>
 </Rows>
 
-Don't put a CSS `transition` on `scale` for swell elements or on `transform` for stretch elements: the script updates them every frame and a transition would lag behind. Use press classes on single controls, not containers: highlight lights the whole element on a press anywhere inside it, and stretch blocks scrolling and text selection in its whole subtree.
+Don't add a CSS `transition` on `scale` (for swell) or `transform` (for stretch): the script updates them every frame, and a transition would lag. Use press classes on individual controls, not containers: highlight lights up the whole element, and stretch blocks scrolling and text selection inside it.
 
-A disabled control (`:disabled`, or `aria-disabled="true"`) isn't pressed: no highlight, swell or stretch, with the script or without. How it looks disabled is up to you.
+Disabled controls (`:disabled` or `aria-disabled="true"`) get no press effects. Their disabled look is up to you.
 
 </Section>
 
 <Section id="groups" title="Glass groups">
 
-Glass elements inside an `lb-group` merge into one surface when they get close and separate as they move apart. The group draws one backdrop clipped to the merged outline, so overlaps aren't blurred twice.
+Glass elements inside `lb-group` merge into one surface when they get close, and separate as they move apart. The group draws a single backdrop for the merged shape, so overlaps aren't blurred twice.
 
 <GroupTiles />
+
+<Only js>
 
 ```html
 <div class="lb lb-group">
@@ -332,44 +410,60 @@ Glass elements inside an `lb-group` merge into one surface when they get close a
 </script>
 ```
 
+</Only>
+<Only react>
+
+```tsx
+import { Glass } from "@fluidkit/blur/react";
+
+<Glass.Group className="toolbar">
+  <Glass>…</Glass>
+  <Glass interactive render={<button />}>…</Glass>
+</Glass.Group>
+```
+
+</Only>
+
 <Rows>
 <Row>
 <Cell title="Optional script">
 
-Groups need the `@fluidkit/blur/melt` entry. Without it, or while the children are far apart, they render as ordinary glass.
+Groups need the `@fluidkit/blur/melt` entry. Without it, or while the children are far apart, they look like ordinary glass.
 
 </Cell>
 <Cell title="Merge distance">
 
-Children start to merge when they are closer than `--lb-merge`, `18px` by default. Set it on the group.
+Children start merging when they're closer than `--lb-merge` (default `18px`). Set it on the group.
 
 </Cell>
 </Row>
 <Row>
 <Cell title="Tracking movement">
 
-The group follows its children's springs, inline style and class changes, size changes, and CSS transitions and animations. For anything else that moves them, call `update()`.
+The group follows its children's springs, inline style and class changes, size changes, and CSS transitions and animations. If something else moves them, call `update()`.
 
 </Cell>
 <Cell title="Same material">
 
-The group uses the same variables as any glass. While it draws the shared surface, the root has `data-lb-melted`. An `lb-tinted` child keeps its tint on top.
+The group uses the same variables as any glass. While it draws the merged surface, the root has `data-lb-melted`. An `lb-tinted` child keeps its tint.
 
 </Cell>
 </Row>
 </Rows>
 
-**Server rendering.** The entry can be imported on the server; `installGlassGroups()` does nothing there. In React, Vue or Svelte, call it after hydration (in an effect), because the group adds its own elements to the root. Write both `lb lb-group` in the markup, so a re-render that sets the class doesn't drop `lb`.
+<Only js>
+
+**Server rendering.** The entry is safe to import on the server, where `installGlassGroups()` does nothing. In React, Vue or Svelte, call it after hydration (in an effect), because the group adds its own elements to the root. Write both `lb lb-group` in your markup, so a re-render doesn't drop `lb`.
 
 ```tsx
 import { useEffect } from "react";
 import { installGlassGroups } from "@fluidkit/blur/melt";
 
 export function Toolbar() {
-  // After hydration: the group adds its own elements to the root
+  // After hydration, since the group adds its own elements to the root
   useEffect(() => installGlassGroups(), []);
   return (
-    // "lb" in the markup too, so a re-render keeps it
+    // Include "lb" in the markup so a re-render keeps it
     <div className="lb lb-group">
       <div className="lb">…</div>
       <button className="lb lb-interactive">…</button>
@@ -378,20 +472,71 @@ export function Toolbar() {
 }
 ```
 
+</Only>
+<Only react>
+
+**Server rendering.** `Glass.Group` renders `lb lb-group` on the server and sets up the group after hydration. It cleans up on unmount. The group adds its own elements to the root, so select children by class (`.toolbar > .lb`), not with `> *`.
+
+</Only>
+
 </Section>
 
 <Section id="edges" title="Scroll edges">
 
-Content that scrolls can fade out toward its edges, as under the bars in iOS: `lb-edge` and `lb-edge-x` on the element that scrolls. They come with this stylesheet and don't need glass; they have [a page of their own](/edge).
+Scrolling content can fade out at its edges, like under iOS bars: add `lb-edge` or `lb-edge-x` to the scrolling element. They come with the stylesheet and don't need glass. See [Scroll Edge](/edge).
+
+</Section>
+
+<Section id="components" title="Components" only="react">
+
+**`Glass`** renders a `div`, or your own element with `render` (as in Base UI). Your classes and styles are kept.
+
+| Prop | Description |
+| --- | --- |
+| `clear?: boolean` | Clearer glass for photos and video (`lb-clear`) |
+| `tint?: boolean \| string` | Fill with a color. Pass a color, or `true` to use the inherited `--lb-tint` (`lb-tinted`) |
+| `lens?: boolean` | Glass without blur (`lb-lens`) |
+| `transparency?: number` | `0` opaque, `0.5` default, `1` clear (`--lb-transparency`) |
+| `depth?: number` | `0` flat, `0.5` default, `1` pronounced (`--lb-depth`) |
+| `interactive?: boolean` | Highlight, swell and stretch (`lb-interactive`) |
+| `highlight?`, `swell?: boolean` | Individual press effects (`lb-highlight`, `lb-swell`) |
+| `stretch?: boolean \| "x" \| "y"` | Stretch, optionally along one axis (`lb-stretch`, `--lb-stretch-axis`) |
+
+Press props set up press effects automatically, including inside iframes.
+
+**`Glass.Group`** renders a `div` with `lb lb-group`, or your own element, and turns it into a [glass group](#groups). `merge` sets how close children get before merging, in px (default `18`). `transparency` and `depth` work like on `Glass` and apply to all children.
+
+```tsx
+<Glass.Group className="toolbar" merge={24}>
+  <Glass interactive render={<button aria-label="Back" />}><BackIcon /></Glass>
+  <Glass interactive render={<button aria-label="Share" />}><ShareIcon /></Glass>
+</Glass.Group>
+```
+
+**Hooks and helpers.**
+
+- `glass(variants)` returns `{ className, style }` for the same props, for elements that aren't `Glass`, like a router `Link`.
+- `usePress()` sets up press effects, if you write the press classes by hand.
+- `useGlassGroup()` returns a ref for a group root (with `lb lb-group`) and the group itself, so you can call `update()`.
+
+```tsx
+import { glass, useGlassGroup, usePress } from "@fluidkit/blur/react";
+
+const { className, style } = glass({ interactive: true, tint: "#0a84ff" });
+<Link className={className} style={style} href="/follow">Follow</Link>;
+
+const { root, group } = useGlassGroup();
+<div ref={root} className="lb lb-group">…</div>;
+```
 
 </Section>
 
 <Section id="api" title="API">
 
-The functions behind press and melt. What each entry exports is listed under [Entries](#entries).
+The functions behind press effects and groups. See [Entries](#entries) for where each one comes from.
 
 **`installPress(root?: Document): () => void`**<br />
-Installs press behaviors on `root` (default `document`) and returns a function that uninstalls them. Calling it again returns the same function. While installed, `<html>` has `data-lb-interaction`. Works inside open shadow roots; for an iframe, pass its `contentDocument`. Does nothing without a DOM.
+Sets up press effects on `root` (default: `document`) and returns a function that removes them. Calling it again returns the same function. While active, `<html>` has `data-lb-interaction`. Works in open shadow roots; for an iframe, pass its `contentDocument`. Does nothing without a DOM.
 
 ```ts
 const uninstall = installPress();
@@ -399,22 +544,22 @@ const uninstall = installPress();
 // An iframe has its own document
 installPress(frame.contentDocument);
 
-// Later, if the page goes away
+// Later, to remove it
 uninstall();
 ```
 
 **`installGlassGroups(root?: Document): () => void`**<br />
-Turns every `.lb-group` in the document into a group, including ones added later, and releases a group when its root leaves the document. Returns a cleanup that destroys the groups it created; calling it again returns the same cleanup. Does nothing without a DOM.
+Turns every `.lb-group` in the document into a group, including ones added later, and cleans up groups whose root is removed. Returns a cleanup function; calling it again returns the same one. Does nothing without a DOM.
 
 **`createGlassGroup(root: HTMLElement): GlassGroup`**<br />
-Creates a group for one element you manage yourself. Adds `lb` and `lb-group` to `root` if missing. Calling it again for the same root returns the existing group.
+Creates a group for a single element you manage yourself. Adds `lb` and `lb-group` to `root` if missing. Calling it again for the same root returns the existing group.
 
 ```ts
 import { createGlassGroup } from "@fluidkit/blur/melt";
 
 const group = createGlassGroup(toolbar);
 
-// A child moved by something the group can't see
+// After moving a child in a way the group can't detect
 group.update();
 
 // Later
@@ -425,17 +570,17 @@ group.destroy();
 
 <Section id="support" title="Browser support">
 
-Any browser with `backdrop-filter`, `color-mix()` and CSS `pow()`. Without `@property` (Firefox before 128) the glass still renders, but some settings inherit into nested glass and the press highlight doesn't fade. Groups also need `clip-path: path()`, `mask` with an inline SVG, and Canvas 2D. The JavaScript is ESM targeting ES2022. [Scroll edges](/edge) need scroll-driven animations (Chrome 115, Safari 26); elsewhere there are none.
+Any browser with `backdrop-filter`, `color-mix()` and CSS `pow()`. Without `@property` (Firefox before 128) the glass still renders, but some settings leak into nested glass and the press highlight doesn't fade. Groups also need `clip-path: path()`, `mask` with inline SVG, and Canvas 2D. The JavaScript is ESM targeting ES2022. [Scroll edges](/edge) need scroll-driven animations (Chrome 115, Safari 26); elsewhere there's no fade.
 
 </Section>
 
 <Section id="limitations" title="Limitations">
 
-- **Backdrop roots.** Glass blurs only what's inside its backdrop root. An ancestor with `filter`, `opacity` below 1, `mask`, `clip-path`, `mix-blend-mode` or its own `backdrop-filter` cuts the glass off from everything behind that ancestor.
-- **Transforms on groups.** Scaling a group or its ancestors works; rotating doesn't. Movement the group can't see needs `update()`. The merged outline uses circular arcs, even for squircle children.
-- **Clipping around a group.** In Chromium, an ancestor with `overflow: hidden` (or `clip`, or paint containment) and a `corner-shape` other than `round` shows a blurred rectangle around merged glass. Put the shape on the ancestor's background instead and leave it unclipped. Clipping with plain `border-radius` is fine.
-- **No refraction.** See the [FAQ](#faq). So a lens doesn't magnify what's under it.
-- **A lens in a group.** A group's children give their glass to the group's shared surface while melted, a lens too: keep lens glass out of a group's direct children.
+- **Backdrop roots.** Glass only blurs what's inside its backdrop root. An ancestor with `filter`, `opacity` below 1, `mask`, `clip-path`, `mix-blend-mode` or its own `backdrop-filter` hides everything behind that ancestor from the glass.
+- **Transforms on groups.** Scaling a group or its ancestors works; rotating doesn't. Movement the group can't detect needs `update()`. The merged shape uses circular corners, even for squircle children.
+- **Clipping around a group.** In Chromium, an ancestor with `overflow: hidden` (or `clip`, or paint containment) and a `corner-shape` other than `round` shows a blurred rectangle around merged glass. Put the shape on the ancestor's background instead and don't clip. Clipping with plain `border-radius` is fine.
+- **No refraction.** See the [FAQ](#faq). A lens doesn't magnify.
+- **Lenses in groups.** While merged, a group draws its children's glass as one surface, lenses included. Don't put lens glass directly in a group.
 
 </Section>
 
@@ -444,17 +589,19 @@ Any browser with `backdrop-filter`, `color-mix()` and CSS `pow()`. Without `@pro
 <Faq>
 <Question q="Why no refraction?">
 
-Refraction on the web needs SVG filters, which only one browser engine applies to a backdrop, and they are expensive on every frame of scrolling. Liquid Blur uses only what renders the same in every browser.
+Refraction on the web needs SVG filters, which only one browser engine applies to a backdrop, and they're expensive on every frame while scrolling. Liquid Blur only uses what renders the same in every browser.
 
 </Question>
 <Question q="Does it need JavaScript?">
 
-No. The material is plain CSS. The optional scripts add press behaviors and glass groups.
+No. The material is plain CSS. The optional scripts add press effects and glass groups.
 
 </Question>
 <Question q="How do I use it with React, Vue or Svelte?">
 
-Use the classes as they are, and install press once at the root. It returns its own cleanup.
+In React, use [`Glass`](/blur?framework=react#components). Elsewhere, use the classes and set up press effects once in your root component; `installPress()` returns its own cleanup.
+
+<Only js>
 
 ```tsx
 import { useEffect } from "react";
@@ -466,15 +613,17 @@ export function App() {
 }
 ```
 
+</Only>
+
 </Question>
 <Question q="How fast is it?">
 
-A backdrop filter costs GPU time in proportion to the area of glass on screen: a toolbar is cheap, a full-page panel is not. While animating, the script writes only transforms and two custom properties per frame and never reads layout.
+A backdrop filter costs GPU time proportional to the area of glass on screen: a toolbar is cheap, a full-page panel isn't. While animating, the scripts only write transforms and two CSS variables per frame and never read layout.
 
 </Question>
 <Question q="Is this Apple's Liquid Glass?">
 
-No. It's inspired by it, but has no lensing or refraction and uses only what browsers support today.
+No. It's inspired by it, but has no refraction and only uses what browsers support today.
 
 </Question>
 </Faq>

@@ -1,14 +1,20 @@
 ---
 /**
  * A live example with its code behind tabs: the example in the default slot, the code in the
- * `html`, `js` and `css` slots (Markdown code blocks). A tab shows only for a slot that's filled.
+ * `html`, `js`, `react` and `css` slots (Markdown code blocks). A tab shows only for a slot that's
+ * filled. With React code given, the HTML and JS tabs are JavaScript's and the React tab React's:
+ * each shows with its framework chosen
  */
-const tabs = [
-  ["example", "Example"],
-  ["html", "HTML"],
-  ["js", "JS"],
-  ["css", "CSS"],
-].filter(([slot]) => slot === "example" || Astro.slots.has(slot));
+const react = Astro.slots.has("react");
+const tabs = (
+  [
+    ["example", "Example", undefined],
+    ["html", "HTML", react ? "js" : undefined],
+    ["js", "JS", react ? "js" : undefined],
+    ["react", "React", "react"],
+    ["css", "CSS", undefined],
+  ] as const
+).filter(([slot]) => slot === "example" || Astro.slots.has(slot));
 ---
 
 <div class="ex" data-ex>
@@ -16,8 +22,8 @@ const tabs = [
     <div class="seg" role="group" aria-label="Show">
       <span class="seg__thumb" aria-hidden="true"></span>
       {
-        tabs.map(([value, label], i) => (
-          <button type="button" data-value={value} aria-pressed={i === 0 ? "true" : "false"}>
+        tabs.map(([value, label, only], i) => (
+          <button type="button" data-value={value} data-only={only} aria-pressed={i === 0 ? "true" : "false"}>
             {label}
           </button>
         ))
@@ -27,6 +33,7 @@ const tabs = [
   <div class="ex__panel" data-panel="example"><slot /></div>
   {Astro.slots.has("html") && <div class="ex__panel" data-panel="html" hidden><slot name="html" /></div>}
   {Astro.slots.has("js") && <div class="ex__panel" data-panel="js" hidden><slot name="js" /></div>}
+  {react && <div class="ex__panel" data-panel="react" hidden><slot name="react" /></div>}
   {Astro.slots.has("css") && <div class="ex__panel" data-panel="css" hidden><slot name="css" /></div>}
 </div>
 
@@ -45,8 +52,13 @@ const tabs = [
   for (const ex of document.querySelectorAll<HTMLElement>("[data-ex]:not([data-ex-ready])")) {
     ex.dataset.exReady = "";
     const panels = [...ex.querySelectorAll<HTMLElement>(":scope > [data-panel]")];
-    segmented(ex.querySelector<HTMLElement>(".seg")!, (value) => {
+    const tabs = segmented(ex.querySelector<HTMLElement>(".seg")!, (value) => {
       for (const panel of panels) panel.hidden = panel.dataset.panel !== value;
+    });
+    // Another framework chosen: a tab of the one before is gone, so it's the example again
+    window.addEventListener("fk:framework", () => {
+      const open = ex.querySelector<HTMLElement>(`.seg button[data-value="${tabs.value()}"]`);
+      if (open && !open.checkVisibility()) tabs.select("example");
     });
   }
 </script>

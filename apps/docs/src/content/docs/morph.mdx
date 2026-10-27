@@ -2,8 +2,9 @@
 package: "@fluidkit/morph"
 name: Morph
 order: 2
-description: "One element flows into another: one shape the whole way, on interruptible springs. Works on any element; with Liquid Blur, it's the same glass."
-intro: "One element flows into another and back, on springs you can turn around mid-way. Any element; with <a href=\"/blur\">Liquid Blur</a>, the same glass."
+description: "Animate one element into another with a single continuous shape, on springs you can interrupt. Works with any element, and with Liquid Blur glass."
+intro: "Turn a button into a panel and back with one continuous shape. Springs can be interrupted and reversed at any point. Works with any element, and with <a href=\"/blur\">Liquid Blur</a> glass."
+react: "Components and a hook from <code>@fluidkit/morph/react</code>. Code, props and API on this page are for React."
 ---
 
 import Section from "../../components/docs/Section.astro";
@@ -15,10 +16,13 @@ import Step from "../../components/docs/Step.astro";
 import Install from "../../components/docs/Install.astro";
 import MorphExample from "../../components/MorphExample.astro";
 import Example from "../../components/docs/Example.astro";
+import Only from "../../components/docs/Only.astro";
 
 <Section id="start" title="Get started">
 
-A morph flows between states: real elements, each laid out where and as it is at rest. One is shown, the others are hidden. Asked for another, a single shape flows from the box of the one shown to the box of the other, and at rest that element is itself again. Here the states are a button and its panel.
+A morph switches between **states**: ordinary elements laid out where they should appear. One state is visible at a time. When you switch, a single shape animates from the visible state to the next one, and then the next state takes its place.
+
+<Only js>
 
 <Steps>
 <Step>
@@ -30,7 +34,7 @@ A morph flows between states: real elements, each laid out where and as it is at
 </Step>
 <Step>
 
-**Lay out both states** where they are at rest. Hide the panel with `visibility: hidden` so it can still be measured, and put it above the button (`z-index: 2`). Each state has its own surface: here both are [Liquid Blur](/blur) glass, but any styling works.
+**Lay out both states** where they should appear. Hide the panel with `visibility: hidden` (not `display: none`, so it can be measured) and put it above the button with `z-index: 2`. Style the states however you like; here both are [Liquid Blur](/blur) glass.
 
 ```html
 <div class="morph-scene">
@@ -62,7 +66,7 @@ A morph flows between states: real elements, each laid out where and as it is at
 </Step>
 <Step>
 
-**Create the morph** after the elements are in the DOM, and send it to a state from your own handlers. What a menu needs on top (its `aria-expanded`, Escape, focus) is yours, in `onStart` and `onRest`.
+**Create the morph** once the elements are in the DOM, and call `to()` from your handlers. Accessibility details like `aria-expanded`, Escape and focus are up to you; `onStart` and `onRest` are good places for them.
 
 ```ts
 import "@fluidkit/blur/style.css"; // the glass, if the states are glass
@@ -76,7 +80,7 @@ const morph = createMorph({
   states: [button, panel],
   onStart(to) {
     button.setAttribute("aria-expanded", String(to === panel));
-    // The panel is itself on its way in: focus can go into it at once
+    // The panel is already interactive while it animates in
     if (to === panel) close.focus({ preventScroll: true });
   },
   onRest(at) {
@@ -101,15 +105,80 @@ document.addEventListener("keydown", onKey);
 </Step>
 </Steps>
 
+</Only>
+<Only react>
+
+<Steps>
+<Step>
+
+**Install.** The React components are included in the package (React 18+).
+
+<Install pkg="@fluidkit/morph" />
+
+</Step>
+<Step>
+
+**Add the states.** Each `Morph.State` has a `value`. A `Morph.Trigger` switches to its `value` when clicked. A state can also be a trigger: here the button opens the panel.
+
+```tsx
+import "@fluidkit/blur/style.css"; // the glass, if the states are glass
+import { Morph } from "@fluidkit/morph/react";
+
+export function More() {
+  return (
+    <div className="morph-scene">
+      <Morph.Root>
+        <Morph.State value="button" id="more" className="lb" render={<Morph.Trigger value="panel" />}>
+          More
+        </Morph.State>
+        <Morph.State value="panel" id="panel" className="lb">
+          <p>Panel content</p>
+          <Morph.Trigger value="button">Close</Morph.Trigger>
+        </Morph.State>
+      </Morph.Root>
+    </div>
+  );
+}
+```
+
+</Step>
+<Step>
+
+**Lay out both states** where they should appear. Hide the panel with `visibility: hidden` in CSS, not in the `style` prop: the morph manages inline `opacity` and `visibility`. Put the panel above the button with `z-index: 2`.
+
+```css
+.morph-scene { position: relative; min-height: 240px; }
+#more { width: 88px; height: 44px; border-radius: 22px; }
+#panel {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: min(280px, 100%);
+  height: 220px;
+  box-sizing: border-box;
+  padding: 20px;
+  border-radius: 28px;
+  visibility: hidden;
+  z-index: 2;
+}
+```
+
+Components are marked `"use client"`. On the server they render plain markup, and the panel stays hidden by your CSS.
+
+</Step>
+</Steps>
+
+</Only>
+
 </Section>
 
 <Section id="examples" title="Examples">
 
-The shape takes the surface of the states, so the result depends on what they're made of.
+The shape takes on the look of the states, so the result depends on how you style them.
 
 ### Plain CSS
 
-Without Liquid Blur: a solid pill flows into a solid panel.
+No Liquid Blur: a solid pill turns into a solid panel.
 
 <Example>
 <MorphExample kind="plain" />
@@ -144,7 +213,7 @@ const morph = createMorph({
 });
 
 share.addEventListener("click", () => morph.to(morph.current === panel ? share : panel));
-// A pick closes it
+// Choosing an item closes the panel
 panel.addEventListener("click", (e) => {
   if ((e.target as Element).closest("button")) morph.to(share);
 });
@@ -154,12 +223,61 @@ document.addEventListener("keydown", (e) => {
 ```
 
 </Fragment>
+<Fragment slot="react">
+
+```tsx
+import { useCallback, useEffect, useState } from "react";
+import { Morph } from "@fluidkit/morph/react";
+
+const items = ["Messages", "Copy Link", "Add to Favorites"];
+
+export function Share() {
+  const [value, setValue] = useState("share");
+  const open = value === "panel";
+  useEscape(useCallback(() => setValue("share"), []));
+  return (
+    <div className="scene">
+      <Morph.Root value={value} onValueChange={setValue}>
+        {/* The pill is also a trigger: clicking it opens the panel */}
+        <Morph.State
+          value="share"
+          id="share"
+          aria-haspopup="menu"
+          aria-expanded={open}
+          render={<Morph.Trigger value={open ? "share" : "panel"} />}
+        >
+          <ShareIcon /> Share
+        </Morph.State>
+        <Morph.State value="panel" id="share-panel" role="menu" aria-label="Share">
+          {items.map((label) => (
+            // Choosing an item closes the panel
+            <Morph.Trigger key={label} value="share" role="menuitem">
+              <Icon name={label} /> {label}
+            </Morph.Trigger>
+          ))}
+        </Morph.State>
+      </Morph.Root>
+    </div>
+  );
+}
+
+/** Escape closes the panel */
+function useEscape(back: () => void) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && back();
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [back]);
+}
+```
+
+</Fragment>
 <Fragment slot="css">
 
 ```css
 .scene { position: relative; height: 300px; }
 
-/* Both at the bottom middle, placed by margins, never by transform */
+/* Both centered at the bottom, positioned with margins, not transform */
 #share,
 #share-panel {
   position: absolute;
@@ -205,7 +323,7 @@ document.addEventListener("keydown", (e) => {
 
 ### From solid to glass
 
-The pill is glass covered by a solid layer, the panel plain glass. The two surfaces differ, so on the way the pill's dissolves into the panel's: nothing to script.
+The pill is glass with a solid layer on top; the panel is plain glass. Because the two look different, the solid layer fades into glass on the way. No extra code needed.
 
 <Example>
 <MorphExample kind="glassify" />
@@ -250,6 +368,57 @@ document.addEventListener("keydown", (e) => {
 ```
 
 </Fragment>
+<Fragment slot="react">
+
+```tsx
+import "@fluidkit/blur/style.css";
+import { useCallback, useEffect, useState } from "react";
+import { Morph } from "@fluidkit/morph/react";
+
+const items = ["Messages", "Copy Link", "Add to Favorites"];
+
+export function Share() {
+  const [value, setValue] = useState("share");
+  const open = value === "panel";
+  useEscape(useCallback(() => setValue("share"), []));
+  return (
+    <div className="scene">
+      <Morph.Root value={value} onValueChange={setValue}>
+        {/* The pill is also a trigger: clicking it opens the panel */}
+        <Morph.State
+          value="share"
+          id="share"
+          className="lb"
+          aria-haspopup="menu"
+          aria-expanded={open}
+          render={<Morph.Trigger value={open ? "share" : "panel"} />}
+        >
+          <ShareIcon /> Share
+        </Morph.State>
+        <Morph.State value="panel" id="share-panel" className="lb" role="menu" aria-label="Share">
+          {items.map((label) => (
+            // Choosing an item closes the panel
+            <Morph.Trigger key={label} value="share" role="menuitem">
+              <Icon name={label} /> {label}
+            </Morph.Trigger>
+          ))}
+        </Morph.State>
+      </Morph.Root>
+    </div>
+  );
+}
+
+/** Escape closes the panel */
+function useEscape(back: () => void) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && back();
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [back]);
+}
+```
+
+</Fragment>
 <Fragment slot="css">
 
 ```css
@@ -262,7 +431,7 @@ document.addEventListener("keydown", (e) => {
   margin: 0 auto;
 }
 
-/* Glass under a solid layer: the layer is the pill's own surface, so it dissolves on the way */
+/* Glass with a solid layer on top; the layer fades out during the morph */
 #share {
   width: 116px;
   height: 44px;
@@ -307,7 +476,7 @@ document.addEventListener("keydown", (e) => {
 
 ### In a glass group
 
-A button in a merged toolbar. The panel opens over the neighboring buttons, so the shape leaves the group and flies as separate glass. See [With Liquid Blur](#glass).
+A button in a toolbar whose glass is merged. The panel opens on top of the other buttons, so the shape leaves the group and animates as separate glass. See [With Liquid Blur](#glass).
 
 <Example>
 <MorphExample kind="group" />
@@ -339,7 +508,7 @@ import "@fluidkit/blur/style.css";
 import { installGlassGroups } from "@fluidkit/blur/melt";
 import { createMorph } from "@fluidkit/morph";
 
-// Melts the toolbar's buttons into one glass, and the shape with them while it's beside them
+// Merges the toolbar buttons into one piece of glass, including the moving shape
 installGlassGroups();
 
 const share = document.getElementById("share")!;
@@ -357,6 +526,64 @@ panel.addEventListener("click", (e) => {
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") morph.to(share);
 });
+```
+
+</Fragment>
+<Fragment slot="react">
+
+```tsx
+import "@fluidkit/blur/style.css";
+import { Glass } from "@fluidkit/blur/react";
+import { useCallback, useEffect, useState } from "react";
+import { Morph } from "@fluidkit/morph/react";
+
+const items = ["Messages", "Copy Link", "Add to Favorites"];
+
+export function Share() {
+  const [value, setValue] = useState("share");
+  const open = value === "panel";
+  useEscape(useCallback(() => setValue("share"), []));
+  return (
+    <div className="scene">
+      <Morph.Root value={value} onValueChange={setValue}>
+        {/* Merges the toolbar buttons into one piece of glass, including the moving shape */}
+        <Glass.Group className="toolbar">
+          <Glass interactive render={<button type="button" aria-label="Back" />}><BackIcon /></Glass>
+          <Glass interactive render={<button type="button" aria-label="Play" />}><PlayIcon /></Glass>
+          {/* The button is also a trigger: clicking it opens the panel */}
+          <Morph.State
+            value="share"
+            id="share"
+            className="lb lb-interactive"
+            aria-label="Share"
+            aria-haspopup="menu"
+            aria-expanded={open}
+            render={<Morph.Trigger value={open ? "share" : "panel"} />}
+          >
+            <ShareIcon />
+          </Morph.State>
+        </Glass.Group>
+        <Morph.State value="panel" id="share-panel" className="lb" role="menu" aria-label="Share">
+          {items.map((label) => (
+            // Choosing an item closes the panel
+            <Morph.Trigger key={label} value="share" role="menuitem">
+              <Icon name={label} /> {label}
+            </Morph.Trigger>
+          ))}
+        </Morph.State>
+      </Morph.Root>
+    </div>
+  );
+}
+
+/** Escape closes the panel */
+function useEscape(back: () => void) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && back();
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [back]);
+}
 ```
 
 </Fragment>
@@ -385,7 +612,7 @@ document.addEventListener("keydown", (e) => {
   padding: 0;
 }
 
-/* Above the shape when it's lifted out of the group */
+/* Above the shape when it leaves the group */
 #share-panel {
   z-index: 2;
   width: 264px;
@@ -412,7 +639,7 @@ document.addEventListener("keydown", (e) => {
 
 <Section id="match" title="Shared elements">
 
-Mark an element in each of two states with the same `data-fk-match`, and it flies from where it is in one to where it is in the other, crossing over from one to the other on the way. Here the pill's icon flies into the menu's title, and its label into the option picked. Pick another and the pill comes back with it.
+Give an element in each of two states the same `data-fk-match`, and it moves from one position to the other during the morph. Here the icon moves into the menu title, and the label moves into the selected option. Pick another option and the pill comes back with the new label.
 
 <Example>
 <MorphExample kind="match" />
@@ -460,7 +687,7 @@ const morph = createMorph({
 
 sort.addEventListener("click", () => morph.to(morph.current === panel ? sort : panel));
 
-// A pick relabels the pill and moves the match to its label: that's the one that flies back
+// Picking an option updates the pill label and moves the match to it, then closes
 panel.addEventListener("click", (e) => {
   const pick = (e.target as Element).closest<HTMLElement>("[role=menuitemradio]");
   if (!pick) return;
@@ -479,6 +706,67 @@ document.addEventListener("keydown", (e) => {
 ```
 
 </Fragment>
+<Fragment slot="react">
+
+```tsx
+import "@fluidkit/blur/style.css";
+import { useCallback, useEffect, useState } from "react";
+import { Morph } from "@fluidkit/morph/react";
+
+const options = ["Newest", "Oldest", "Most Popular", "A–Z"];
+
+export function Sort() {
+  const [sort, setSort] = useState("Newest");
+  const [value, setValue] = useState("pill");
+  useEscape(useCallback(() => setValue("pill"), []));
+  return (
+    <div className="scene">
+      <Morph.Root value={value} onValueChange={setValue}>
+        <Morph.State
+          value="pill"
+          id="sort"
+          className="lb lb-interactive"
+          aria-haspopup="menu"
+          aria-expanded={value === "panel"}
+          render={<Morph.Trigger value="panel" />}
+        >
+          <Morph.Match name="sort-icon" render={<SortIcon />} />
+          <Morph.Match name="sort">{sort}</Morph.Match>
+        </Morph.State>
+        <Morph.State value="panel" id="sort-panel" className="lb" role="menu" aria-label="Sort by">
+          <p>
+            <Morph.Match name="sort-icon" render={<SortIcon />} /> Sort by
+          </p>
+          {options.map((option) => (
+            // Picking an option updates the pill label and moves the match to it, then closes
+            <Morph.Trigger
+              key={option}
+              value="pill"
+              role="menuitemradio"
+              aria-checked={option === sort}
+              onClick={() => setSort(option)}
+            >
+              <Morph.Match name={option === sort ? "sort" : undefined}>{option}</Morph.Match>
+              <CheckIcon className="check" />
+            </Morph.Trigger>
+          ))}
+        </Morph.State>
+      </Morph.Root>
+    </div>
+  );
+}
+
+/** Escape closes the panel */
+function useEscape(back: () => void) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && back();
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [back]);
+}
+```
+
+</Fragment>
 <Fragment slot="css">
 
 ```css
@@ -491,7 +779,7 @@ document.addEventListener("keydown", (e) => {
   margin: 0 auto;
 }
 
-/* As wide as its label: the shape follows when it changes */
+/* Sized to its label */
 #sort {
   width: fit-content;
   height: 44px;
@@ -536,13 +824,13 @@ document.addEventListener("keydown", (e) => {
 </Fragment>
 </Example>
 
-In the smaller state it stays where it is; in the bigger one it keeps to the edge it's nearest (or the middle), so a label by the left edge stays by it however the shape grows. Its size changes with the shape's, keeping its proportions. Move the attribute when what's shared changes, as the pick does here: the morph reads it each time it sets off or turns around.
+The shared element keeps its proportions and scales with the shape. In the larger state it sticks to the nearest edge, so a label on the left stays on the left as the shape grows. The morph reads `data-fk-match` each time it starts, so you can move the attribute when the shared element changes, as the example does with the selected option.
 
 </Section>
 
 <Section id="states" title="More than two states">
 
-A morph takes any number of states, and flows from whichever is shown to whichever is asked for. Here a button grows into a bar, and the bar into a card; the tabs jump straight between any two. The play button is shared by all three, the artwork and the title by the bar and the card: a match flies only between two states that both have it.
+A morph can have any number of states and can go from any state to any other. Here a button grows into a bar, and the bar into a card; the tabs jump directly between any two. The play button is shared by all three states, the artwork and title by the bar and the card. A shared element only moves between two states that both have it.
 
 <Example>
 <MorphExample kind="steps" />
@@ -597,7 +885,7 @@ const states = [dot, bar, card];
 const morph = createMorph({
   states,
   onStart(to, from) {
-    // Focus follows into the state on its way in
+    // Move focus into the next state
     if (from.contains(document.activeElement)) {
       const target = to === dot ? dot : to.querySelector<HTMLElement>("#expand, #collapse");
       target?.focus({ preventScroll: true });
@@ -605,7 +893,7 @@ const morph = createMorph({
   },
 });
 
-// One step in by the states themselves, one step out by Escape
+// Click a state to go one step in, press Escape to go one step out
 dot.addEventListener("click", () => morph.to(bar));
 document.getElementById("expand")!.addEventListener("click", () => morph.to(card));
 document.getElementById("collapse")!.addEventListener("click", () => morph.to(bar));
@@ -613,6 +901,75 @@ document.addEventListener("keydown", (e) => {
   const step = states.indexOf(morph.current);
   if (e.key === "Escape" && step > 0) morph.to(states[step - 1]);
 });
+```
+
+</Fragment>
+<Fragment slot="react">
+
+```tsx
+import "@fluidkit/blur/style.css";
+import { useEffect, useState } from "react";
+import { Morph } from "@fluidkit/morph/react";
+
+const steps = ["dot", "bar", "card"];
+
+export function NowPlaying() {
+  const [value, setValue] = useState("dot");
+  // Click a state to go one step in, press Escape to go one step out
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setValue((v) => steps[Math.max(0, steps.indexOf(v) - 1)]);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+  return (
+    <div className="scene">
+      <Morph.Root value={value} onValueChange={setValue}>
+        <Morph.State
+          value="dot"
+          id="dot"
+          className="lb lb-interactive"
+          aria-label="Now playing"
+          render={<Morph.Trigger value="bar" />}
+        >
+          <Morph.Match name="play" render={<PlayIcon />} />
+        </Morph.State>
+
+        <Morph.State value="bar" id="bar" className="lb">
+          <Morph.Trigger value="card" id="expand" aria-label="Open player">
+            <Morph.Match name="art" className="art" />
+            <span className="meta">
+              <Morph.Match name="title" render={<strong />}>Surface Tension</Morph.Match>
+              <span>Lumen</span>
+            </span>
+          </Morph.Trigger>
+          <button className="icon" type="button" aria-label="Play">
+            <Morph.Match name="play" render={<PlayIcon />} />
+          </button>
+        </Morph.State>
+
+        <Morph.State value="card" id="card" className="lb" role="dialog" aria-label="Now playing">
+          <Morph.Trigger value="bar" id="collapse" className="icon" aria-label="Minimize">
+            <ChevronIcon />
+          </Morph.Trigger>
+          <Morph.Match name="art" className="art" />
+          <span className="meta">
+            <Morph.Match name="title" render={<strong />}>Surface Tension</Morph.Match>
+            <span>Lumen — Neon Tides</span>
+          </span>
+          <div className="controls">
+            <button className="icon" type="button" aria-label="Previous"><PreviousIcon /></button>
+            <button className="icon" type="button" aria-label="Play">
+              <Morph.Match name="play" render={<PlayIcon />} />
+            </button>
+            <button className="icon" type="button" aria-label="Next"><NextIcon /></button>
+          </div>
+        </Morph.State>
+      </Morph.Root>
+    </div>
+  );
+}
 ```
 
 </Fragment>
@@ -629,7 +986,7 @@ document.addEventListener("keydown", (e) => {
   margin: 0 auto;
 }
 
-/* The two not shown: hidden, and above the shape */
+/* Hidden at first, and above the shape */
 #bar,
 #card {
   z-index: 2;
@@ -702,25 +1059,25 @@ document.addEventListener("keydown", (e) => {
 </Fragment>
 </Example>
 
-Each flight is between two states, the smaller riding as a copy and the bigger flying itself. Sent back mid-way, it turns around; sent to the third, it starts over from where the shape is.
+If you switch back mid-way, the morph reverses smoothly. If you switch to a third state mid-way, it continues from where the shape currently is.
 
 </Section>
 
-<Section id="options" title="Options">
+<Section id="options" title="Options" only="js">
 
 `createMorph(options: MorphOptions): Morph`
 
-| Option | Meaning |
+| Option | Description |
 | --- | --- |
-| `states: HTMLElement[]` | The elements it flows between, each with a parent in the DOM, laid out where it is at rest |
-| `initial?: HTMLElement` | The one shown at the start; the first state by default |
-| `container?: HTMLElement` | Where to put the shape instead of next to the smaller state. Use it when that state's parent has `overflow: hidden` |
-| `spring?: { grow?, shrink? }` | Springs for flowing into a bigger box and into a smaller one; anything left out uses `defaultMorphSprings` |
-| `onStart?: (to, from) => void` | Called when a flight sets off, including when it turns around or heads elsewhere mid-way |
-| `onRest?: (at) => void` | Called when it comes to rest as a state |
-| `onProgress?: (progress, to, from) => void` | Called every frame of a flight with how far along it is toward `to`, from `0` to `1`. `from` is `null` when it started over mid-way. Turned around, `to` is the other end. Swapped at once, it's called once with `1` |
+| `states: HTMLElement[]` | The state elements. Each must be in the DOM, laid out where it should appear |
+| `initial?: HTMLElement` | The state shown first. Default: the first one |
+| `container?: HTMLElement` | Where to put the shape while it animates. Use it when a state's parent has `overflow: hidden` and would clip the shape. Default: next to the smaller state |
+| `spring?: { grow?, shrink? }` | Springs for growing into a larger state and shrinking into a smaller one. Default: `defaultMorphSprings` |
+| `onStart?: (to, from) => void` | Called when an animation starts, including when it reverses or changes target mid-way |
+| `onRest?: (at) => void` | Called when the animation finishes |
+| `onProgress?: (progress, to, from) => void` | Called every frame with progress toward `to`, from `0` to `1`. `from` is `null` if the animation was redirected mid-way. Called once with `1` when the switch is instant |
 
-Each direction has five channels: `x` and `y` move the center, `width` and `height` change the size, and `progress` drives the corners, the contents and shared elements. Pass only the channels you change; `defaultMorphSprings` is exported as a starting point. A spring is `{ duration, bounce, settle? }`: `duration` in seconds, `bounce` from `0` (no overshoot) to `1`, and `settle` the bounce after the first overshoot, `bounce` by default. Shrinking from rest, the shape holds a beat while the contents go first.
+Each direction has five spring channels: `x` and `y` for the position, `width` and `height` for the size, and `progress` for corners, content and shared elements. Pass only the ones you want to change. A spring is `{ duration, bounce, settle? }`: `duration` in seconds, `bounce` from `0` (no overshoot) to `1`, and `settle`, the bounce after the first overshoot (default: same as `bounce`).
 
 ```ts
 const morph = createMorph({
@@ -731,7 +1088,7 @@ const morph = createMorph({
 });
 ```
 
-`onProgress` moves something of the page with the flight, on the same spring: a scrim behind the panel, a chevron.
+Use `onProgress` to animate something else in sync, like a backdrop or a chevron:
 
 ```ts
 const morph = createMorph({
@@ -745,59 +1102,145 @@ const morph = createMorph({
 
 </Section>
 
-<Section id="api" title="API">
+<Section id="api" title="API" only="js">
 
-| Member | Meaning |
+| Member | Description |
 | --- | --- |
-| `current` | The state asked for; changes immediately |
-| `moving` | Whether a flight is under way |
-| `to(state, move?)` | A `Promise<boolean>`: `true` once it rests there, `false` if it was sent elsewhere or destroyed first. `{ instant: true }` swaps at once, as with reduced motion |
-| `update()` | Measures the states again and follows them mid-flight |
-| `add(state)` | Takes one more element as a state, hidden until it's asked for: an item added to a list later |
-| `remove(state)` | Lets go of a state and gives its inline styles back, before it leaves the page. Not the current one; one end of a flight under way lands it at once |
-| `set(settings)` | Takes new `spring`, `onStart`, `onRest` or `onProgress`, the rest kept: a component's props as they change, without a morph made again. New springs take the next flight |
-| `destroy()` | Stops the flight, removes the shape and gives every state its own inline styles back. Later calls do nothing |
+| `current` | The target state. Changes as soon as you call `to()` |
+| `moving` | `true` while animating |
+| `to(state, move?)` | Animates to `state`. Returns a `Promise<boolean>`: `true` when it arrives, `false` if it was redirected or destroyed first. Pass `{ instant: true }` to switch without animation |
+| `update()` | Re-measures the states. Call it if something moves a state while it animates |
+| `add(state)` | Adds a state, hidden until you switch to it. Useful for list items added later |
+| `remove(state)` | Removes a state and restores its inline styles. Call it before removing the element from the page. You can't remove the current state |
+| `set(settings)` | Updates `spring`, `onStart`, `onRest` or `onProgress` without recreating the morph. New springs apply from the next animation |
+| `destroy()` | Stops the animation, removes the shape and restores every state's inline styles |
 
-Sent back mid-way, it turns around keeping its speed. Sent to a third state mid-way, it starts over from where the shape is. During a flight it follows scrolling, window resizes and a state's own size changes (contents loaded on the way) by itself; call `update()` after anything else moves a state. `destroy()` doesn't remove your own event listeners.
+The morph follows scrolling, window resizes and size changes of the states on its own. `destroy()` doesn't remove event listeners you added.
 
 </Section>
 
-<Section id="layout" title="Layout">
+<Section id="parts" title="Parts" only="react">
+
+| Part | Renders | Description |
+| --- | --- | --- |
+| `Morph.Root` | nothing | Holds the props below and connects the parts inside it |
+| `Morph.State` | `div` | A state with a `value`. Has `data-current` while it's the target |
+| `Morph.Trigger` | `button` | Switches to its `value` on click. `instant` skips the animation. Call `event.preventDefault()` in your own `onClick` to cancel |
+| `Morph.Match` | `span` | A shared element: moves to the `Morph.Match` with the same `name` in the other state. No `name`, no match |
+
+`Morph.Root` props:
+
+| Prop | Description |
+| --- | --- |
+| `value?: string` | The current state, for controlled use |
+| `defaultValue?: string` | The initial state, for uncontrolled use. Default: the first state rendered |
+| `onValueChange?: (value) => void` | Called when a trigger or `to()` asks for another state |
+| `onStart?: (to, from) => void` | Called when an animation starts, including when it reverses or changes target mid-way |
+| `onRest?: (at) => void` | Called when the animation finishes |
+| `onProgress?: (progress, to, from) => void` | Called every frame with progress toward `to`, from `0` to `1`. `from` is `null` if the animation was redirected mid-way |
+| `spring?: { grow?, shrink? }` | Springs for growing and shrinking, per channel (`x`, `y`, `width`, `height`, `progress`). Default: `defaultMorphSprings`. See [core](/core#spring) |
+| `container?: HTMLElement \| RefObject` | Where to put the shape while it animates, if a parent with `overflow: hidden` would clip it |
+
+**Controlled.** Pass `value` and `onValueChange` to keep the state in your component. Triggers then only call `onValueChange`. The animation starts after the new value renders, so anything the same click changed (a label, a match) is already in place.
+
+```tsx
+const [value, setValue] = useState("button");
+<Morph.Root value={value} onValueChange={setValue}>…</Morph.Root>
+```
+
+**Adding and removing states.** States rendered later, like new list items, are picked up automatically. Removed states are released and get their styles back. Changing props never recreates the morph.
+
+</Section>
+
+<Section id="composition" title="Composition" only="react">
+
+**Render as your own element.** Every part accepts `render`, as in Base UI: pass an element and our props are merged into it, or pass a function that receives the props and state. To make a state a trigger, render it as one:
+
+```tsx
+<Morph.State value="button" render={<Morph.Trigger value="panel" />}>More</Morph.State>
+<Morph.State value="panel" render={(props, { current }) => <dialog {...props} open={current} />} />
+```
+
+**Glass.** Make a state glass with `className="lb"`, or render it as [`Glass`](/blur#components). Inside a [`Glass.Group`](/blur#groups), the shape merges with neighboring glass as it moves.
+
+```tsx
+import { Glass } from "@fluidkit/blur/react";
+
+<Glass.Group className="toolbar">
+  <Glass interactive render={<button aria-label="Back" />}><BackIcon /></Glass>
+  <Morph.State value="button" render={<Glass interactive render={<Morph.Trigger value="panel" />} />}>
+    <ShareIcon />
+  </Morph.State>
+</Glass.Group>
+```
+
+**Shared elements.** `Morph.Match` can also render as your own element (`render={<svg … />}`). Give the `name` to whichever element is shared right now, as the sort menu above does with the selected option.
+
+**Accessibility.** `aria-expanded`, Escape and focus are up to you. Use `value` to know the current state, and `onStart` / `onRest` to know when an animation starts and ends.
+
+</Section>
+
+<Section id="hook" title="The hook" only="react">
+
+Use `useMorph(options)` when the parts don't fit your markup. It takes the same options as `Morph.Root` and returns a ref for each state.
+
+```tsx
+import { useMorph } from "@fluidkit/morph/react";
+
+const morph = useMorph({ defaultValue: "button" });
+
+<button ref={morph.state("button")} className="lb" onClick={() => morph.to("panel")}>More</button>
+<div ref={morph.state("panel")} className="lb panel">
+  <button onClick={() => morph.to("button")}>Close</button>
+</div>
+```
+
+| Member | Description |
+| --- | --- |
+| `state(value)` | Ref for the state with this value. Stable between renders |
+| `value` | The current state |
+| `moving` | `true` while animating |
+| `to(value, move?)` | Switches to a state. Returns a `Promise<boolean>`: `true` when it arrives, `false` if it was redirected first. `{ instant: true }` skips the animation |
+| `morph` | The underlying engine, once a state is mounted |
+
+</Section>
+
+<Section id="layout" title="How it works">
 
 <Rows>
 <Row>
-<Cell title="The bigger state">
+<Cell title="The larger state">
 
-Flies itself, either way: the real element, moved through its inline `transform`, `opacity`, `filter` and `clip-path` alone, so its text never reflows and it stays live (pressed, typed into, playing). Don't transition those. Its own translation, such as `translate: -50% -50%` for centering, is kept. Its surface steps aside for the shape meanwhile, so it has to be above it (`z-index: 2`).
+The real element animates, using only its inline `transform`, `opacity`, `filter` and `clip-path`. Its text doesn't reflow, and it stays interactive while it moves. Don't put transitions on those properties. A translation of your own, like `translate: -50% -50%`, is kept. It must sit above the shape (`z-index: 2`).
 
 </Cell>
 <Cell title="The smaller state">
 
-Rides in the shape as a copy, taken as it is when the shape sets off or turns around, staying where it is and fading as the shape leaves it. The copy keeps its classes and attributes, so style states with them: selectors through the state's parent don't reach it.
+A snapshot of it rides inside the shape and fades out. The snapshot keeps the element's classes and attributes, but not its parents, so don't style states through parent selectors.
 
 </Cell>
 </Row>
 <Row>
 <Cell title="Surfaces">
 
-The shape is the bigger state's surface the whole way. Where the smaller one's is another as drawn (fill, border, shadow, backdrop, pseudo-elements), it lies over it and fades as the shape grows: a solid control dissolves into glass, a tint into none.
+The shape uses the larger state's background, border and shadow. If the smaller state looks different, its look fades out as the shape grows: a solid button dissolves into glass.
 
 </Cell>
-<Cell title="The corners">
+<Cell title="Corners">
 
-Each corner animates from one state's radius to the other's and stays circular, so a sheet rounded only on top stays square below. Percentages resolve against the box; an elliptical corner uses the smaller of its two radii. Where `corner-shape` is supported, the shape animates too.
+Each corner animates from one state's radius to the other's. A panel rounded only at the top stays square at the bottom. Where `corner-shape` is supported, it animates too.
 
 </Cell>
 </Row>
 <Row>
 <Cell title="Hidden states">
 
-A state not shown is hidden (`opacity: 0`, `visibility: hidden`, with `data-fk-away`) and takes no presses. One that holds focus as it goes keeps it: it's only made transparent, so a control's `aria-expanded` is still announced. Pressing the shape on its way presses the smallest state under it, so a button can be pressed again before the shape is home.
+Hidden states get `opacity: 0`, `visibility: hidden` and `data-fk-away`, and ignore clicks. A state that has focus when it hides stays focusable, so screen readers still announce it. Clicking the moving shape clicks the state underneath, so a button can be pressed again before the animation ends.
 
 </Cell>
 <Cell title="Mounting">
 
-Can be imported on the server. Create the morph in the browser after mounting or hydration, and call `destroy()` on unmount. The shape is added next to the smaller state only while it flies, so `:last-child` and similar selectors still match at rest. With reduced motion, the states swap instantly.
+Safe to import on the server. Create the morph in the browser after mount, and call `destroy()` on unmount. The shape exists only while animating, so selectors like `:last-child` work as usual. With reduced motion, states switch instantly.
 
 </Cell>
 </Row>
@@ -807,7 +1250,7 @@ Can be imported on the server. Create the morph in the browser after mounting or
 
 <Section id="top-layer" title="Dialogs and popovers">
 
-A state can be a `<dialog>` or a popover. Open it before the morph goes to it, so it's laid out and can be measured, and close it once the morph has come back:
+A state can be a `<dialog>` or a popover. Open it before switching to it, so it can be measured, and close it after switching back:
 
 ```ts
 const morph = createMorph({ states: [button, dialog] });
@@ -817,12 +1260,12 @@ button.addEventListener("click", () => {
   morph.to(dialog);
 });
 close.addEventListener("click", async () => {
-  // `false` if it was sent elsewhere on the way: then it stays open
+  // `false` if it was redirected on the way; then keep it open
   if (await morph.to(button)) dialog.close();
 });
 ```
 
-A modal dialog and a popover are drawn in the top layer, above everything else on the page, the shape included: the state flies itself up there, while the shape goes under it, and under a modal's backdrop too. Fade the backdrop in with the flight, so the shape isn't dimmed before the dialog is there:
+Dialogs and popovers render in the top layer, above everything else, including the shape. Fade the backdrop in with the animation so the shape isn't dimmed early:
 
 ```ts
 const morph = createMorph({
@@ -837,79 +1280,37 @@ const morph = createMorph({
 dialog::backdrop { opacity: var(--open, 1); }
 ```
 
-A popover with `popover="auto"` closes on any press outside it, a press on the shape on its way included. Use `popover="manual"` and close it yourself, as a morph's state.
+<Only react>
+
+In React, open the dialog in the trigger's `onClick`, before switching, and close it when `to()` resolves:
+
+```tsx
+import { useMergedRefs } from "@fluidkit/core/react";
+
+const morph = useMorph({ defaultValue: "button" });
+const dialog = useRef<HTMLDialogElement>(null);
+const dialogRef = useMergedRefs(dialog, morph.state("dialog"));
+
+<button ref={morph.state("button")} onClick={() => { dialog.current!.showModal(); morph.to("dialog"); }}>Open</button>
+<dialog ref={dialogRef}>
+  <button onClick={async () => (await morph.to("button")) && dialog.current!.close()}>Close</button>
+</dialog>
+```
+
+</Only>
+
+A popover with `popover="auto"` closes on any click outside it, including on the moving shape. Use `popover="manual"` and close it yourself.
 
 </Section>
 
 <Section id="glass" title="With Liquid Blur">
 
-Inside a Liquid Blur [glass group](/blur#groups), the shape is placed by the state in the group, and the behavior depends on where the other one is:
+When a state is inside a Liquid Blur [glass group](/blur#groups), the behavior depends on where the other state is:
 
-- **Beside the neighbors:** the shape stays in the group and merges with the neighboring glass as it moves.
-- **Over a neighbor:** the shape leaves the group and flies as separate glass above it (`z-index: 1`). A stub stays in the state's place and shrinks away, so the connection to the neighbors fades out gradually.
+- **Next to the other buttons:** the shape stays in the group and merges with the neighboring glass as it moves.
+- **On top of them:** the shape leaves the group and animates as separate glass above it (`z-index: 1`). The gap it leaves in the group closes smoothly.
 
-In a group the shape wears the bigger state's classes, as the group needs to melt it, so surfaces don't dissolve into each other there. The two packages don't import each other; they coordinate through attributes in the DOM.
-
-If a parent clips with `overflow: hidden`, the shape would be cut off. Pass a `container` and it's placed there instead. It then inherits theme and custom properties from the container.
-
-</Section>
-
-<Section id="react" title="React">
-
-A small hook creates the morph on mount and destroys it on unmount. Keep the panel's `visibility: hidden` in CSS, not inline, so a re-render doesn't override the morph.
-
-```tsx
-import { useEffect, useRef, useState } from "react";
-import { createMorph, type Morph, type MorphOptions } from "@fluidkit/morph";
-
-/** A button and its panel; options are read once, on mount */
-export function useMorph(options: Omit<MorphOptions, "states"> = {}) {
-  const button = useRef<HTMLButtonElement>(null);
-  const panel = useRef<HTMLDivElement>(null);
-  const morph = useRef<Morph | null>(null);
-  const [open, setOpen] = useState(false);
-  useEffect(() => {
-    const m = createMorph({
-      ...options,
-      states: [button.current!, panel.current!],
-      onStart(to, from) {
-        setOpen(to === panel.current);
-        options.onStart?.(to, from);
-      },
-    });
-    morph.current = m;
-    return () => m.destroy();
-  }, []);
-  return {
-    button,
-    panel,
-    open,
-    toggle: () => morph.current?.to(open ? button.current! : panel.current!),
-    close: () => morph.current?.to(button.current!),
-  };
-}
-
-export function More() {
-  const morph = useMorph();
-  return (
-    <div className="morph-scene">
-      <button
-        ref={morph.button}
-        className="lb"
-        type="button"
-        aria-controls="panel"
-        aria-expanded={morph.open}
-        onClick={morph.toggle}
-      >
-        More
-      </button>
-      <div ref={morph.panel} id="panel" className="lb" role="menu">
-        <button type="button" onClick={morph.close}>Close</button>
-      </div>
-    </div>
-  );
-}
-```
+If a parent has `overflow: hidden`, the shape would be clipped. Pass a `container` to place it elsewhere; it then inherits theme and CSS variables from that container.
 
 </Section>
 
@@ -921,11 +1322,11 @@ Any browser with ES2022 and `clip-path: inset()`. Corner shapes animate where `c
 
 <Section id="limitations" title="Limitations">
 
-- Rotated or scaled ancestors aren't supported, and the bigger state can't have a transform of its own other than a translation.
-- The bigger state comes in magnified, up to 1.45 times its size, and takes that room in the page however it's clipped. So that it doesn't widen the page on its way, the nearest element it's laid out in that spans the page (such as `main`) clips sideways (`overflow-x: clip`) while it flies. Without one below `<body>`, as with states right in the body or a body with side padding, put `overflow-x: clip` on an element around them yourself: on `<body>` it isn't enough, iOS Safari pans to what overflows the body.
-- The smaller state's copy is a snapshot: a video or a field in it doesn't play or update on the way.
-- The bigger state's pseudo-elements stay drawn while its surface steps aside.
-- Corners animate as circular arcs; the corner shape follows the top-left corner.
-- While the shape merges with a glass group, its corners are round.
+- Rotated or scaled ancestors aren't supported. The larger state can't have its own transform other than a translation.
+- The larger state enters scaled up to 1.45×. To keep it from widening the page, the morph sets `overflow-x: clip` on the nearest full-width ancestor (like `main`) while animating. If the states sit directly in `<body>`, wrap them in an element with `overflow-x: clip` yourself; on `<body>` it doesn't help in iOS Safari.
+- The smaller state is a snapshot: video and inputs inside it don't update during the animation.
+- The larger state's `::before` and `::after` stay visible while it animates.
+- Corners animate as circular arcs. Only the top-left `corner-shape` is used.
+- While merging with a glass group, corners are round.
 
 </Section>

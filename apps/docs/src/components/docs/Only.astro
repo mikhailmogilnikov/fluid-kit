@@ -1,0 +1,14 @@
+---
+/**
+ * Docs for one framework: shown only with it chosen. `<Only react>…</Only>` for React,
+ * `<Only js>…</Only>` for plain JavaScript; Markdown inside works as anywhere
+ */
+interface Props {
+  js?: boolean;
+  react?: boolean;
+}
+
+const { react = false } = Astro.props;
+---
+
+<div class="only" data-only={react ? "react" : "js"}><slot /></div>

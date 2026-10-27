@@ -1,8 +1,9 @@
 # Fluid Kit
 
-A family of small, framework-agnostic libraries for fluid interfaces on the web. Each package works
-on its own, on plain DOM; where two meet, they read attributes the other sets (`data-fk-*`, see
-[the contract](https://fluidkit.mogilnikov.dev/core#contract)) instead of importing each other.
+A family of small libraries for fluid interfaces on the web, for plain JavaScript or React. Each
+package works on its own. When two are used together, they coordinate through DOM attributes
+(`data-fk-*`, see [the contract](https://fluidkit.mogilnikov.dev/core#contract)) instead of
+importing each other.
 
 **[Documentation](https://fluidkit.mogilnikov.dev)**
 
@@ -10,12 +11,12 @@ on its own, on plain DOM; where two meet, they read attributes the other sets (`
 
 | Package | What |
 | --- | --- |
-| [`@fluidkit/blur`](packages/blur/README.md) | A glass material: backdrop blur, fill, rims, press behaviors, glass that melts between shapes |
-| [`@fluidkit/morph`](packages/morph/README.md) | One element flows into another and back, on interruptible springs; any element |
-| [`@fluidkit/indicator`](packages/indicator/README.md) | One element flies onto whatever is hovered, pressed or chosen: menus, tabs, segmented controls |
-| [`@fluidkit/drag`](packages/drag/README.md) | Drag with rubber-band edges, let go onto the snap point a flick reaches: sheets, swipe actions, switches |
-| [`@fluidkit/lift`](packages/lift/README.md) | A long press lifts anything above the page and opens your menu beside it, as iOS's context menus |
-| [`@fluidkit/core`](packages/core/README.md) | What they share: the spring, boxes as the browser draws them, and the DOM contract |
+| [`@fluidkit/blur`](packages/blur/README.md) | A glass material: backdrop blur, fill, rims, press effects, glass that merges between shapes |
+| [`@fluidkit/morph`](packages/morph/README.md) | Animates one element into another and back, on interruptible springs |
+| [`@fluidkit/indicator`](packages/indicator/README.md) | One element that moves to whatever is hovered, pressed or selected: menus, tabs, segmented controls |
+| [`@fluidkit/drag`](packages/drag/README.md) | Drag with rubber-band edges and flick-aware snap points: sheets, swipe actions, switches |
+| [`@fluidkit/lift`](packages/lift/README.md) | Long-press to lift anything above the page and open your menu, like iOS context menus |
+| [`@fluidkit/core`](packages/core/README.md) | Shared pieces: the spring, element measurement, and the DOM contract |
 
 `apps/docs` is the docs site: one page per package, written in MDX in
 `apps/docs/src/content/docs/`, with live demos.

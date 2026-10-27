@@ -7,6 +7,7 @@ import Fence from "../components/docs/Fence.astro";
 import Icon from "../components/Icon.astro";
 import Playground from "../components/Playground.astro";
 import MorphDemo from "../components/MorphDemo.astro";
+import FrameworkSwitch from "../components/docs/FrameworkSwitch.astro";
 
 /** A package's documentation, from `src/content/docs/<package>.mdx` */
 export async function getStaticPaths() {
@@ -28,7 +29,8 @@ const play = (
 /** The contents, from the page's own sections */
 const toc = [...(page.body ?? "").matchAll(/<Section\s([^>]*)>/g)].map(([, attrs]) => {
   const attr = (name: string) => new RegExp(`\\b${name}="([^"]*)"`).exec(attrs)?.[1];
-  return [attr("id")!, attr("title")!] as const;
+  // A section for one framework: its link shows with it, as the section does
+  return [attr("id")!, attr("title")!, attr("only")] as const;
 });
 ---
 
@@ -43,6 +45,7 @@ const toc = [...(page.body ?? "").matchAll(/<Section\s([^>]*)>/g)].map(([, attrs
         <span class="rise">{page.data.name}</span>
       </h1>
       <p class="docs-head__lead rise" style="--i: 1" set:html={page.data.intro} />
+      <div class="rise" style="--i: 1"><FrameworkSwitch note={page.data.react} /></div>
     </section>
 
     {
@@ -55,9 +58,16 @@ const toc = [...(page.body ?? "").matchAll(/<Section\s([^>]*)>/g)].map(([, attrs
 
     <div class="docs">
       <aside class="toc" aria-label="On this page" data-toc>
+        <FrameworkSwitch place="toc" />
         <span class="toc__title">On this page</span>
         <span class="toc__mark" aria-hidden="true" data-toc-mark></span>
-        {toc.map(([id, label]) => <a href={`#${id}`}>{label}</a>)}
+        {
+          toc.map(([id, label, only]) => (
+            <a href={`#${id}`} data-only={only}>
+              {label}
+            </a>
+          ))
+        }
       </aside>
 
       <!-- Narrower screens: the same contents, folded, under the nav -->
@@ -68,7 +78,14 @@ const toc = [...(page.body ?? "").matchAll(/<Section\s([^>]*)>/g)].map(([, attrs
           <Icon name="plus" size={18} />
         </summary>
         <nav aria-label="On this page">
-          {toc.map(([id, label]) => <a href={`#${id}`}>{label}</a>)}
+          <FrameworkSwitch place="fold" />
+          {
+            toc.map(([id, label, only]) => (
+              <a href={`#${id}`} data-only={only}>
+                {label}
+              </a>
+            ))
+          }
         </nav>
       </details>
 

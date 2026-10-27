@@ -1,10 +1,9 @@
 # @fluidkit/indicator
 
-One element that flies onto whichever item is hovered, pressed, focused or chosen: the highlight
-of a menu, the thumb of tabs, the pill of a segmented control. The items stay where they are;
-only the indicator moves, its center, size and corners on springs that keep their speed when sent
-elsewhere, blurred by its own speed on the way, as iOS does. Works on any element; with
-[`@fluidkit/blur`](https://fluidkit.mogilnikov.dev/blur) it can be glass.
+One element that moves to whichever item is hovered, pressed, focused or selected: a menu
+highlight, a tab thumb, a segmented control's pill. The items stay put; only the indicator moves,
+on springs that keep their speed when redirected, with a slight motion blur like in iOS. Works with
+any element, and with [`@fluidkit/blur`](https://fluidkit.mogilnikov.dev/blur) glass.
 
 **[Documentation](https://fluidkit.mogilnikov.dev/indicator)** · [Changelog](CHANGELOG.md) · Part of
 [Fluid Kit](https://fluidkit.mogilnikov.dev)
@@ -13,7 +12,7 @@ elsewhere, blurred by its own speed on the way, as iOS does. Works on any elemen
 npm install @fluidkit/indicator
 ```
 
-Put the indicator in the container, positioned and under the items:
+Add the indicator to the container, absolutely positioned and behind the items:
 
 ```html
 <div class="menu" role="menu">
@@ -39,16 +38,15 @@ createIndicator({
 });
 ```
 
-It follows a hovering mouse or pen, and a pressing finger across items (released over another
-item, that one is clicked). Over a separator it stays on the last item, then crosses in a few
-frames. For a chosen item, such as a tab, set `rest`; for full control, `trigger: "manual"` and
-`to()`. Options, the API and the layout rules are in the
-[documentation](https://fluidkit.mogilnikov.dev/indicator).
+It follows the mouse or pen on hover, and a finger pressing across items (releasing on another
+item clicks it). For a selected item, like a tab, set `rest`; for full control, use
+`trigger: "manual"` and `to()`. See the [documentation](https://fluidkit.mogilnikov.dev/indicator)
+for options and the API.
 
 ## React
 
-From `@fluidkit/indicator/react`: components made of parts, each rendered as an element of yours
-with `render`, and `useIndicator()` for markup of your own.
+`@fluidkit/indicator/react` has components (each part can render as your own element with
+`render`) and a `useIndicator()` hook for custom markup.
 
 ```tsx
 import { Indicator } from "@fluidkit/indicator/react";
@@ -60,7 +58,7 @@ import { Indicator } from "@fluidkit/indicator/react";
 </Indicator.Root>
 ```
 
-More in the [documentation](https://fluidkit.mogilnikov.dev/indicator#react).
+More in the [documentation](https://fluidkit.mogilnikov.dev/indicator?framework=react#parts).
 
 ## License
 

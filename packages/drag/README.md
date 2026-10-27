@@ -1,10 +1,9 @@
 # @fluidkit/drag
 
-One element dragged by a pointer, along one axis or both, as iOS drags its sheets, the rows of a
-list swiped open and the thumb of a switch. Past its bounds it pulls back like rubber; let go, it
-heads for the snap point nearest to where a flick would have carried it, on a spring that starts at
-the finger's own speed. Caught on its way, it stops under the finger. Works on any element; with
-[`@fluidkit/blur`](https://fluidkit.mogilnikov.dev/blur) it can be glass.
+Drag an element along one axis or both, like iOS sheets, swipeable rows and switch thumbs. It
+stretches like rubber past its bounds. On release, it springs to the snap point the flick points to,
+starting at the finger's speed. Grab it mid-motion and it stops under your finger. Works with any
+element, and with [`@fluidkit/blur`](https://fluidkit.mogilnikov.dev/blur) glass.
 
 **[Documentation](https://fluidkit.mogilnikov.dev/drag)** · [Changelog](CHANGELOG.md) · Part of
 [Fluid Kit](https://fluidkit.mogilnikov.dev)
@@ -13,7 +12,7 @@ the finger's own speed. Caught on its way, it stops under the finger. Works on a
 npm install @fluidkit/drag
 ```
 
-Lay the element out where it rests at offset 0; snap points are offsets from there, in pixels:
+Lay out the element at its starting position. Snap points are pixel offsets from there:
 
 ```js
 import { createDrag } from "@fluidkit/drag";
@@ -21,18 +20,33 @@ import { createDrag } from "@fluidkit/drag";
 createDrag({
   element: document.querySelector(".sheet"),
   axis: "y",
-  // Open, half way, and down to its title; read again on a resize
+  // Open, half way, collapsed to the title. Recomputed on resize
   snaps: () => [0, innerHeight / 2, innerHeight - 88],
   initial: 1,
 });
 ```
 
-It moves the element with its inline `translate` alone, so `transform` and `scale` stay yours. On
-touch the browser keeps the other axis (a list still scrolls past a row that swipes sideways), and
-the click a drag would end in is dropped. A sheet's list given as `scroll` shares one gesture with
-the sheet, as in iOS: the sheet opens before the list scrolls, and the list scrolls back to its
-start before the sheet goes down. Options, the API and how a snap point is chosen are in the
-[documentation](https://fluidkit.mogilnikov.dev/drag).
+It only writes the element's inline `translate`, so `transform` and `scale` stay free. On touch,
+the other axis is left to the browser, so a list still scrolls past rows that swipe sideways. Pass a
+sheet's list as `scroll` and one gesture can move the sheet and scroll the list, like in iOS. See
+the [documentation](https://fluidkit.mogilnikov.dev/drag) for options, the API and how snap points
+are picked.
+
+## React
+
+`@fluidkit/drag/react` has components (each part can render as your own element with
+`render`) and a `useDrag()` hook for custom markup.
+
+```tsx
+import { Drag } from "@fluidkit/drag/react";
+
+<Drag.Root axis="y" snaps={({ height }) => [0, height / 2, height - 76]} snap={snap} onSnapChange={setSnap}>
+  <Drag.Handle className="grabber" />
+  <Drag.Scroll render={<ul />}>{rows}</Drag.Scroll>
+</Drag.Root>
+```
+
+More in the [documentation](https://fluidkit.mogilnikov.dev/drag?framework=react#parts).
 
 ## License
 

@@ -1,9 +1,9 @@
 # @fluidkit/core
 
-What the [Fluid Kit](https://fluidkit.mogilnikov.dev) packages share: an interruptible,
-velocity-keeping spring every moving part runs on, boxes read as the browser draws them, and the
-DOM attributes they meet by. You get it with `@fluidkit/blur`, `@fluidkit/morph`,
-`@fluidkit/indicator`, `@fluidkit/drag` or `@fluidkit/lift`; install it on its own for the spring.
+Shared building blocks of the [Fluid Kit](https://fluidkit.mogilnikov.dev) packages: an
+interruptible spring that keeps its velocity, element measurement, and the DOM attributes the
+packages use to work together. It comes with every other package; install it on its own if you only
+need the spring.
 
 **[Documentation](https://fluidkit.mogilnikov.dev/core)** · [Changelog](CHANGELOG.md)
 

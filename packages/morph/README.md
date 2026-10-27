@@ -1,10 +1,9 @@
 # @fluidkit/morph
 
-One element flows into another and back: one shape the whole way, its center, size and corners on
-springs you can turn around mid-way. The bigger state flies itself, live, coming in magnified and
-out of focus and settling sharp; the smaller one rides along as a copy, and elements they share fly
-from one to the other. It works on any element; with
-[`@fluidkit/blur`](https://fluidkit.mogilnikov.dev/blur) it's the same glass.
+Animate one element into another and back with a single continuous shape. Position, size and
+corners run on springs you can reverse at any point, and elements shared by both states move from
+one to the other. Works with any element, and with
+[`@fluidkit/blur`](https://fluidkit.mogilnikov.dev/blur) glass.
 
 **[Documentation](https://fluidkit.mogilnikov.dev/morph)** · [Changelog](CHANGELOG.md) · Part of
 [Fluid Kit](https://fluidkit.mogilnikov.dev)
@@ -13,7 +12,7 @@ from one to the other. It works on any element; with
 npm install @fluidkit/morph
 ```
 
-Lay out both states where they are at rest, the hidden one with `visibility: hidden`, then:
+Lay out both states where they should appear, hide the panel with `visibility: hidden`, then:
 
 ```js
 import { createMorph } from "@fluidkit/morph";
@@ -22,8 +21,28 @@ const morph = createMorph({ states: [button, panel] });
 button.addEventListener("click", () => morph.to(morph.current === panel ? button : panel));
 ```
 
-Options, the returned morph, layout rules, shared elements, glass groups, a React hook and the
-limitations are in the [documentation](https://fluidkit.mogilnikov.dev/morph).
+See the [documentation](https://fluidkit.mogilnikov.dev/morph) for options, the API, shared
+elements, glass groups and limitations.
+
+## React
+
+`@fluidkit/morph/react` has components (each part can render as your own element with
+`render`) and a `useMorph()` hook for custom markup.
+
+```tsx
+import { Morph } from "@fluidkit/morph/react";
+
+<Morph.Root>
+  <Morph.State value="button" className="lb" render={<Morph.Trigger value="panel" />}>
+    More
+  </Morph.State>
+  <Morph.State value="panel" className="lb panel">
+    <Morph.Trigger value="button">Close</Morph.Trigger>
+  </Morph.State>
+</Morph.Root>
+```
+
+More in the [documentation](https://fluidkit.mogilnikov.dev/morph?framework=react#parts).
 
 ## License
 

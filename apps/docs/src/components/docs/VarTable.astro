@@ -6,7 +6,7 @@ const vars = [
     items: [
       ["--lb-transparency", "0.5", "0 is opaque, 1 is clear. Moves fill and blur together. Registered, so it transitions."],
       ["--lb-depth", "0.5", "0 is flat, 1 is pronounced. Moves shading, glow and rims."],
-      ["--lb-lens", "0", "0 is glass, 1 is a lens, as lb-lens: no blur. Registered, so it transitions."],
+      ["--lb-lens", "0", "0 is glass, 1 is a lens without blur, like lb-lens. Registered, so it transitions."],
       ["--lb-dark", "per theme", "0 is light, 1 is dark. Follows the system and data-theme."],
     ],
   },
@@ -15,7 +15,7 @@ const vars = [
     items: [
       ["--lb-fill-light", "#ffffff", "Fill in the light theme."],
       ["--lb-fill-dark", "#3a3a3a", "Fill in the dark theme."],
-      ["--lb-fill", "unset", "One fill for both themes; wins over the two above."],
+      ["--lb-fill", "unset", "One fill for both themes. Overrides the two above."],
       ["--lb-text-light", "#000000", "Text in the light theme."],
       ["--lb-text-dark", "#ffffff", "Text in the dark theme."],
       ["--lb-text", "unset", "One text color for both themes."],
@@ -28,14 +28,14 @@ const vars = [
   {
     group: "Behavior",
     items: [
-      ["--lb-highlight-size", "1", "Reach of the press highlight, as a multiplier. It already follows the element's size."],
-      ["--lb-swell", "1.1", "Pressed scale at button size. Smaller glass grows more, bigger less."],
-      ["--lb-stretch", "2", "Stretch strength; 0 turns it off."],
-      ["--lb-edge-size", "28px", "How far a scroll edge (lb-edge, lb-edge-x) fades."],
-      ["--lb-edge-start", "--lb-edge-size", "The same for the top or left; 0px turns that edge off."],
-      ["--lb-edge-end", "--lb-edge-size", "The same for the bottom or right; 0px turns that edge off."],
-      ["--lb-edge-strength", "1", "How transparent the content gets at a scroll edge: 1 is all the way."],
-      ["--lb-stretch-axis", "both", "Which way it stretches: x, y or both. x for a switch's thumb that stays in its track."],
+      ["--lb-highlight-size", "1", "Size of the press highlight, as a multiplier. It already scales with the element."],
+      ["--lb-swell", "1.1", "Scale while pressed, at button size. Smaller glass grows more, larger less."],
+      ["--lb-stretch", "2", "Stretch strength. 0 turns it off."],
+      ["--lb-edge-size", "28px", "Length of the scroll edge fade (lb-edge, lb-edge-x)."],
+      ["--lb-edge-start", "--lb-edge-size", "The same for the top or left. 0px turns that edge off."],
+      ["--lb-edge-end", "--lb-edge-size", "The same for the bottom or right. 0px turns that edge off."],
+      ["--lb-edge-strength", "1", "How transparent content gets at a scroll edge. 1 is fully."],
+      ["--lb-stretch-axis", "both", "Stretch direction: x, y or both. Use x for a switch thumb that stays in its track."],
     ],
   },
 ];

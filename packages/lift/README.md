@@ -1,9 +1,9 @@
 # @fluidkit/lift
 
-A long press, a right click or the menu key lifts any element above everything, the page dimmed and
-blurred behind it, and opens your menu beside it: iOS's context menu, for the web. The same finger
-can slide onto an item and let go to choose it. A copy of the element lifts, dressed as it's drawn,
-in a modal `<dialog>` over any `overflow`, `z-index` and transform; the element keeps its place.
+Long-press, right-click or press the menu key to lift any element above the page, with the
+background dimmed and blurred, and open your menu next to it. The iOS context menu, for the web. The
+same finger can slide onto an item to pick it. A copy of the element is lifted in a modal `<dialog>`,
+above any `overflow`, `z-index` or transform; the original stays in place.
 
 **[Documentation](https://fluidkit.mogilnikov.dev/lift)** · [Changelog](CHANGELOG.md) · Part of
 [Fluid Kit](https://fluidkit.mogilnikov.dev)
@@ -31,13 +31,13 @@ createLift({
 });
 ```
 
-The menu is yours: Lift places it under the element (or over it), opens it and closes it. Options,
-the API and how it works are in the [documentation](https://fluidkit.mogilnikov.dev/lift).
+You write the menu; Lift positions it below (or above) the element, opens and closes it. See the
+[documentation](https://fluidkit.mogilnikov.dev/lift) for options and the API.
 
 ## React
 
-From `@fluidkit/lift/react`: components made of parts, each rendered as an element of yours with
-`render`, and `useLift()` for markup of your own.
+`@fluidkit/lift/react` has components (each part can render as your own element with
+`render`) and a `useLift()` hook for custom markup.
 
 ```tsx
 import { Lift } from "@fluidkit/lift/react";
@@ -51,7 +51,7 @@ import { Lift } from "@fluidkit/lift/react";
 </Lift.Root>
 ```
 
-More in the [documentation](https://fluidkit.mogilnikov.dev/lift#react).
+More in the [documentation](https://fluidkit.mogilnikov.dev/lift?framework=react#parts).
 
 ## License
 

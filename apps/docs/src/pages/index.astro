@@ -26,8 +26,8 @@ const REPO = "https://github.com/mikhailmogilnikov/fluid-kit";
       <div class="mark mark--hero"><span class="lb"></span></div>
       <p class="lead rise" style="--i: 1">
         <b>Fluid Kit</b> is a family of libraries for fluid interfaces: a glass material in plain CSS,
-        controls that grow into panels of it, highlights that follow the pointer, and sheets you flick.
-        No framework needed.
+        buttons that grow into panels, highlights that follow the pointer, and sheets you can flick.
+        Works with plain JavaScript or React.
       </p>
       <div class="actions rise" style="--i: 2">
         <a class="button button--ink breathe" href="/blur">Get started</a>
@@ -51,7 +51,7 @@ const REPO = "https://github.com/mikhailmogilnikov/fluid-kit";
             <a class="lib__head" href="/blur">
               <b>Liquid Blur</b><code>@fluidkit/blur</code><Icon name="arrow" size={16} />
             </a>
-            <p>A glass material in plain CSS. Press behaviors, and pieces of glass that melt together.</p>
+            <p>A glass material in plain CSS, with press effects and glass that merges together.</p>
           </div>
         </article>
 
@@ -63,7 +63,7 @@ const REPO = "https://github.com/mikhailmogilnikov/fluid-kit";
             <a class="lib__head" href="/morph">
               <b>Morph</b><code>@fluidkit/morph</code><Icon name="arrow" size={16} />
             </a>
-            <p>One element flows into another and back, on springs you can turn around mid-way.</p>
+            <p>Animate one element into another and back, on springs you can reverse mid-way.</p>
           </div>
         </article>
 
@@ -73,7 +73,7 @@ const REPO = "https://github.com/mikhailmogilnikov/fluid-kit";
             <a class="lib__head" href="/indicator">
               <b>Indicator</b><code>@fluidkit/indicator</code><Icon name="arrow" size={16} />
             </a>
-            <p>One element flies onto whatever is hovered, pressed or chosen: menus, tabs, segmented controls.</p>
+            <p>One element that moves to whatever is hovered, pressed or selected: menus, tabs, segmented controls.</p>
           </div>
         </article>
 
@@ -85,31 +85,31 @@ const REPO = "https://github.com/mikhailmogilnikov/fluid-kit";
             <a class="lib__head" href="/drag">
               <b>Drag</b><code>@fluidkit/drag</code><Icon name="arrow" size={16} />
             </a>
-            <p>Drag with rubber-band edges, and let go onto the snap point a flick reaches: sheets, swipes, switches.</p>
+            <p>Drag with rubber-band edges and snap points that respect the flick: sheets, swipes, switches.</p>
           </div>
         </article>
 
         <article class="lib reveal" style="--d: 320ms">
           <LiftExample kind="photos" card>
-            <Hint text="hold it" light style="top: 276px; left: 50%" />
+            <Hint text="hold it" light style="bottom: 30px; left: 50%" />
           </LiftExample>
           <div class="lib__body">
             <a class="lib__head" href="/lift">
               <b>Lift</b><code>@fluidkit/lift</code><Icon name="arrow" size={16} />
             </a>
-            <p>A long press lifts anything above the page, blurred behind it, and opens your menu beside it.</p>
+            <p>Long-press anything to lift it above a blurred page and open your menu next to it.</p>
           </div>
         </article>
 
         <article class="lib reveal" style="--d: 400ms">
           <EdgeExample card>
-            <Hint text="scroll it" light style="top: 266px; left: 50%" />
+            <Hint text="scroll it" light style="bottom: 30px; left: 50%" />
           </EdgeExample>
           <div class="lib__body">
             <a class="lib__head" href="/edge">
               <b>Scroll Edge</b><code>@fluidkit/blur</code><Icon name="arrow" size={16} />
             </a>
-            <p>Content that scrolls fades out toward its edges, as under iOS bars, and only where there's more past them.</p>
+            <p>Scrolling content fades out at its edges, like under iOS bars, only where there's more to scroll.</p>
           </div>
         </article>
       </div>
