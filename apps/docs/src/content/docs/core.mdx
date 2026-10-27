@@ -4,7 +4,7 @@ name: Core
 order: 8
 description: "Shared building blocks of the Fluid Kit packages: an interruptible spring that keeps its velocity, element measurement, and the DOM attributes the packages use to work together."
 intro: "The spring behind every animation, element measurement, and the DOM attributes the packages use to work together."
-frameworks: ["react", "vue"]
+frameworks: ["react", "vue", "svelte"]
 ---
 
 import Section from "../../components/docs/Section.astro";
@@ -168,6 +168,45 @@ const Spinner = defineComponent({
     return () => renderPart("span", { ref, class: "spinner" }, props.asChild, slots, {});
   },
 });
+```
+
+</Section>
+
+<Section id="svelte" title="Svelte" only="svelte">
+
+`@fluidkit/core/svelte` has the helpers the packages' Svelte components are built from. You can use them for your own components on top of an engine.
+
+| Export | Description |
+| --- | --- |
+| `PartProps<State, Attributes>` | A part's props: the element's attributes, `children`, and a `child` snippet that receives `{ props, ...state }`, as in bits-ui |
+| `mergeProps(...props)` | Merges props in order, for a part's `child` snippet: classes and styles joined, handlers both called, attachments all kept |
+| `elementRef()` | An element an attachment hands over: `{@attach ref.attach}`, then `ref.current`, read reactively |
+| `syncSettings(engine, settings, taken)` | After each update that changes them, passes only the changed settings to the engine's `set()`. In a component's script |
+| `flag(on)` | `""` or `undefined`, for a data attribute that's there or not |
+
+```svelte
+<script lang="ts">
+  import { createAttachmentKey } from "svelte/attachments";
+  import { SpringAnimator } from "@fluidkit/core";
+  import { mergeProps, type PartProps } from "@fluidkit/core/svelte";
+
+  let { child, children, ...rest }: PartProps = $props();
+
+  const attach = createAttachmentKey();
+  const spin = (el: Element) => {
+    const style = (el as HTMLElement).style;
+    const spring = new SpringAnimator({ r: 0 }, { duration: 1, bounce: 0 }, ({ r }) => (style.rotate = `${r}deg`));
+    spring.to({ r: 360 });
+    return () => spring.stop();
+  };
+  const merged = $derived(mergeProps({ class: "spinner" }, rest, { [attach]: spin }));
+</script>
+
+{#if child}
+  {@render child({ props: merged })}
+{:else}
+  <span {...merged}>{@render children?.()}</span>
+{/if}
 ```
 
 </Section>

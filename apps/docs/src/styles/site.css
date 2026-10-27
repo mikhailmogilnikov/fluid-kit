@@ -1832,13 +1832,14 @@ code {
 .docs-play svg { flex: none; }
 
 /*
- * Docs for some frameworks: `data-only` lists them (`js`, `react`, `vue`), and they show only while
+ * Docs for some frameworks: `data-only` lists them (`js`, `react`, `vue`, `svelte`), and they show only while
  * the page shows one of them (`data-view` on the root: the framework chosen where the page has docs
  * for it, TypeScript without one otherwise, set before the page is first painted)
  */
 :root:not([data-view]) [data-only]:not([data-only~="js"]),
 :root[data-view="react"] [data-only]:not([data-only~="react"]),
-:root[data-view="vue"] [data-only]:not([data-only~="vue"]) {
+:root[data-view="vue"] [data-only]:not([data-only~="vue"]),
+:root[data-view="svelte"] [data-only]:not([data-only~="svelte"]) {
   display: none !important;
 }
 .only { display: contents; }
@@ -1860,6 +1861,14 @@ code {
 }
 .framework button:hover .framework__mark { opacity: 0.75; }
 .framework button[aria-pressed="true"] .framework__mark { filter: none; opacity: 1; }
+/* Short of room: TypeScript's mark says it, then every mark alone (their names stay their labels) */
+@media (max-width: 460px) {
+  .framework [data-value="js"] .framework__label { display: none; }
+}
+@media (max-width: 359px) {
+  .framework .framework__label { display: none; }
+  .framework button { padding: 0 12px; }
+}
 
 /* A section written for one framework says so beside its title */
 .doc__only {

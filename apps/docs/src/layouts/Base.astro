@@ -55,10 +55,10 @@ const socialImageAlt = "Fluid Kit. Fluid interfaces for the web. A blurred glass
       // its docs for that framework where it has them (`data-view`), its JavaScript docs where not
       try {
         const root = document.documentElement;
-        const known = ["js", "react", "vue"];
+        const known = ["js", "react", "vue", "svelte"];
         const asked = new URLSearchParams(location.search).get("framework");
         const framework = known.includes(asked) ? asked : localStorage.getItem("fk-framework");
-        if (framework === "react" || framework === "vue") {
+        if (framework && framework !== "js" && known.includes(framework)) {
           root.dataset.framework = framework;
           if ((root.dataset.frameworks || "").split(" ").includes(framework)) root.dataset.view = framework;
         }

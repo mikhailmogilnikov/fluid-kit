@@ -4,7 +4,7 @@ name: Indicator
 order: 3
 description: "A single element that moves to whatever is hovered, pressed or selected: a menu highlight, a tab thumb. Uses interruptible springs and motion blur."
 intro: "Menu highlights and tab thumbs: one element that moves to whatever is hovered, pressed or selected. Works with any element, and on <a href=\"/blur\">Liquid Blur</a> glass."
-frameworks: ["react", "vue"]
+frameworks: ["react", "vue", "svelte"]
 ---
 
 import Section from "../../components/docs/Section.astro";
@@ -167,6 +167,47 @@ On the server, including Nuxt, the components render plain markup.
 </Steps>
 
 </Only>
+<Only svelte>
+
+<Steps>
+<Step>
+
+**Install.** The Svelte components are included in the package (Svelte 5.29+).
+
+<Install pkg="@fluidkit/indicator" />
+
+</Step>
+<Step>
+
+**Add the parts.** The root is the container, the thumb is the element that moves, and each item has a `value`. `bind:value` holds the selected item. The parts handle positioning and put the thumb behind the items; the look is up to you.
+
+```svelte
+<script lang="ts">
+  import { Indicator } from "@fluidkit/indicator/svelte";
+
+  let tab = $state("overview");
+</script>
+
+<Indicator.Root bind:value={tab} trigger="press" class="tabs">
+  <Indicator.Thumb class="tabs__thumb" />
+  <Indicator.Item value="overview">Overview</Indicator.Item>
+  <Indicator.Item value="releases">Releases</Indicator.Item>
+</Indicator.Root>
+```
+
+```css
+.tabs { isolation: isolate; display: flex; padding: 3px; border-radius: 999px; }
+.tabs__thumb { background: #fff; }
+/* The selected tab, and the one under the thumb */
+.tabs [data-selected] { font-weight: 600; }
+```
+
+Put these styles in a global stylesheet or wrap them in `:global()`: a component's scoped styles don't reach the elements the parts render. On the server, including SvelteKit, the components render plain markup.
+
+</Step>
+</Steps>
+
+</Only>
 
 </Section>
 
@@ -250,6 +291,27 @@ import { Indicator } from "@fluidkit/indicator/vue";
     <Indicator.Item value="store" role="menuitem" aria-disabled="true"><EyeIcon />Show in Store</Indicator.Item>
   </Indicator.Root>
 </template>
+```
+
+</Fragment>
+<Fragment slot="svelte">
+
+```svelte
+<script lang="ts">
+  import "@fluidkit/blur/style.css";
+  import { Indicator } from "@fluidkit/indicator/svelte";
+</script>
+
+<!-- Default trigger: hover for mouse, press and drag for touch -->
+<Indicator.Root class="menu lb" role="menu" aria-label="Album">
+  <Indicator.Thumb class="highlight" />
+  <Indicator.Item value="library" role="menuitem"><PlusIcon />Add to Library</Indicator.Item>
+  <Indicator.Item value="love" role="menuitem"><HeartIcon />Love</Indicator.Item>
+  <Indicator.Item value="share" role="menuitem"><ArrowIcon />Share Album</Indicator.Item>
+  <hr />
+  <Indicator.Item value="link" role="menuitem"><CopyIcon />Copy Link</Indicator.Item>
+  <Indicator.Item value="store" role="menuitem" aria-disabled="true"><EyeIcon />Show in Store</Indicator.Item>
+</Indicator.Root>
 ```
 
 </Fragment>
@@ -385,6 +447,26 @@ const tab = ref("overview");
 ```
 
 </Fragment>
+<Fragment slot="svelte">
+
+```svelte
+<script lang="ts">
+  import { Indicator } from "@fluidkit/indicator/svelte";
+
+  const tabs = { overview: "Overview", releases: "Releases", audience: "Audience" };
+  let tab = $state("overview");
+</script>
+
+<!-- Shows the selection only; keyboard focus keeps its own ring -->
+<Indicator.Root bind:value={tab} trigger="press" focus={false} class="tabs" role="tablist" aria-label="Artist">
+  <Indicator.Thumb class="tabs__thumb" />
+  {#each Object.entries(tabs) as [value, label] (value)}
+    <Indicator.Item {value} role="tab" aria-selected={tab === value}>{label}</Indicator.Item>
+  {/each}
+</Indicator.Root>
+```
+
+</Fragment>
 <Fragment slot="css">
 
 ```css
@@ -443,7 +525,7 @@ Follows the pressed item, across items while the pointer is down. On touch it ap
 </Cell>
 <Cell title="<code>manual</code>">
 
-Only `to()` and `rest` move it (in React and Vue, the selected value and `active`). For an indicator driven by your own state, like the current section of a page.
+Only `to()` and `rest` move it (in React, Vue and Svelte, the selected value and `active`). For an indicator driven by your own state, like the current section of a page.
 
 </Cell>
 </Row>
@@ -486,7 +568,7 @@ The default springs are fast and don't overshoot: the indicator covers most of t
 
 </Section>
 
-<Section id="parts" title="Parts" only="react vue">
+<Section id="parts" title="Parts" only="react vue svelte">
 
 <Only react>
 
@@ -547,10 +629,41 @@ Every part also takes `as-child`, see [Composition](#composition).
 Changing props never recreates the indicator; a new `trigger` applies immediately.
 
 </Only>
+<Only svelte>
+
+| Part | Renders | Description |
+| --- | --- | --- |
+| `Indicator.Root` | `div`, positioned | The container for the items and thumb. Takes the props below |
+| `Indicator.Thumb` | `span aria-hidden`, absolute, behind the items | The element that moves |
+| `Indicator.Item` | `button` | An item with a `value`. Has `data-selected` when selected and `data-active` while the indicator is on it |
+
+Every part also takes a `child` snippet, see [Composition](#composition).
+
+`Indicator.Root` props:
+
+| Prop | Description |
+| --- | --- |
+| `bind:value` | The selected item. Without it, the root keeps its own, starting at `defaultValue` |
+| `defaultValue?: string \| null` | The initially selected item, for uncontrolled use |
+| `onValueChange={(value) => …}` | An item was selected, by a click or a press released on it |
+| `active?: string \| null` | An item pointed at by something else, like the finger on a [Lift](/lift) menu. `null` goes back to the selected item |
+| `onActiveChange={(value) => …}` | The indicator moved to another item, or hid (`null`) |
+| `trigger?: "auto" \| "hover" \| "press" \| "manual"` | What moves it, see [Triggers](#triggers). Default: `auto` |
+| `click?: boolean` | With press, click (and select) the item where the pointer is released. Default: `true` |
+| `focus?: boolean` | Move to items with visible keyboard focus. Default: `true`, except with `manual` |
+| `spring?: Partial<IndicatorSprings>` | Springs for `x`, `y`, `width`, `height` and `presence`. Default: `defaultIndicatorSprings`, fast and without overshoot |
+
+**Controlled.** With `bind:value`, clicks update your state. To accept or refuse a change yourself, bind a getter and a setter: `bind:value={() => tab, (next) => allowed(next) && (tab = next)}`.
+
+**Nesting.** A root only tracks its own items, not those of a nested root, so a menu with its own indicator can sit inside tabs with another.
+
+Changing props never recreates the indicator; a new `trigger` applies immediately.
+
+</Only>
 
 </Section>
 
-<Section id="composition" title="Composition" only="react vue">
+<Section id="composition" title="Composition" only="react vue svelte">
 
 <Only react>
 
@@ -580,10 +693,26 @@ Changing props never recreates the indicator; a new `trigger` applies immediatel
 **With Lift.** In a [Lift](/lift#composition) menu, pass the item under the finger as `active`, and use `as-child` to make each lift item an indicator item too.
 
 </Only>
+<Only svelte>
+
+**Render as your own element.** Every part accepts a `child` snippet, as in bits-ui: instead of its own element, the part renders yours. Spread the `props` it gives onto your element: they carry our attributes, handlers and the attachment that connects it. The snippet also receives the part's state (`{ selected, active }` for items).
+
+```svelte
+<Indicator.Item value="inbox">
+  {#snippet child({ props })}<a {...props} href="/inbox">Inbox</a>{/snippet}
+</Indicator.Item>
+<Indicator.Item value="sent">
+  {#snippet child({ props, selected })}<button {...props}>{#if selected}<b>Sent</b>{:else}Sent{/if}</button>{/snippet}
+</Indicator.Item>
+```
+
+**With Lift.** In a [Lift](/lift#composition) menu, pass the item under the finger as `active`, and use a `child` snippet to make each lift item an indicator item too.
+
+</Only>
 
 </Section>
 
-<Section id="hook" title="The hook" only="react vue">
+<Section id="hook" title="The hook" only="react vue svelte">
 
 <Only react>
 
@@ -642,6 +771,36 @@ const nav = useIndicator(() => ({ value: page.value, onValueChange: (v) => (page
 | `engine` | Shallow ref to the underlying engine, once mounted |
 
 With the composable, styling is up to you: position the container, and make the indicator absolute and behind the items, as described in [How it works](#layout). The parts do this for you.
+
+</Only>
+<Only svelte>
+
+Use `useIndicator(() => options)` when the parts don't fit your markup. Call it in a component's script; the options getter is read again when what it uses changes. It returns attachments for `{@attach}`, and state you read like any other.
+
+```svelte
+<script lang="ts">
+  import { useIndicator } from "@fluidkit/indicator/svelte";
+
+  let page = $state("home");
+  const nav = useIndicator(() => ({ value: page, onValueChange: (v) => (page = v) }));
+</script>
+
+<nav {@attach nav.container} class="tabs">
+  <span {@attach nav.indicator} class="thumb"></span>
+  <a {@attach nav.item("home")} href="/">Home</a>
+  <a {@attach nav.item("docs")} href="/docs">Docs</a>
+</nav>
+```
+
+| Member | Description |
+| --- | --- |
+| `container`, `indicator` | Attachments for the container and the moving element |
+| `item(value)` | Attachment for the item with this value |
+| `value`, `active` | The selected item, and the item the indicator is on now |
+| `select(value)` | Selects an item, like a click |
+| `engine` | The underlying engine, once mounted |
+
+With the function, styling is up to you: position the container, and make the indicator absolute and behind the items, as described in [How it works](#layout). The parts do this for you.
 
 </Only>
 

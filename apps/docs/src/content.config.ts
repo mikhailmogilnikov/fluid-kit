@@ -20,7 +20,7 @@ const docs = defineCollection({
      * The frameworks the page has docs of their own for, besides TypeScript without one. With another
      * one chosen, the page shows its TypeScript docs
      */
-    frameworks: z.array(z.enum(["react", "vue"])).default(["react"]),
+    frameworks: z.array(z.enum(["react", "vue", "svelte"])).default(["react"]),
   }),
 });
 

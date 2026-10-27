@@ -4,7 +4,7 @@ name: Lift
 order: 5
 description: "Long-press any element to lift it above the page, with the background dimmed and blurred, and open your menu next to it. The iOS context menu, for the web."
 intro: "Long-press any element and it lifts above the page, with the background dimmed and blurred, and your menu opens next to it. Slide the same finger onto an item to pick it. The iOS context menu, for the web; with <a href=\"/blur\">Liquid Blur</a>, the menu can be glass."
-frameworks: ["react", "vue"]
+frameworks: ["react", "vue", "svelte"]
 ---
 
 import Section from "../../components/docs/Section.astro";
@@ -146,6 +146,47 @@ On the server, including Nuxt, the components render plain markup; the lift star
 </Steps>
 
 </Only>
+<Only svelte>
+
+<Steps>
+<Step>
+
+**Install.** The Svelte components are included in the package (Svelte 5.29+).
+
+<Install pkg="@fluidkit/lift" />
+
+</Step>
+<Step>
+
+**Add the parts.** Put the target, the menu and its items inside `Lift.Root`. The menu stays hidden until the target is lifted, and `onSelect` receives the `value` of the chosen item.
+
+```svelte
+<script lang="ts">
+  import { Lift } from "@fluidkit/lift/svelte";
+
+  let { src }: { src: string } = $props();
+</script>
+
+<Lift.Root onSelect={(value) => console.log(value)}>
+  <Lift.Target>
+    {#snippet child({ props })}
+      <img {...props} class="photo" {src} alt="" tabindex={0} />
+    {/snippet}
+  </Lift.Target>
+  <Lift.Menu class="menu" aria-label="Photo">
+    <Lift.Item value="copy">Copy</Lift.Item>
+    <Lift.Item value="share">Share</Lift.Item>
+    <Lift.Item value="delete">Delete</Lift.Item>
+  </Lift.Menu>
+</Lift.Root>
+```
+
+On the server, including SvelteKit, the components render plain markup; the lift starts working after hydration. Style the parts from a global stylesheet or with `:global()`: a component's scoped styles don't reach the elements the parts render.
+
+</Step>
+</Steps>
+
+</Only>
 
 </Section>
 
@@ -153,7 +194,7 @@ On the server, including Nuxt, the components render plain markup; the lift star
 
 ### Photos
 
-Hold a photo, or right-click it. It shrinks slightly while held (`data-lifting`), then lifts, and the menu opens below it (or above, near the bottom of the screen). Keep your finger down and slide onto an item to pick it on release. The highlight is an [Indicator](/indicator) driven by `onHighlight`. In the TypeScript version, six photos share one menu; in React and Vue, each photo has its own.
+Hold a photo, or right-click it. It shrinks slightly while held (`data-lifting`), then lifts, and the menu opens below it (or above, near the bottom of the screen). Keep your finger down and slide onto an item to pick it on release. The highlight is an [Indicator](/indicator) driven by `onHighlight`. In the TypeScript version, six photos share one menu; in React, Vue and Svelte, each photo has its own.
 
 <Example>
 <LiftExample kind="photos" />
@@ -245,6 +286,45 @@ const act = (value: string) => {
     </Lift.Menu>
   </Lift.Root>
 </template>
+```
+
+</Fragment>
+<Fragment slot="svelte">
+
+```svelte
+<script lang="ts">
+  import "@fluidkit/blur/style.css";
+  import { Indicator } from "@fluidkit/indicator/svelte";
+  import { Lift } from "@fluidkit/lift/svelte";
+
+  let { src }: { src: string } = $props();
+  const items = ["Copy", "Share", "Favorite", "Delete"];
+  // The item under the finger, where the highlight goes
+  let pointed = $state<string | null>(null);
+  const act = (value: string) => {
+    /* … */
+  };
+</script>
+
+<Lift.Root onHighlight={(item) => (pointed = item?.dataset.value ?? null)} onSelect={act}>
+  <Lift.Target>
+    {#snippet child({ props })}
+      <img {...props} class="photo" {src} alt="" tabindex={0} />
+    {/snippet}
+  </Lift.Target>
+  <Lift.Menu class="menu lb" aria-label="Photo">
+    <Indicator.Root active={pointed}>
+      <Indicator.Thumb class="menu__highlight" />
+      {#each items as label (label)}
+        <Lift.Item value={label}>
+          {#snippet child({ props })}
+            <Indicator.Item {...props} value={label}>{label}</Indicator.Item>
+          {/snippet}
+        </Lift.Item>
+      {/each}
+    </Indicator.Root>
+  </Lift.Menu>
+</Lift.Root>
 ```
 
 </Fragment>
@@ -370,6 +450,41 @@ const choose = (value: string) => {
 ```
 
 </Fragment>
+<Fragment slot="svelte">
+
+```svelte
+<script lang="ts">
+  import { Lift } from "@fluidkit/lift/svelte";
+
+  let { text }: { text: string } = $props();
+  const reactions = ["❤️", "👍", "😂", "😮", "😢", "🔥"];
+  let reaction = $state<string | null>(null);
+  const choose = (value: string) => {
+    if (reactions.includes(value)) reaction = reaction === value ? null : value;
+  };
+</script>
+
+<Lift.Root onSelect={choose}>
+  <Lift.Target class="bubble" tabindex={0}>
+    {text}
+    {#if reaction}<span class="bubble__reaction">{reaction}</span>{/if}
+  </Lift.Target>
+  <Lift.Menu class="stack" aria-label="Message">
+    <div class="reactions lb" role="group" aria-label="React">
+      {#each reactions as r (r)}
+        <Lift.Item value={r} aria-label={`React ${r}`}>{r}</Lift.Item>
+      {/each}
+    </div>
+    <div class="menu lb">
+      <Lift.Item value="reply">Reply</Lift.Item>
+      <Lift.Item value="copy">Copy</Lift.Item>
+      <Lift.Item value="delete">Delete</Lift.Item>
+    </div>
+  </Lift.Menu>
+</Lift.Root>
+```
+
+</Fragment>
 </Example>
 
 ### An app icon
@@ -432,6 +547,33 @@ const run = (action: string) => {
 ```
 
 </Fragment>
+<Fragment slot="svelte">
+
+```svelte
+<script lang="ts">
+  import { Lift } from "@fluidkit/lift/svelte";
+
+  let { app }: { app: { name: string; glyph: string; gradient: string } } = $props();
+  const run = (action: string) => {
+    /* … */
+  };
+</script>
+
+<Lift.Root onSelect={run}>
+  <Lift.Target class="icon" style="background: {app.gradient}" aria-label={app.name} tabindex={0}>
+    {app.glyph}
+  </Lift.Target>
+  <Lift.Menu class="menu lb" aria-label={app.name}>
+    <Lift.Item value="new">New Item</Lift.Item>
+    <Lift.Item value="search">Search</Lift.Item>
+    <Lift.Separator />
+    <Lift.Item value="edit">Edit Home Screen</Lift.Item>
+    <Lift.Item value="remove" class="danger">Remove App</Lift.Item>
+  </Lift.Menu>
+</Lift.Root>
+```
+
+</Fragment>
 </Example>
 
 </Section>
@@ -471,7 +613,7 @@ const run = (action: string) => {
 
 </Section>
 
-<Section id="parts" title="Parts" only="react vue">
+<Section id="parts" title="Parts" only="react vue svelte">
 
 <Only react>
 
@@ -549,10 +691,49 @@ Every part also takes `as-child`, see [Composition](#composition).
 Changing props never recreates the lift. A new target or menu element recreates it.
 
 </Only>
+<Only svelte>
+
+| Part | Renders | Description |
+| --- | --- | --- |
+| `Lift.Root` | nothing | Holds the props below and connects the parts inside it |
+| `Lift.Target` | `div` | The element to hold and lift. Has `data-state="open"` while lifted |
+| `Lift.Menu` | `div role="menu" hidden` | The menu, hidden until opened |
+| `Lift.Item` | `button role="menuitem"` | A menu item. `value` is passed to the root's `onSelect`. `disabled` prevents choosing it. Its own `onSelect={(event) => …}` runs first; call `event.preventDefault()` to keep the menu open |
+| `Lift.Separator` | `div role="separator"` | A divider, skipped by the finger and the keyboard |
+| `Lift.Preview` | `div`, hidden | Lifted instead of a copy, at its own size: something live, or larger |
+
+Every part also takes a `child` snippet, see [Composition](#composition).
+
+`Lift.Root` props:
+
+| Prop | Description |
+| --- | --- |
+| `onSelect={(value, item) => …}` | An item was chosen. Receives its `value` and element. The menu then closes, unless the item's own `onSelect` prevented it. Never fires for disabled items |
+| `bind:open` | Whether it's open, for controlled use |
+| `defaultOpen?: boolean` | Whether it starts open, for uncontrolled use |
+| `onOpenChange={(open) => …}` | It opened or closed |
+| `onHighlight={(item) => …}` | The finger that lifted it moved over an item, or off the items (`null`) |
+| `delay?: number` | How long to hold, in ms. Default: `500` |
+| `scale?: number` | How much larger the lifted element gets. Default: `1.04` |
+| `dim?: number` | How dark the page gets, `0` to `1`. Default: `0.2` |
+| `blur?: number` | How much the page is blurred, in px. Default: `12` |
+| `placement?: "auto" \| "below" \| "above"` | Where the menu opens. Default: `auto` |
+| `spring?: SpringParams` | The lift animation spring. Default: `defaultLiftSpring`. See [core](/core#spring) |
+| `items?: string` | Selector for items inside the menu. Default: `Lift.Item`s, buttons and links |
+
+**Controlled.** Use `bind:open` to keep the open state in your component.
+
+```svelte
+<Lift.Root bind:open>…</Lift.Root>
+```
+
+Changing props never recreates the lift. A new target or menu element recreates it.
+
+</Only>
 
 </Section>
 
-<Section id="composition" title="Composition" only="react vue">
+<Section id="composition" title="Composition" only="react vue svelte">
 
 <Only react>
 
@@ -614,10 +795,49 @@ const [pointed, setPointed] = useState<string | null>(null);
 **Styling.** Parts expose state as data attributes: `data-state="open"` on the target and menu, `data-lifting` while held, `data-highlighted` on the item under the finger, `data-disabled` on disabled items.
 
 </Only>
+<Only svelte>
+
+**Render as your own element.** Every part accepts a `child` snippet, as in bits-ui: instead of its own element, the part renders yours. Spread the `props` it gives onto your element: they carry our attributes, handlers and the attachment that connects it. The snippet also receives the part's state.
+
+```svelte
+<Lift.Target>
+  {#snippet child({ props })}<img {...props} {src} alt="" />{/snippet}
+</Lift.Target>
+<Lift.Target>
+  {#snippet child({ props, opened })}<img {...props} src={opened ? large : src} alt="" />{/snippet}
+</Lift.Target>
+```
+
+Put classes and other attributes on the part itself (`<Lift.Target class="photo">`): they come in `props` with ours. An attribute written after the spread replaces the one `props` gave.
+
+**With an indicator.** The highlight under the finger is an [Indicator](/indicator). `onHighlight` tells it which item is under the finger (`active`), and a `child` snippet makes each lift item an indicator item too.
+
+```svelte
+<Lift.Root onHighlight={(item) => (pointed = item?.dataset.value ?? null)} onSelect={act}>
+  <Lift.Target>
+    {#snippet child({ props })}<img {...props} {src} alt="" />{/snippet}
+  </Lift.Target>
+  <Lift.Menu class="menu lb">
+    <Indicator.Root active={pointed}>
+      <Indicator.Thumb class="highlight" />
+      <Lift.Item value="copy">
+        {#snippet child({ props })}<Indicator.Item {...props} value="copy">Copy</Indicator.Item>{/snippet}
+      </Lift.Item>
+      <Lift.Item value="share">
+        {#snippet child({ props })}<Indicator.Item {...props} value="share">Share</Indicator.Item>{/snippet}
+      </Lift.Item>
+    </Indicator.Root>
+  </Lift.Menu>
+</Lift.Root>
+```
+
+**Styling.** Parts expose state as data attributes: `data-state="open"` on the target and menu, `data-lifting` while held, `data-highlighted` on the item under the finger, `data-disabled` on disabled items.
+
+</Only>
 
 </Section>
 
-<Section id="hook" title="The hook" only="react vue">
+<Section id="hook" title="The hook" only="react vue svelte">
 
 <Only react>
 
@@ -671,6 +891,34 @@ const lift = useLift({ onSelect: (item) => act(item.dataset.action) });
 | `lift` | Shallow ref to the underlying engine, once mounted |
 
 While open, the menu is moved into Lift's dialog. Wrap it in its own parent element, as above, so Vue doesn't get confused by the missing node. The parts do this for you. If the component unmounts while open, the lift closes first and everything goes back where Vue expects it.
+
+</Only>
+<Only svelte>
+
+Use `useLift(() => options)` when the parts don't fit your markup. Call it in a component's script; the options getter is read again when what it uses changes. It returns attachments for `{@attach}`, and state you read like any other.
+
+```svelte
+<script lang="ts">
+  import { useLift } from "@fluidkit/lift/svelte";
+
+  let { src }: { src: string } = $props();
+  const lift = useLift(() => ({ onSelect: (item) => act(item.dataset.action) }));
+</script>
+
+<img {@attach lift.element} {src} alt="" />
+<div>
+  <div {@attach lift.menu} role="menu" hidden>…</div>
+</div>
+```
+
+| Member | Description |
+| --- | --- |
+| `element`, `menu`, `preview` | Attachments for the lifted element, the menu and a custom preview |
+| `opened` | `true` while open |
+| `open()`, `close()` | Open (focusing the first item) or close |
+| `lift` | The underlying engine, once mounted |
+
+While open, the menu is moved into Lift's dialog. Wrap it in its own parent element, as above, so Svelte doesn't lose track of it. The parts do this for you. If the component unmounts while open, the lift closes first and everything goes back where Svelte expects it.
 
 </Only>
 
@@ -731,6 +979,11 @@ In React, pass the item from `onHighlight` to the indicator's `active`. See [Com
 <Only vue>
 
 In Vue, pass the item from `@highlight` to the indicator's `active`. See [Composition](#composition).
+
+</Only>
+<Only svelte>
+
+In Svelte, pass the item from `onHighlight` to the indicator's `active`. See [Composition](#composition).
 
 </Only>
 

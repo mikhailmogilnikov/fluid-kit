@@ -4,7 +4,7 @@ name: Morph
 order: 2
 description: "Animate one element into another with a single continuous shape, on springs you can interrupt. Works with any element, and with Liquid Blur glass."
 intro: "Turn a button into a panel and back with one continuous shape. Springs can be interrupted and reversed at any point. Works with any element, and with <a href=\"/blur\">Liquid Blur</a> glass."
-frameworks: ["react", "vue"]
+frameworks: ["react", "vue", "svelte"]
 ---
 
 import Section from "../../components/docs/Section.astro";
@@ -232,6 +232,69 @@ On the server, including Nuxt, the components render plain markup, and the panel
 </Steps>
 
 </Only>
+<Only svelte>
+
+<Steps>
+<Step>
+
+**Install.** The Svelte components are included in the package (Svelte 5.29+).
+
+<Install pkg="@fluidkit/morph" />
+
+</Step>
+<Step>
+
+**Add the states.** Each `Morph.State` has a `value`. A `Morph.Trigger` switches to its `value` when clicked. A state can also be a trigger, with a `child` snippet: here the button opens the panel.
+
+```svelte
+<script lang="ts">
+  import "@fluidkit/blur/style.css"; // the glass, if the states are glass
+  import { Morph } from "@fluidkit/morph/svelte";
+</script>
+
+<div class="morph-scene">
+  <Morph.Root>
+    <Morph.State value="button">
+      {#snippet child({ props })}
+        <Morph.Trigger {...props} id="more" class="lb" value="panel">More</Morph.Trigger>
+      {/snippet}
+    </Morph.State>
+    <Morph.State value="panel" id="panel" class="lb">
+      <p>Panel content</p>
+      <Morph.Trigger value="button">Close</Morph.Trigger>
+    </Morph.State>
+  </Morph.Root>
+</div>
+```
+
+</Step>
+<Step>
+
+**Lay out both states** where they should appear. Hide the panel with `visibility: hidden` in CSS, not in `style`: the morph manages inline `opacity` and `visibility`. Put the panel above the button with `z-index: 2`.
+
+```css
+.morph-scene { position: relative; min-height: 240px; }
+#more { width: 88px; height: 44px; border-radius: 22px; }
+#panel {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: min(280px, 100%);
+  height: 220px;
+  box-sizing: border-box;
+  padding: 20px;
+  border-radius: 28px;
+  visibility: hidden;
+  z-index: 2;
+}
+```
+
+On the server, including SvelteKit, the components render plain markup, and the panel stays hidden by your CSS. Styles for the states go in a global stylesheet or `:global()`: a component's scoped styles don't reach the parts' elements.
+
+</Step>
+</Steps>
+
+</Only>
 
 </Section>
 
@@ -373,6 +436,46 @@ onUnmounted(() => document.removeEventListener("keydown", onKey));
     </Morph.Root>
   </div>
 </template>
+```
+
+</Fragment>
+<Fragment slot="svelte">
+
+```svelte
+<script lang="ts">
+  import { Morph } from "@fluidkit/morph/svelte";
+
+  const items = ["Messages", "Copy Link", "Add to Favorites"];
+  let value = $state("share");
+</script>
+
+<!-- Escape closes the panel -->
+<svelte:window onkeydown={(e) => e.key === "Escape" && (value = "share")} />
+
+<div class="scene">
+  <Morph.Root bind:value>
+    <!-- The pill is also a trigger: clicking it opens the panel -->
+    <Morph.State value="share">
+      {#snippet child({ props })}
+        <Morph.Trigger
+          {...props}
+          id="share"
+          value={value === "panel" ? "share" : "panel"}
+          aria-haspopup="menu"
+          aria-expanded={value === "panel"}
+        >
+          <ShareIcon /> Share
+        </Morph.Trigger>
+      {/snippet}
+    </Morph.State>
+    <Morph.State value="panel" id="share-panel" role="menu" aria-label="Share">
+      <!-- Choosing an item closes the panel -->
+      {#each items as label (label)}
+        <Morph.Trigger value="share" role="menuitem"><Icon name={label} /> {label}</Morph.Trigger>
+      {/each}
+    </Morph.State>
+  </Morph.Root>
+</div>
 ```
 
 </Fragment>
@@ -563,6 +666,48 @@ onUnmounted(() => document.removeEventListener("keydown", onKey));
     </Morph.Root>
   </div>
 </template>
+```
+
+</Fragment>
+<Fragment slot="svelte">
+
+```svelte
+<script lang="ts">
+  import "@fluidkit/blur/style.css";
+  import { Morph } from "@fluidkit/morph/svelte";
+
+  const items = ["Messages", "Copy Link", "Add to Favorites"];
+  let value = $state("share");
+</script>
+
+<!-- Escape closes the panel -->
+<svelte:window onkeydown={(e) => e.key === "Escape" && (value = "share")} />
+
+<div class="scene">
+  <Morph.Root bind:value>
+    <!-- The pill is also a trigger: clicking it opens the panel -->
+    <Morph.State value="share">
+      {#snippet child({ props })}
+        <Morph.Trigger
+          {...props}
+          id="share"
+          class="lb"
+          value={value === "panel" ? "share" : "panel"}
+          aria-haspopup="menu"
+          aria-expanded={value === "panel"}
+        >
+          <ShareIcon /> Share
+        </Morph.Trigger>
+      {/snippet}
+    </Morph.State>
+    <Morph.State value="panel" id="share-panel" class="lb" role="menu" aria-label="Share">
+      <!-- Choosing an item closes the panel -->
+      {#each items as label (label)}
+        <Morph.Trigger value="share" role="menuitem"><Icon name={label} /> {label}</Morph.Trigger>
+      {/each}
+    </Morph.State>
+  </Morph.Root>
+</div>
 ```
 
 </Fragment>
@@ -781,6 +926,59 @@ onUnmounted(() => document.removeEventListener("keydown", onKey));
     </Morph.Root>
   </div>
 </template>
+```
+
+</Fragment>
+<Fragment slot="svelte">
+
+```svelte
+<script lang="ts">
+  import "@fluidkit/blur/style.css";
+  import { Glass } from "@fluidkit/blur/svelte";
+  import { Morph } from "@fluidkit/morph/svelte";
+
+  const items = ["Messages", "Copy Link", "Add to Favorites"];
+  let value = $state("share");
+</script>
+
+<!-- Escape closes the panel -->
+<svelte:window onkeydown={(e) => e.key === "Escape" && (value = "share")} />
+
+<div class="scene">
+  <Morph.Root bind:value>
+    <!-- Merges the toolbar buttons into one piece of glass, including the moving shape -->
+    <Glass.Group class="toolbar">
+      <Glass interactive>
+        {#snippet child({ props })}<button {...props} type="button" aria-label="Back"><BackIcon /></button>{/snippet}
+      </Glass>
+      <Glass interactive>
+        {#snippet child({ props })}<button {...props} type="button" aria-label="Play"><PlayIcon /></button>{/snippet}
+      </Glass>
+      <!-- The button is also a trigger: clicking it opens the panel -->
+      <Morph.State value="share">
+        {#snippet child({ props })}
+          <Morph.Trigger
+            {...props}
+            id="share"
+            class="lb lb-interactive"
+            value={value === "panel" ? "share" : "panel"}
+            aria-label="Share"
+            aria-haspopup="menu"
+            aria-expanded={value === "panel"}
+          >
+            <ShareIcon />
+          </Morph.Trigger>
+        {/snippet}
+      </Morph.State>
+    </Glass.Group>
+    <Morph.State value="panel" id="share-panel" class="lb" role="menu" aria-label="Share">
+      <!-- Choosing an item closes the panel -->
+      {#each items as label (label)}
+        <Morph.Trigger value="share" role="menuitem"><Icon name={label} /> {label}</Morph.Trigger>
+      {/each}
+    </Morph.State>
+  </Morph.Root>
+</div>
 ```
 
 </Fragment>
@@ -1014,6 +1212,65 @@ onUnmounted(() => document.removeEventListener("keydown", onKey));
     </Morph.Root>
   </div>
 </template>
+```
+
+</Fragment>
+<Fragment slot="svelte">
+
+```svelte
+<script lang="ts">
+  import "@fluidkit/blur/style.css";
+  import { Morph } from "@fluidkit/morph/svelte";
+
+  const options = ["Newest", "Oldest", "Most Popular", "A–Z"];
+  let sort = $state("Newest");
+  let value = $state("pill");
+</script>
+
+<!-- Escape closes the menu -->
+<svelte:window onkeydown={(e) => e.key === "Escape" && (value = "pill")} />
+
+<div class="scene">
+  <Morph.Root bind:value>
+    <Morph.State value="pill">
+      {#snippet child({ props })}
+        <Morph.Trigger
+          {...props}
+          id="sort"
+          class="lb lb-interactive"
+          value="panel"
+          aria-haspopup="menu"
+          aria-expanded={value === "panel"}
+        >
+          <Morph.Match name="sort-icon">
+            {#snippet child({ props })}<SortIcon {...props} />{/snippet}
+          </Morph.Match>
+          <Morph.Match name="sort">{sort}</Morph.Match>
+        </Morph.Trigger>
+      {/snippet}
+    </Morph.State>
+    <Morph.State value="panel" id="sort-panel" class="lb" role="menu" aria-label="Sort by">
+      <p>
+        <Morph.Match name="sort-icon">
+          {#snippet child({ props })}<SortIcon {...props} />{/snippet}
+        </Morph.Match>
+        Sort by
+      </p>
+      <!-- Picking an option updates the pill label and moves the match to it, then closes -->
+      {#each options as option (option)}
+        <Morph.Trigger
+          value="pill"
+          role="menuitemradio"
+          aria-checked={option === sort}
+          onclick={() => (sort = option)}
+        >
+          <Morph.Match name={option === sort ? "sort" : undefined}>{option}</Morph.Match>
+          <CheckIcon class="check" />
+        </Morph.Trigger>
+      {/each}
+    </Morph.State>
+  </Morph.Root>
+</div>
 ```
 
 </Fragment>
@@ -1284,6 +1541,67 @@ onUnmounted(() => document.removeEventListener("keydown", onKey));
 ```
 
 </Fragment>
+<Fragment slot="svelte">
+
+```svelte
+<script lang="ts">
+  import "@fluidkit/blur/style.css";
+  import { Morph } from "@fluidkit/morph/svelte";
+
+  const steps = ["dot", "bar", "card"];
+  let value = $state("dot");
+</script>
+
+<!-- Click a state to go one step in, press Escape to go one step out -->
+<svelte:window
+  onkeydown={(e) => {
+    if (e.key === "Escape") value = steps[Math.max(0, steps.indexOf(value) - 1)];
+  }}
+/>
+
+<div class="scene">
+  <Morph.Root bind:value>
+    <Morph.State value="dot">
+      {#snippet child({ props })}
+        <Morph.Trigger {...props} id="dot" class="lb lb-interactive" value="bar" aria-label="Now playing">
+          <Morph.Match name="play">{#snippet child({ props })}<PlayIcon {...props} />{/snippet}</Morph.Match>
+        </Morph.Trigger>
+      {/snippet}
+    </Morph.State>
+
+    <Morph.State value="bar" id="bar" class="lb">
+      <Morph.Trigger id="expand" value="card" aria-label="Open player">
+        <Morph.Match name="art" class="art" />
+        <span class="meta">
+          <Morph.Match name="title">{#snippet child({ props })}<strong {...props}>Surface Tension</strong>{/snippet}</Morph.Match>
+          <span>Lumen</span>
+        </span>
+      </Morph.Trigger>
+      <button class="icon" type="button" aria-label="Play">
+        <Morph.Match name="play">{#snippet child({ props })}<PlayIcon {...props} />{/snippet}</Morph.Match>
+      </button>
+    </Morph.State>
+
+    <Morph.State value="card" id="card" class="lb" role="dialog" aria-label="Now playing">
+      <Morph.Trigger id="collapse" class="icon" value="bar" aria-label="Minimize"><ChevronIcon /></Morph.Trigger>
+      <Morph.Match name="art" class="art" />
+      <span class="meta">
+        <Morph.Match name="title">{#snippet child({ props })}<strong {...props}>Surface Tension</strong>{/snippet}</Morph.Match>
+        <span>Lumen — Neon Tides</span>
+      </span>
+      <div class="controls">
+        <button class="icon" type="button" aria-label="Previous"><PreviousIcon /></button>
+        <button class="icon" type="button" aria-label="Play">
+          <Morph.Match name="play">{#snippet child({ props })}<PlayIcon {...props} />{/snippet}</Morph.Match>
+        </button>
+        <button class="icon" type="button" aria-label="Next"><NextIcon /></button>
+      </div>
+    </Morph.State>
+  </Morph.Root>
+</div>
+```
+
+</Fragment>
 <Fragment slot="css">
 
 ```css
@@ -1430,7 +1748,7 @@ The morph follows scrolling, window resizes and size changes of the states on it
 
 </Section>
 
-<Section id="parts" title="Parts" only="react vue">
+<Section id="parts" title="Parts" only="react vue svelte">
 
 <Only react>
 
@@ -1496,10 +1814,43 @@ Every part also takes `as-child`, see [Composition](#composition).
 **Adding and removing states.** States rendered later, like new list items, are picked up automatically. Removed states are released and get their styles back. Changing props never recreates the morph.
 
 </Only>
+<Only svelte>
+
+| Part | Renders | Description |
+| --- | --- | --- |
+| `Morph.Root` | nothing | Holds the props below and connects the parts inside it |
+| `Morph.State` | `div` | A state with a `value`. Has `data-current` while it's the target |
+| `Morph.Trigger` | `button` | Switches to its `value` on click. `instant` skips the animation. Call `event.preventDefault()` in your own `onclick` to cancel |
+| `Morph.Match` | `span` | A shared element: moves to the `Morph.Match` with the same `name` in the other state. No `name`, no match |
+
+Every part also takes a `child` snippet, see [Composition](#composition).
+
+`Morph.Root` props:
+
+| Prop | Description |
+| --- | --- |
+| `bind:value` | The current state. Without it, the root keeps its own, starting at `defaultValue` |
+| `defaultValue?: string` | The initial state, for uncontrolled use. Default: the first state rendered |
+| `onValueChange={(value) => …}` | A state was asked for, by a trigger |
+| `onStart={(to, from) => …}` | An animation started, including when it reversed or changed target mid-way |
+| `onRest={(at) => …}` | The animation finished |
+| `onProgress={(progress, to, from) => …}` | Every frame, with progress toward `to` from `0` to `1`. `from` is `null` if the animation was redirected mid-way |
+| `spring?: { grow?, shrink? }` | Springs for growing and shrinking, per channel (`x`, `y`, `width`, `height`, `progress`). Default: `defaultMorphSprings`. See [core](/core#spring) |
+| `container?: HTMLElement \| null` | Where to put the shape while it animates, if a parent with `overflow: hidden` would clip it. An element from `bind:this` |
+
+**Controlled.** With `bind:value`, triggers update your state, and the animation starts after the new value renders, so anything the same click changed (a label, a match) is already in place. To accept or refuse a change yourself, bind a getter and a setter: `bind:value={() => shown, (next) => allowed(next) && (shown = next)}`.
+
+```svelte
+<Morph.Root bind:value={shown}>…</Morph.Root>
+```
+
+**Adding and removing states.** States rendered later, like new list items, are picked up automatically. Removed states are released and get their styles back. Changing props never recreates the morph.
+
+</Only>
 
 </Section>
 
-<Section id="composition" title="Composition" only="react vue">
+<Section id="composition" title="Composition" only="react vue svelte">
 
 <Only react>
 
@@ -1554,10 +1905,42 @@ import { Glass } from "@fluidkit/blur/react";
 **Accessibility.** `aria-expanded`, Escape and focus are up to you. Use the `v-model` value to know the current state, and `@start` / `@rest` to know when an animation starts and ends.
 
 </Only>
+<Only svelte>
+
+**Render as your own element.** Every part accepts a `child` snippet, as in bits-ui: instead of its own element, the part renders yours. Spread the `props` it gives onto your element: they carry our attributes, handlers and the attachment that connects it. To make a state a trigger, spread the state's props onto the trigger:
+
+```svelte
+<Morph.State value="button">
+  {#snippet child({ props })}<Morph.Trigger {...props} value="panel">More</Morph.Trigger>{/snippet}
+</Morph.State>
+```
+
+**Glass.** Make a state glass with `class="lb"`, or render it as [`Glass`](/blur#components). Inside a [`Glass.Group`](/blur#groups), the shape merges with neighboring glass as it moves.
+
+```svelte
+<Glass.Group class="toolbar">
+  <Glass interactive>
+    {#snippet child({ props })}<button {...props} aria-label="Back"><BackIcon /></button>{/snippet}
+  </Glass>
+  <Morph.State value="button">
+    {#snippet child({ props: state })}
+      <Glass {...state} interactive>
+        {#snippet child({ props })}<Morph.Trigger {...props} value="panel"><ShareIcon /></Morph.Trigger>{/snippet}
+      </Glass>
+    {/snippet}
+  </Morph.State>
+</Glass.Group>
+```
+
+**Shared elements.** `Morph.Match` can also render as your own element with a `child` snippet. Give the `name` to whichever element is shared right now, as the sort menu above does with the selected option.
+
+**Accessibility.** `aria-expanded`, Escape and focus are up to you. Use the bound value to know the current state, and `onStart` / `onRest` to know when an animation starts and ends.
+
+</Only>
 
 </Section>
 
-<Section id="hook" title="The hook" only="react vue">
+<Section id="hook" title="The hook" only="react vue svelte">
 
 <Only react>
 
@@ -1609,6 +1992,32 @@ const morph = useMorph({ defaultValue: "button" });
 | `moving` | Ref: `true` while animating |
 | `to(value, move?)` | Switches to a state. Returns a `Promise<boolean>`: `true` when it arrives, `false` if it was redirected first. `{ instant: true }` skips the animation |
 | `morph` | Shallow ref to the underlying engine, once a state is mounted |
+
+</Only>
+<Only svelte>
+
+Use `useMorph(() => options)` when the parts don't fit your markup. Call it in a component's script; the options getter is read again when what it uses changes. It returns an attachment for each state.
+
+```svelte
+<script lang="ts">
+  import { useMorph } from "@fluidkit/morph/svelte";
+
+  const morph = useMorph(() => ({ defaultValue: "button" }));
+</script>
+
+<button {@attach morph.state("button")} class="lb" onclick={() => morph.to("panel")}>More</button>
+<div {@attach morph.state("panel")} class="lb panel">
+  <button onclick={() => morph.to("button")}>Close</button>
+</div>
+```
+
+| Member | Description |
+| --- | --- |
+| `state(value)` | Attachment for the state with this value, the same one each time |
+| `value` | The current state |
+| `moving` | `true` while animating |
+| `to(value, move?)` | Switches to a state. Returns a `Promise<boolean>`: `true` when it arrives, `false` if it was redirected first. `{ instant: true }` skips the animation |
+| `morph` | The underlying engine, once a state is mounted |
 
 </Only>
 
@@ -1738,6 +2147,30 @@ const close = async () => (await morph.to("button")) && dialog.value!.close();
     <button @click="close">Close</button>
   </dialog>
 </template>
+```
+
+</Only>
+<Only svelte>
+
+In Svelte, open the dialog in the click handler, before switching, and close it when `to()` resolves. `bind:this` and the state's attachment sit side by side:
+
+```svelte
+<script lang="ts">
+  import { useMorph } from "@fluidkit/morph/svelte";
+
+  const morph = useMorph(() => ({ defaultValue: "button" }));
+  let dialog = $state<HTMLDialogElement>();
+  const open = () => {
+    dialog!.showModal();
+    morph.to("dialog");
+  };
+  const close = async () => (await morph.to("button")) && dialog!.close();
+</script>
+
+<button {@attach morph.state("button")} onclick={open}>Open</button>
+<dialog bind:this={dialog} {@attach morph.state("dialog")}>
+  <button onclick={close}>Close</button>
+</dialog>
 ```
 
 </Only>

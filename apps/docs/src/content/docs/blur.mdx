@@ -4,7 +4,7 @@ name: Liquid Blur
 order: 1
 description: "A glass material for the web: backdrop blur, fill, rims, springy press effects, and glass that merges between shapes. Plain CSS classes plus optional scripts. No refraction."
 intro: "Glass for the web. One class to add it, two variables to tune it."
-frameworks: ["react", "vue"]
+frameworks: ["react", "vue", "svelte"]
 ---
 
 import Section from "../../components/docs/Section.astro";
@@ -144,6 +144,48 @@ The classes are plain CSS, so `class="lb lb-interactive"` also works. In that ca
 </Steps>
 
 </Only>
+<Only svelte>
+
+<Steps>
+<Step>
+
+**Install.** The Svelte components are included in the package (Svelte 5.29+).
+
+<Install pkg="@fluidkit/blur" />
+
+</Step>
+<Step>
+
+**Import the stylesheet** once, in your root layout (`src/routes/+layout.svelte` in SvelteKit) or your app's entry.
+
+```ts
+import "@fluidkit/blur/style.css";
+```
+
+</Step>
+<Step>
+
+**Use `Glass`.** Variants are props, and a `child` snippet lets you use your own element: spread the `props` it gives onto it. Press props (`interactive`, `highlight`, `swell`, `stretch`) set up press effects automatically.
+
+```svelte
+<script lang="ts">
+  import { Glass } from "@fluidkit/blur/svelte";
+</script>
+
+<Glass>
+  {#snippet child({ props })}<nav {...props}>…</nav>{/snippet}
+</Glass>
+<Glass interactive>
+  {#snippet child({ props })}<button {...props} type="button">Follow</button>{/snippet}
+</Glass>
+```
+
+The classes are plain CSS, so `class="lb lb-interactive"` also works. In that case, call `usePress()` once in your root layout.
+
+</Step>
+</Steps>
+
+</Only>
 
 <Only js>
 
@@ -199,6 +241,11 @@ The React entry, `@fluidkit/blur/react`, provides `Glass`, `Glass.Group` and a f
 The Vue entry, `@fluidkit/blur/vue`, provides `Glass`, `Glass.Group` and a few composables. See [Components](#components). It sets up press effects and groups for you.
 
 </Only>
+<Only svelte>
+
+The Svelte entry, `@fluidkit/blur/svelte`, provides `Glass`, `Glass.Group` and a few functions. See [Components](#components). It sets up press effects and groups for you.
+
+</Only>
 
 To animate a button into a panel of the same glass, use [Morph](/morph). It works inside glass groups.
 
@@ -249,6 +296,24 @@ Set the shape with `border-radius`. The default is a capsule.
 <Glass clear>Over a photo</Glass>
 <Glass lens>A lens</Glass>
 <Glass :style="{ borderRadius: '24px', padding: '16px' }">Card</Glass>
+```
+
+</Only>
+<Only svelte>
+
+`Glass` adds the classes based on its props. `tint` also accepts a color.
+
+```svelte
+<Glass interactive>
+  {#snippet child({ props })}<button {...props}>Press me</button>{/snippet}
+</Glass>
+<Glass highlight stretch>A bar: lights and stretches, doesn't swell</Glass>
+<Glass tint="#ff3b30" highlight>
+  {#snippet child({ props })}<button {...props}>Tinted</button>{/snippet}
+</Glass>
+<Glass clear>Over a photo</Glass>
+<Glass lens>A lens</Glass>
+<Glass style="border-radius: 24px; padding: 16px">Card</Glass>
 ```
 
 </Only>
@@ -407,6 +472,11 @@ The press classes need `installPress()` (see [Get started](#start)). Without it,
 `Glass` with a press prop sets this up automatically. If you write the classes by hand, call `usePress()` in your root component.
 
 </Only>
+<Only svelte>
+
+`Glass` with a press prop sets this up automatically. If you write the classes by hand, call `usePress()` in your root layout.
+
+</Only>
 
 <Rows>
 <Row>
@@ -503,6 +573,22 @@ import { Glass } from "@fluidkit/blur/vue";
 ```
 
 </Only>
+<Only svelte>
+
+```svelte
+<script lang="ts">
+  import { Glass } from "@fluidkit/blur/svelte";
+</script>
+
+<Glass.Group class="toolbar">
+  <Glass>…</Glass>
+  <Glass interactive>
+    {#snippet child({ props })}<button {...props}>…</button>{/snippet}
+  </Glass>
+</Glass.Group>
+```
+
+</Only>
 
 <Rows>
 <Row>
@@ -563,6 +649,11 @@ export function Toolbar() {
 **Server rendering.** `Glass.Group` renders `lb lb-group` on the server, including in Nuxt, and sets up the group after hydration. It cleans up on unmount. The group adds its own elements to the root, so select children by class (`.toolbar > .lb`), not with `> *`.
 
 </Only>
+<Only svelte>
+
+**Server rendering.** `Glass.Group` renders `lb lb-group` on the server, including in SvelteKit, and sets up the group after hydration. It cleans up when it's removed. The group adds its own elements to the root, so select children by class (`.toolbar > .lb`), not with `> *`.
+
+</Only>
 
 </Section>
 
@@ -572,7 +663,7 @@ Scrolling content can fade out at its edges, like under iOS bars: add `lb-edge` 
 
 </Section>
 
-<Section id="components" title="Components" only="react vue">
+<Section id="components" title="Components" only="react vue svelte">
 
 <Only react>
 
@@ -663,6 +754,54 @@ const { root, group } = useGlassGroup();
 ```
 
 </Only>
+<Only svelte>
+
+**`Glass`** renders a `div`, or with a `child` snippet an element of yours. Your classes and styles are kept.
+
+| Prop | Description |
+| --- | --- |
+| `clear?: boolean` | Clearer glass for photos and video (`lb-clear`) |
+| `tint?: boolean \| string` | Fill with a color. Pass a color, or `tint` alone to use the inherited `--lb-tint` (`lb-tinted`) |
+| `lens?: boolean` | Glass without blur (`lb-lens`) |
+| `transparency?: number` | `0` opaque, `0.5` default, `1` clear (`--lb-transparency`) |
+| `depth?: number` | `0` flat, `0.5` default, `1` pronounced (`--lb-depth`) |
+| `interactive?: boolean` | Highlight, swell and stretch (`lb-interactive`) |
+| `highlight?`, `swell?: boolean` | Individual press effects (`lb-highlight`, `lb-swell`) |
+| `stretch?: boolean \| "x" \| "y"` | Stretch, optionally along one axis (`lb-stretch`, `--lb-stretch-axis`) |
+
+Press props set up press effects automatically, including inside iframes.
+
+**`Glass.Group`** renders a `div` with `lb lb-group`, or an element of yours with a `child` snippet, and turns it into a [glass group](#groups). `merge` sets how close children get before merging, in px (default `18`). `transparency` and `depth` work like on `Glass` and apply to all children.
+
+```svelte
+<Glass.Group class="toolbar" merge={24}>
+  <Glass interactive>
+    {#snippet child({ props })}<button {...props} aria-label="Back"><BackIcon /></button>{/snippet}
+  </Glass>
+  <Glass interactive>
+    {#snippet child({ props })}<button {...props} aria-label="Share"><ShareIcon /></button>{/snippet}
+  </Glass>
+</Glass.Group>
+```
+
+**Functions and helpers.**
+
+- `glass(variants)` returns `{ class, style }` for the same props, to spread onto elements that aren't `Glass`: `<a {...glass({ interactive: true })} href="/follow">`.
+- `usePress()` sets up press effects, if you write the press classes by hand.
+- `useGlassGroup()` returns an attachment for a group root (with `lb lb-group`) and the group itself, so you can call `update()`.
+
+```svelte
+<script lang="ts">
+  import { glass, useGlassGroup } from "@fluidkit/blur/svelte";
+
+  const toolbar = useGlassGroup();
+</script>
+
+<a {...glass({ interactive: true, tint: "#0a84ff" })} href="/follow">Follow</a>
+<div {@attach toolbar.root} class="lb lb-group">…</div>
+```
+
+</Only>
 
 </Section>
 
@@ -734,7 +873,7 @@ No. The material is plain CSS. The optional scripts add press effects and glass 
 </Question>
 <Question q="How do I use it with React, Vue or Svelte?">
 
-In React and Vue, use `Glass` (see [Components](#components) with your framework chosen). Elsewhere, use the classes and set up press effects once in your root component; `installPress()` returns its own cleanup.
+In React, Vue and Svelte, use `Glass` (see [Components](#components) with your framework chosen). Elsewhere, use the classes and set up press effects once in your root component; `installPress()` returns its own cleanup.
 
 <Only js>
 

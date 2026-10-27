@@ -1,7 +1,7 @@
 ---
 /**
  * A section of a package's page, under a heading of its own; the page's contents list these. With
- * `only`, it's written for some frameworks (`"js"`, `"react"`, `"vue"`, or `"react vue"`) and shows
+ * `only`, it's written for some frameworks (`"js"`, `"react"`, `"vue"`, `"svelte"`, or several, `"vue svelte"`) and shows
  * only while the page shows one of them, its title saying which
  */
 interface Props {
@@ -11,7 +11,7 @@ interface Props {
 }
 
 const { id, title, only } = Astro.props;
-const names: Record<string, string> = { js: "TypeScript", react: "React", vue: "Vue" };
+const names: Record<string, string> = { js: "TypeScript", react: "React", vue: "Vue", svelte: "Svelte" };
 ---
 
 <section class="doc reveal" id={id} data-only={only}>

@@ -4,7 +4,7 @@ name: Drag
 order: 4
 description: "Drag an element with rubber-band edges and snap points. On release, a spring carries the pointer's speed. For sheets, swipe actions and switches."
 intro: "Sheets, swipeable rows, switch thumbs. Drag an element with rubber-band edges; on release it snaps to where the flick takes it, keeping the finger's speed. Works with any element, and with <a href=\"/blur\">Liquid Blur</a> glass."
-frameworks: ["react", "vue"]
+frameworks: ["react", "vue", "svelte"]
 ---
 
 import Section from "../../components/docs/Section.astro";
@@ -160,6 +160,52 @@ On the server, including Nuxt, the components render plain markup at offset 0.
 </Steps>
 
 </Only>
+<Only svelte>
+
+<Steps>
+<Step>
+
+**Install.** The Svelte components are included in the package (Svelte 5.29+).
+
+<Install pkg="@fluidkit/drag" />
+
+</Step>
+<Step>
+
+**Lay out the element at its starting position.** Snap points and bounds are pixel offsets from there. Drag moves the element with inline `translate`, so `transform` and `scale` stay free for you.
+
+```css
+/* Laid out fully open; Drag moves it down to the other positions */
+.sheet { position: absolute; top: 12px; left: 0; right: 0; height: 100%; }
+```
+
+A class on a part reaches its element, but a component's scoped styles don't: put these in a global stylesheet or `:global()`.
+
+</Step>
+<Step>
+
+**Add `Drag.Root`.** It's the element that moves. Snap points can be a function of the parent's size; it's called again when the size changes.
+
+```svelte
+<script lang="ts">
+  import type { Snippet } from "svelte";
+  import { Drag } from "@fluidkit/drag/svelte";
+
+  let { children }: { children: Snippet } = $props();
+</script>
+
+<!-- Open, half way, collapsed to the title -->
+<Drag.Root class="sheet" axis="y" snaps={({ height }) => [0, height / 2, height - 88]} defaultSnap={1}>
+  {@render children()}
+</Drag.Root>
+```
+
+On the server, including SvelteKit, the components render plain markup at offset 0.
+
+</Step>
+</Steps>
+
+</Only>
 
 </Section>
 
@@ -271,6 +317,38 @@ defineProps<{ places: { id: string; name: string }[] }>();
     </Drag.Root>
   </div>
 </template>
+```
+
+</Fragment>
+<Fragment slot="svelte">
+
+```svelte
+<script lang="ts">
+  import "@fluidkit/blur/style.css";
+  import { Drag } from "@fluidkit/drag/svelte";
+
+  let { places }: { places: { id: string; name: string }[] } = $props();
+</script>
+
+<div class="screen">
+  <!-- Offsets from the laid-out position (12px from the top): open, half way, collapsed -->
+  <Drag.Root axis="y" snaps={({ height }) => [0, height / 2 - 12, height - 12 - 76]} defaultSnap={1}>
+    {#snippet child({ props })}
+      <section {...props} class="sheet lb" aria-label="Nearby">
+        <span class="sheet__grabber" aria-hidden="true"></span>
+        <h3>Nearby</h3>
+        <!-- One gesture can scroll the list and move the sheet -->
+        <Drag.Scroll>
+          {#snippet child({ props })}
+            <ul {...props} class="sheet__list">
+              {#each places as place (place.id)}<li>{place.name}</li>{/each}
+            </ul>
+          {/snippet}
+        </Drag.Scroll>
+      </section>
+    {/snippet}
+  </Drag.Root>
+</div>
 ```
 
 </Fragment>
@@ -551,6 +629,93 @@ const land = (mail: Mail, snap: number) => {
 ```
 
 </Fragment>
+<Fragment slot="svelte">
+
+```svelte
+<script lang="ts">
+  import { Drag } from "@fluidkit/drag/svelte";
+
+  type Mail = { id: string; subject: string };
+  let { mails }: { mails: Mail[] } = $props();
+  const LEAD = 92;
+  const TRAIL = 168;
+  // Snap points: fully right, left action, closed, right actions, fully left
+  const ALL_RIGHT = 0;
+  const CLOSED = 2;
+  const ALL_LEFT = 4;
+  // remove(mail) and toggleUnread(mail) are your own functions
+
+  // Which row is open, and how far. Only one at a time
+  let open = $state<{ id: string; snap: number } | null>(null);
+  const rows = new Map<string, HTMLElement>();
+  const snapOf = (mail: Mail) => (open?.id === mail.id ? open.snap : CLOSED);
+  const setSnap = (mail: Mail, snap: number) => (open = snap === CLOSED ? null : { id: mail.id, snap });
+  // Starting to swipe another row closes this one
+  const start = (mail: Mail) => open?.id !== mail.id && (open = null);
+  // Width for the actions; past half way to the edge, the outer action fills the row
+  const follow = (mail: Mail, x: number) => {
+    const row = rows.get(mail.id)!;
+    row.style.setProperty("--x", String(x));
+    row.toggleAttribute("data-full", x < -(TRAIL + row.clientWidth) / 2 || x > (LEAD + row.clientWidth) / 2);
+  };
+  // A full swipe runs the action on release; after marking, slide back closed
+  const land = (mail: Mail, snap: number) => {
+    if (snap === ALL_LEFT) remove(mail);
+    if (snap === ALL_RIGHT) toggleUnread(mail);
+    setSnap(mail, snap === ALL_RIGHT ? CLOSED : snap);
+  };
+  // Each row's element, by its mail
+  const row = (mail: Mail) => (el: Element) => {
+    rows.set(mail.id, el as HTMLElement);
+    return () => rows.delete(mail.id);
+  };
+</script>
+
+<ul class="inbox lb">
+  {#each mails as mail (mail.id)}
+    <li {@attach row(mail)} class="row">
+      <div class="row__lead" aria-hidden="true">
+        <button
+          type="button"
+          class="unread"
+          tabindex={-1}
+          onclick={() => {
+            toggleUnread(mail);
+            setSnap(mail, CLOSED);
+          }}>Unread</button
+        >
+      </div>
+      <div class="row__trail" aria-hidden="true">
+        <button type="button" class="flag" tabindex={-1} onclick={() => setSnap(mail, CLOSED)}>Flag</button>
+        <button
+          type="button"
+          class="delete"
+          tabindex={-1}
+          onclick={() => {
+            setSnap(mail, ALL_LEFT);
+            remove(mail);
+          }}>Delete</button
+        >
+      </div>
+      <!-- Drags don't fire clicks, so a click is a tap -->
+      <Drag.Root
+        class="row__face"
+        axis="x"
+        snaps={({ width }) => [width, LEAD, 0, -TRAIL, -width]}
+        bind:snap={() => snapOf(mail), (snap) => land(mail, snap)}
+        deceleration={0.99}
+        onStart={() => start(mail)}
+        onMove={({ x }) => follow(mail, x)}
+        onclick={() => setSnap(mail, CLOSED)}
+      >
+        …
+      </Drag.Root>
+    </li>
+  {/each}
+</ul>
+```
+
+</Fragment>
 <Fragment slot="css">
 
 ```css
@@ -712,6 +877,48 @@ const toggleRef = (el: unknown) => {
     <span :ref="drag.element" class="switch__thumb lb" />
   </button>
 </template>
+```
+
+</Fragment>
+<Fragment slot="svelte">
+
+```svelte
+<script lang="ts">
+  import { useDrag } from "@fluidkit/drag/svelte";
+
+  let { label, checked = $bindable(false) }: { label: string; checked?: boolean } = $props();
+  let toggle = $state<HTMLElement>();
+  // The handle (the switch) contains the moving thumb, so use the function
+  const drag = useDrag(() => ({
+    axis: "x",
+    snaps: ({ width, element }) => [0, width - element.offsetWidth - 4],
+    snap: checked ? 1 : 0,
+    onSnapChange: (snap) => (checked = snap === 1),
+    rubberband: 0,
+    spring: { duration: 0.3, bounce: 0 },
+    // Trails the pointer slightly, so quick back-and-forth looks smooth
+    follow: { duration: 0.18, bounce: 0 },
+    onMove: ({ x }) => {
+      const el = toggle!;
+      const travel = el.clientWidth - el.firstElementChild!.clientWidth - 4;
+      el.style.setProperty("--on", String(x / travel));
+    },
+  }));
+</script>
+
+<!-- Tap or Space toggles. Drags don't fire clicks -->
+<button
+  bind:this={toggle}
+  {@attach drag.handle}
+  type="button"
+  class="switch"
+  role="switch"
+  aria-checked={checked}
+  aria-label={label}
+  onclick={() => (checked = !checked)}
+>
+  <span {@attach drag.element} class="switch__thumb lb"></span>
+</button>
 ```
 
 </Fragment>
@@ -901,6 +1108,59 @@ const jump = (e: MouseEvent) =>
 ```
 
 </Fragment>
+<Fragment slot="svelte">
+
+```svelte
+<script lang="ts">
+  import { useDrag } from "@fluidkit/drag/svelte";
+
+  let slider = $state<HTMLElement>();
+  let knob = $state<HTMLElement>();
+  let value = $state(0.6);
+  const travel = () => slider!.clientWidth - knob!.offsetWidth;
+  const drag = useDrag(() => ({
+    axis: "x",
+    bounds: ({ width, element }) => ({ x: [0, width - element.offsetWidth] }),
+    rubberband: 0.2,
+    deceleration: 0,
+    spring: { duration: 0.25, bounce: 0 },
+    follow: { duration: 0.12, bounce: 0 },
+    onMove: ({ x }) => (value = Math.min(1, Math.max(0, x / travel()))),
+  }));
+  // Initial position, once the drag is made
+  $effect(() => {
+    drag.drag?.to(travel() * 0.6, { instant: true });
+  });
+  // Tap the track to jump there. Drags don't fire clicks
+  const jump = (e: MouseEvent) =>
+    drag.to(e.clientX - slider!.getBoundingClientRect().left - knob!.offsetWidth / 2);
+  // Arrow keys step by a tenth
+  const step = (e: KeyboardEvent) => {
+    const by = e.key === "ArrowRight" ? 0.1 : e.key === "ArrowLeft" ? -0.1 : 0;
+    if (by) drag.to(travel() * Math.min(1, Math.max(0, value + by)));
+  };
+</script>
+
+<div
+  bind:this={slider}
+  {@attach drag.handle}
+  class="slider"
+  role="slider"
+  tabindex={0}
+  aria-label="Volume"
+  aria-valuemin={0}
+  aria-valuemax={100}
+  aria-valuenow={Math.round(value * 100)}
+  style:--v={value}
+  onclick={jump}
+  onkeydown={step}
+>
+  <span class="slider__track"><span class="slider__fill"></span></span>
+  <span bind:this={knob} {@attach drag.element} class="slider__knob lb lb-stretch"></span>
+</div>
+```
+
+</Fragment>
 <Fragment slot="css">
 
 ```css
@@ -1038,6 +1298,41 @@ const tap = (e: MouseEvent) => {
 ```
 
 </Fragment>
+<Fragment slot="svelte">
+
+```svelte
+<script lang="ts">
+  import { Drag, type DragArea } from "@fluidkit/drag/svelte";
+
+  let { src }: { src: string } = $props();
+  let big = $state(false);
+  // Laid out in the top-left corner, 16px in. Corners are recomputed on resize
+  const corners = ({ width, height, element }: DragArea) => {
+    const x = width - element.offsetWidth - 32;
+    const y = height - element.offsetHeight - 32;
+    return [{ x: 0, y: 0 }, { x, y: 0 }, { x: 0, y }, { x, y }];
+  };
+  // Double-tap toggles the size
+  let lastTap = 0;
+  const tap = (e: MouseEvent) => {
+    if (e.timeStamp - lastTap > 320) return void (lastTap = e.timeStamp);
+    lastTap = 0;
+    big = !big;
+  };
+  // Pinch: pass `disabled` while resizing with two fingers
+</script>
+
+<div class="room">
+  <Drag.Root snaps={corners} defaultSnap={3} spring={{ duration: 0.45, bounce: 0.2 }}>
+    {#snippet child({ props })}
+      <video {...props} class="pip" data-big={big || undefined} {src} muted autoplay loop playsinline onclick={tap}
+      ></video>
+    {/snippet}
+  </Drag.Root>
+</div>
+```
+
+</Fragment>
 <Fragment slot="css">
 
 ```css
@@ -1114,7 +1409,7 @@ The release spring starts at the pointer's speed. The default spring has no boun
 
 </Section>
 
-<Section id="parts" title="Parts" only="react vue">
+<Section id="parts" title="Parts" only="react vue svelte">
 
 <Only react>
 
@@ -1194,10 +1489,50 @@ Every part also takes `as-child`, see [Composition](#composition).
 Changing props never recreates the drag. Changing `axis`, or adding a handle or scroll area, recreates it at the same position.
 
 </Only>
+<Only svelte>
+
+| Part | Renders | Description |
+| --- | --- | --- |
+| `Drag.Root` | `div` | The element that moves. Has `data-snap` with the current snap point and `data-dragging` while dragged |
+| `Drag.Handle` | `div` | The part you grab, like a sheet's grabber. Without it, the whole root is the handle |
+| `Drag.Scroll` | `div` | A scrollable area inside, like a sheet's list. One gesture can [scroll it and move the root](#scroll) |
+
+Every part also takes a `child` snippet, see [Composition](#composition).
+
+`Drag.Root` props:
+
+| Prop | Description |
+| --- | --- |
+| `axis?: "x" \| "y" \| "both"` | Direction of movement. Default: `both` |
+| `snaps?: DragSnaps \| (area) => DragSnaps` | Where it can come to rest: offsets along the axis, or `{ x, y }` points for `both`. A function receives `{ width, height, element }` (the parent's inner size and the element), and is called again on resize and when what it uses changes |
+| `bounds?: DragBounds \| (area) => DragBounds` | `{ x?: [min, max], y?: [min, max] }`. Past these it stretches like rubber. Default: the outermost snap points |
+| `bind:snap` | The current snap point. Without it, the root keeps its own, starting at `defaultSnap` |
+| `defaultSnap?: number` | Initial snap point, for uncontrolled use. Default: `0` |
+| `onSnapChange={(snap) => …}` | Released heading for another snap point |
+| `disabled?: boolean` | Disables dragging. An active drag is released |
+| `rubberband?: number` | Resistance past the bounds. Default: `0.55`. `0` stops at the edge |
+| `deceleration?: number` | How fast a flick slows down, per millisecond. Default: `0.998` |
+| `spring?: SpringParams` | The release spring. Default: `{ duration: 0.4, bounce: 0 }`. See [core](/core#spring) |
+| `follow?: SpringParams` | If set, the element trails the pointer on this spring |
+| `onStart={() => …}` | A drag started, or the element was grabbed mid-motion |
+| `onMove={(position, velocity) => …}` | Every frame it moves. Update the DOM directly here; writing to reactive state would update the page every frame |
+| `onEnd={(snap) => …}` | Released, with the target snap point (`null` without snaps) |
+| `onRest={() => …}` | It stopped moving |
+
+**Controlled.** With `bind:snap`, a release updates your state. To accept or refuse it yourself, bind a getter and a setter: `bind:snap={() => snap, (next) => allowed(next) && (snap = next)}`; if `snap` doesn't change, it goes back.
+
+```svelte
+<Drag.Root bind:snap>…</Drag.Root>
+<button onclick={() => (snap = 0)}>Open</button>
+```
+
+Changing props never recreates the drag. Changing `axis`, or adding a handle or scroll area, recreates it at the same position.
+
+</Only>
 
 </Section>
 
-<Section id="composition" title="Composition" only="react vue">
+<Section id="composition" title="Composition" only="react vue svelte">
 
 <Only react>
 
@@ -1247,10 +1582,43 @@ import { Glass } from "@fluidkit/blur/react";
 **Styling.** `data-snap` on the root shows the current snap point, `data-dragging` is there while it's dragged.
 
 </Only>
+<Only svelte>
+
+**Render as your own element.** Every part accepts a `child` snippet, as in bits-ui: instead of its own element, the part renders yours. Spread the `props` it gives onto your element: they carry our attributes, handlers and the attachment that connects it. The snippet also receives the part's state (`{ snap, dragging }`).
+
+```svelte
+<Drag.Root axis="y" {snaps}>
+  {#snippet child({ props })}
+    <section {...props} aria-label="Nearby">
+      <Drag.Scroll>
+        {#snippet child({ props })}<ul {...props} class="list">…</ul>{/snippet}
+      </Drag.Scroll>
+    </section>
+  {/snippet}
+</Drag.Root>
+```
+
+**Glass.** Make it glass with `class="lb"`, or render it as [`Glass`](/blur#components). Drag only writes `translate`, so press effects keep working.
+
+```svelte
+<Drag.Root axis="y" {snaps}>
+  {#snippet child({ props: drag })}
+    <Glass {...drag}>
+      {#snippet child({ props })}<section {...props} class="sheet">…</section>{/snippet}
+    </Glass>
+  {/snippet}
+</Drag.Root>
+```
+
+**Handle outside the element.** With parts, the handle sits inside the moving element. For a switch or slider it's the other way round (the thumb is inside the handle), so use [the function](#hook), as the examples above do.
+
+**Styling.** `data-snap` on the root shows the current snap point, `data-dragging` is there while it's dragged.
+
+</Only>
 
 </Section>
 
-<Section id="hook" title="The hook" only="react vue">
+<Section id="hook" title="The hook" only="react vue svelte">
 
 <Only react>
 
@@ -1306,6 +1674,34 @@ const drag = useDrag({ axis: "x", snaps: ({ width, element }) => [0, width - ele
 To put two refs on one element (yours and the drag's), use one function that calls both, as the switch above does.
 
 </Only>
+<Only svelte>
+
+Use `useDrag(() => options)` when the parts don't fit your markup. Call it in a component's script; the options getter is read again when what it uses changes. It returns attachments for `{@attach}`, and state you read like any other.
+
+```svelte
+<script lang="ts">
+  import { useDrag } from "@fluidkit/drag/svelte";
+
+  const drag = useDrag(() => ({ axis: "x", snaps: ({ width, element }) => [0, width - element.offsetWidth] }));
+</script>
+
+<div {@attach drag.handle} class="track">
+  <span {@attach drag.element} class="thumb"></span>
+</div>
+```
+
+| Member | Description |
+| --- | --- |
+| `element`, `handle`, `scroll` | Attachments for the moving element, the handle and the scroll area |
+| `snap` | The current snap point |
+| `dragging` | `true` while dragged |
+| `snapTo(index, move?)` | Animates to a snap point. `{ instant: true }` jumps there; `{ velocity }` sets the starting speed |
+| `to(position, move?)` | Animates to an offset within the bounds |
+| `drag` | The underlying engine, once mounted: `position`, `velocity`, `update()` |
+
+An element can take the drag's attachment and your own `bind:this` side by side, as the switch above does.
+
+</Only>
 
 </Section>
 
@@ -1344,7 +1740,7 @@ Roles, labels and keyboard support are up to you: a sheet's `dialog` role, a swi
 
 <Section id="scroll" title="A list inside">
 
-A sheet with a scrollable list can share one gesture between the two, like in iOS. Pass the list as `scroll` (in React and Vue, use `Drag.Scroll`). For touch:
+A sheet with a scrollable list can share one gesture between the two, like in iOS. Pass the list as `scroll` (in React, Vue and Svelte, use `Drag.Scroll`). For touch:
 
 <Rows>
 <Row>
