@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.1.0
+
+### Minor Changes
+
+- b92745f: `set(settings)`: a lift, drag, indicator or morph takes new options once made, the rest kept, without being made again: what a component needs as its props change. Everything but the elements it's made on.
+  
+  - Lift: all but `element` and `menu`. Open, it takes them as it goes (its dim, blur, callbacks) or the next time it opens. `LiftSettings` is their type.
+  - Drag: all but `element`, `handle`, `axis`, `scroll` and `initial`. New snap points or bounds are followed at once, as by `update()`. `DragSettings`.
+  - Indicator: all but `container`, `indicator` and `rest`, which is a property of its own. A new `trigger` (or `focus`) takes over at once, and what pointed at it under the old one lets go. `IndicatorSettings`.
+  - Morph: its `spring` and callbacks; new springs take the next flight. `MorphSettings`.
+- 96ccb94: React components and hooks: `@fluidkit/morph/react`, `@fluidkit/drag/react` and `@fluidkit/blur/react`. React is an optional peer dependency (18+).
+  
+  - Morph: `Morph.Root`, `Morph.State`, `Morph.Trigger` and `Morph.Match`, plus `useMorph()`. States have a `value` (`value` / `defaultValue` / `onValueChange`), and callbacks receive values instead of elements. A state can also be a trigger via `render`. The animation starts after the new value renders, so labels and matches changed by the same click animate correctly. States added or removed later are handled automatically.
+  - Drag: `Drag.Root`, `Drag.Handle` and `Drag.Scroll`, plus `useDrag()`. Snap points and bounds can be a function of the parent's size, recomputed on resize and re-render. `snap` / `defaultSnap` / `onSnapChange`; if the parent keeps `snap` unchanged, the element goes back to it.
+  - Blur: `Glass` with variants as props (`clear`, `tint`, `lens`, `transparency`, `depth`, `interactive`, `highlight`, `swell`, `stretch`), which sets up press effects automatically, and `Glass.Group` for glass groups. Also `glass()`, `usePress()` and `useGlassGroup()`.
+
+### Patch Changes
+
+- Updated dependencies [c80a491]
+  - @fluidkit/core@1.4.0
+
 ## 1.0.1
 
 ### Patch Changes
