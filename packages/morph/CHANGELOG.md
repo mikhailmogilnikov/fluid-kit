@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.1
+
+### Patch Changes
+
+- 2ee7de1: `defaultValue` no longer decides the type of the values in React and Vue, as it already didn't in Svelte: `useMorph({ defaultValue: "a" })` now takes `to("b")`, and `useIndicator({ defaultValue: "a" })` takes `select("b")`, without naming the type.
+
 ## 1.3.0
 
 ### Minor Changes
