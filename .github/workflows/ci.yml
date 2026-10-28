@@ -70,3 +70,26 @@ jobs:
       # Already in the image when the versions match; downloaded (not installed) when they don't
       - run: pnpm --filter docs exec playwright install chromium webkit firefox
       - run: pnpm --filter docs check:playground
+
+  # The packages packed as published, installed with npm into an app of their own, its React, Vue and
+  # Svelte type-checked against their declarations and run in three engines
+  consumer:
+    runs-on: ubuntu-latest
+    # The playground's image, for the same reason
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+      options: --user 1001
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        env:
+          VP_GIT_HOOKS: "0"
+      - run: pnpm --filter @fluidkit/consumer exec playwright install chromium webkit firefox
+      # Packing builds each package
+      - run: pnpm --filter @fluidkit/consumer check

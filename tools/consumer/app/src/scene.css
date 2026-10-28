@@ -1,0 +1,18 @@
+/* The same scene in each framework, laid out alike, so the same checks run on each */
+body { font: 16px system-ui, sans-serif; margin: 24px; }
+section { margin: 0 0 24px; }
+.photo { display: block; width: 120px; height: 80px; background: #f80; border-radius: 12px; }
+.menu { display: grid; min-width: 160px; padding: 6px; background: #fff; border-radius: 12px; }
+.card { display: grid; place-items: center; width: 160px; height: 60px; background: #8cf; border-radius: 12px; }
+.tabs { position: relative; display: flex; width: 360px; padding: 4px; background: #eee; border-radius: 12px; isolation: isolate; }
+.tabs > button, .tabs > a { flex: 1; padding: 8px; border: 0; background: none; font: inherit; color: inherit; text-align: center; text-decoration: none; }
+.thumb { position: absolute; z-index: -1; background: #fff; border-radius: 10px; box-shadow: 0 1px 3px #0003; }
+.stage { position: relative; height: 220px; }
+.pill { position: absolute; top: 0; left: 0; padding: 8px 14px; border: 0; border-radius: 99px; background: #def; }
+.panel { position: absolute; top: 0; left: 0; width: 260px; height: 180px; background: #eee; border-radius: 20px; }
+.room { position: relative; width: 300px; height: 400px; overflow: hidden; background: #f4f4f4; }
+.sheet { position: absolute; inset: 0; background: #cde; border-radius: 16px; }
+.grabber { height: 40px; background: #9ab; border-radius: 16px 16px 0 0; }
+.track { position: relative; width: 300px; height: 60px; background: #f4f4f4; }
+.track > .card { width: 120px; background: #fd9; }
+.glassy { display: flex; gap: 12px; padding: 24px; background: linear-gradient(90deg, #f80, #08f); }
