@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.1
+
+### Patch Changes
+
+- 7652eba: `Glass` from `@fluidkit/blur/vue` type-checks in an app that checks libraries (`skipLibCheck: false`): its declaration no longer spells out Vue's instance type, which `vue-tsc` rejected.
+
 ## 1.6.0
 
 ### Minor Changes
