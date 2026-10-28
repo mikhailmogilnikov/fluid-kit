@@ -142,5 +142,8 @@ const Group = defineComponent({
   },
 });
 
-/** Glass, and `Glass.Group` for glass that melts */
-export const Glass = Object.assign(Root, { Group });
+/**
+ * Glass, and `Glass.Group` for glass that melts. Typed by its parts: inferred, its declaration spells
+ * out Vue's instance type, which `vue-tsc` rejects in an app that checks libraries
+ */
+export const Glass: typeof Root & { Group: typeof Group } = Object.assign(Root, { Group });
