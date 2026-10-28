@@ -110,7 +110,7 @@ async function checkPages(dist) {
           : undefined;
       const browser = await BROWSERS[name].launch({ env });
       for (const framework of FRAMEWORKS) {
-        const page = await browser.newPage({ viewport: { width: 1000, height: 1600 } });
+        const page = await browser.newPage({ viewport: { width: 1000, height: 800 } });
         const failures = await checkScene(page, `http://localhost:${PORT}/${framework}.html`);
         await page.close();
         if (failures.length) ok = false;
@@ -165,9 +165,17 @@ async function checkScene(page, url) {
       [thumb, item],
       { timeout },
     );
-  const drag = async (name, dx, dy) => {
-    const box = await page.locator(id(name)).boundingBox();
+  // Where it is on screen, scrolled to first: the mouse goes by the viewport, and a page laid out
+  // taller (Linux's fonts) has it below the fold
+  const place = async (name) => {
+    const element = page.locator(id(name));
+    await element.scrollIntoViewIfNeeded();
+    const box = await element.boundingBox();
     if (!box) throw new Error(`no ${name}`);
+    return box;
+  };
+  const drag = async (name, dx, dy) => {
+    const box = await place(name);
     const x = box.x + box.width / 2;
     const y = box.y + box.height / 2;
     await page.mouse.move(x, y);
@@ -189,11 +197,14 @@ async function checkScene(page, url) {
     }
     const own = await page.$eval(id("own-glass"), (el) => [...el.classList]);
     if (!own.includes("lb") || !own.includes("lb-highlight")) throw new Error(`own-glass: ${own.join(" ")}`);
-    const box = await page.locator(id("glass-button")).boundingBox();
+    const box = await place("glass-button");
     await page.mouse.move(box.x + 10, box.y + 10);
     await page.mouse.down();
-    await page.waitForSelector(`${id("glass-button")}[data-lb-pressed]`, { timeout });
-    await page.mouse.up();
+    try {
+      await page.waitForSelector(`${id("glass-button")}[data-lb-pressed]`, { timeout });
+    } finally {
+      await page.mouse.up();
+    }
   });
 
   await check("indicator", async () => {
@@ -238,7 +249,10 @@ async function checkScene(page, url) {
   });
   await check("drag, own markup", async () => {
     await drag("card", 110, 0);
-    await logged("own snap 1");
+    await logged("own snap 1").catch(async () => {
+      const at = await page.$eval(id("card"), (el) => `snap ${el.dataset.snap}, at ${el.style.translate || "none"}`);
+      throw new Error(`not told of snap 1: ${at}`);
+    });
   });
 
   await check("lift", async () => {
