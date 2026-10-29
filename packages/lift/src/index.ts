@@ -202,6 +202,28 @@ function dress(from: Element, to: Element, root: boolean) {
 }
 
 /**
+ * Whether something from `target` up to `root` scrolls by this much (content px, down and right
+ * positive) and isn't at its end that way. Anything else a gesture there moves is the page, which
+ * iOS scrolls when nothing inside can
+ */
+function scrollsWithin(target: EventTarget | null, root: Element, dx: number, dy: number) {
+  const win = root.ownerDocument.defaultView;
+  if (!win || !(target instanceof win.Node) || !root.contains(target)) return false;
+  for (let el = target instanceof win.Element ? target : target.parentElement; el; el = el.parentElement) {
+    const { overflowX, overflowY } = win.getComputedStyle(el);
+    const y =
+      /auto|scroll/.test(overflowY) &&
+      (dy > 0 ? el.scrollTop + el.clientHeight < el.scrollHeight - 1 : dy < 0 && el.scrollTop > 0);
+    const x =
+      /auto|scroll/.test(overflowX) &&
+      (dx > 0 ? el.scrollLeft + el.clientWidth < el.scrollWidth - 1 : dx < 0 && el.scrollLeft > 0);
+    if (x || y) return true;
+    if (el === root) break;
+  }
+  return false;
+}
+
+/**
  * A copy made a picture of the element: no ids, its form controls in no form or group (a checked
  * radio in a group of the page's would uncheck its original), its frames empty boxes rather than
  * loaded again, its videos their frame as it is. Before it's in the page, so nothing of it loads
@@ -288,6 +310,8 @@ export function createLift(options: LiftOptions): Lift {
   /** The finger that lifted it, followed onto the menu until it's let go; no text selected meanwhile */
   let finger: { id: number; x: number; y: number; moved: boolean; unhold: () => void } | null = null;
   let highlighted: HTMLElement | null = null;
+  /** Where a touch on the open lift last was, for which way it scrolls */
+  let touchAt: { x: number; y: number } | null = null;
   /** The menu key or Shift+F10 just pressed: the context menu that follows is the keyboard's */
   let byKeyboard = false;
 
@@ -489,7 +513,7 @@ export function createLift(options: LiftOptions): Lift {
       "position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none; " +
       "margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; overflow: hidden; " +
       "outline: none; box-shadow: none; opacity: 1; transform: none; filter: none; clip-path: none; " +
-      "mask: none; color: inherit; font: inherit;";
+      "mask: none; color: inherit; font: inherit; overscroll-behavior: contain;";
     shade = doc.createElement("div");
     shade.style.cssText = "position: absolute; inset: 0;";
     layer.append(shade);
@@ -598,6 +622,7 @@ export function createLift(options: LiftOptions): Lift {
     layer.addEventListener("click", clickedLayer);
     layer.addEventListener("keydown", keyed);
     layer.addEventListener("wheel", stillPage, { passive: false });
+    layer.addEventListener("touchstart", touched, { passive: true });
     layer.addEventListener("touchmove", stillPage, { passive: false });
     menu?.addEventListener("click", chosen);
     win.addEventListener("resize", resized);
@@ -649,7 +674,9 @@ export function createLift(options: LiftOptions): Lift {
     layer?.removeEventListener("click", clickedLayer);
     layer?.removeEventListener("keydown", keyed);
     layer?.removeEventListener("wheel", stillPage);
+    layer?.removeEventListener("touchstart", touched);
     layer?.removeEventListener("touchmove", stillPage);
+    touchAt = null;
     menu?.removeEventListener("click", chosen);
     win.removeEventListener("resize", resized);
     doc.removeEventListener("scroll", scrolled, { capture: true });
@@ -679,9 +706,30 @@ export function createLift(options: LiftOptions): Lift {
     if (menu?.contains(e.target as Node)) return;
     close();
   };
-  /** The page doesn't scroll under it; the menu may */
-  const stillPage = (e: Event) => {
-    if (!menu?.contains(e.target as Node)) e.preventDefault();
+  /**
+   * The page doesn't scroll under it; a menu that scrolls may, until its end. Anything else lets the
+   * gesture through to the page, which iOS scrolls even under a modal dialog
+   */
+  const touched = (e: TouchEvent) => {
+    const touch = e.touches[0];
+    touchAt = touch ? { x: touch.clientX, y: touch.clientY } : null;
+  };
+  const stillPage = (e: WheelEvent | TouchEvent) => {
+    let dx = 0;
+    let dy = 0;
+    if ("deltaY" in e) {
+      dx = e.deltaX;
+      dy = e.deltaY;
+    } else {
+      const touch = e.touches[0];
+      if (touch && touchAt) {
+        dx = touchAt.x - touch.clientX;
+        dy = touchAt.y - touch.clientY;
+      }
+      touched(e);
+    }
+    if (menu && scrollsWithin(e.target, menu, dx, dy)) return;
+    if (e.cancelable) e.preventDefault();
   };
   /** The items that can be chosen, in order */
   const itemsOf = () =>
