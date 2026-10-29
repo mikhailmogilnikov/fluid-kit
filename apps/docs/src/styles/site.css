@@ -465,14 +465,14 @@ code {
 
 /* ── Motion ── */
 
+/* Nothing left on it once it's up: an animation held at its end keeps Safari drawing it on a layer
+   of its own, and glass in it shakes while what's under the glass moves */
 .rise {
-  opacity: 0;
-  transform: translateY(14px);
-  animation: rise 0.9s var(--glide) forwards;
+  animation: rise 0.9s var(--glide) backwards;
   animation-delay: calc(var(--i, 0) * 80ms + 60ms);
 }
 @keyframes rise {
-  to { opacity: 1; transform: none; }
+  from { opacity: 0; transform: translateY(14px); }
 }
 
 .js .reveal {
@@ -548,12 +548,14 @@ code {
 :root[data-theme="dark"] .bd-aurora[data-silk="lift"] { background-image: url("../assets/silk-lift-dark.png"); }
 :root[data-theme="dark"] .bd-aurora[data-silk="edge"] { background-image: url("../assets/silk-edge-dark.png"); }
 :root[data-theme="dark"] .bd-aurora[data-silk="text"] { background-image: url("../assets/silk-text-dark.png"); }
+:root[data-theme="dark"] .bd-aurora[data-silk="layout"] { background-image: url("../assets/silk-layout-dark.png"); }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .bd-aurora[data-silk="indicator"] { background-image: url("../assets/silk-indicator-dark.png"); }
   :root:not([data-theme="light"]) .bd-aurora[data-silk="drag"] { background-image: url("../assets/silk-drag-dark.png"); }
   :root:not([data-theme="light"]) .bd-aurora[data-silk="lift"] { background-image: url("../assets/silk-lift-dark.png"); }
   :root:not([data-theme="light"]) .bd-aurora[data-silk="edge"] { background-image: url("../assets/silk-edge-dark.png"); }
   :root:not([data-theme="light"]) .bd-aurora[data-silk="text"] { background-image: url("../assets/silk-text-dark.png"); }
+  :root:not([data-theme="light"]) .bd-aurora[data-silk="layout"] { background-image: url("../assets/silk-layout-dark.png"); }
 }
 
 .bd-stripes::before {
@@ -1560,6 +1562,8 @@ code {
   gap: 20px;
   margin-top: 40px;
 }
+/* An odd one out spans the row */
+.lib--wide { grid-column: 1 / -1; }
 .lib {
   display: grid;
   align-content: start;

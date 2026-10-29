@@ -3,6 +3,7 @@ import { ref } from "vue";
 import { Glass, glass } from "@fluidkit/blur/vue";
 import { Drag, useDrag } from "@fluidkit/drag/vue";
 import { Indicator, useIndicator } from "@fluidkit/indicator/vue";
+import { Layout } from "@fluidkit/layout/vue";
 import { Lift, useLift } from "@fluidkit/lift/vue";
 import { Morph, useMorph } from "@fluidkit/morph/vue";
 
@@ -12,6 +13,8 @@ const open = ref(false);
 const tab = ref("overview");
 const view = ref("button");
 const snap = ref(1);
+const rows = ref(["One", "Two", "Three"]);
+let added = 0;
 
 const lift = useLift({ onSelect: (item) => log(`own select ${item.dataset.v}`) });
 const tabs = useIndicator<"a" | "b">({ trigger: "press", defaultValue: "a" });
@@ -101,6 +104,16 @@ const card = useDrag({ axis: "x", snaps: [0, 120], onSnapChange: (s) => log(`own
 
   <section class="track">
     <div :ref="card.element" class="card" data-testid="card">Card</div>
+  </section>
+
+  <section>
+    <button data-testid="layout-add" @click="rows = [`New ${++added}`, ...rows]">Add</button>
+    <button data-testid="layout-drop" @click="rows = rows.slice(1)">Drop</button>
+    <Layout.Root as-child>
+      <ul data-testid="layout">
+        <li v-for="row in rows" :key="row">{{ row }}</li>
+      </ul>
+    </Layout.Root>
   </section>
 
   <section class="glassy">

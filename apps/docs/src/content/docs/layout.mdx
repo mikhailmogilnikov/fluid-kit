@@ -1,0 +1,842 @@
+---
+package: "@fluidkit/layout"
+name: Layout
+order: 6
+description: "When the layout changes, elements move to their new places on springs instead of jumping: lists, grids, sections that open, labels that grow."
+intro: "Rows put in, ticked off and reordered, a grid filtered, a section opened, a label that grew. Change the page as you always do, and its elements move to where they now are on springs that keep their speed. Works with any element, and with <a href=\"/blur\">Liquid Blur</a> glass."
+frameworks: ["react", "vue", "svelte"]
+---
+
+import Section from "../../components/docs/Section.astro";
+import Steps from "../../components/docs/Steps.astro";
+import Step from "../../components/docs/Step.astro";
+import Install from "../../components/docs/Install.astro";
+import LayoutExample from "../../components/LayoutExample.astro";
+import Example from "../../components/docs/Example.astro";
+import Only from "../../components/docs/Only.astro";
+
+<Section id="start" title="Get started">
+
+Layout watches an element and its items, its children unless you say otherwise. When you put an item in, take one out, reorder them, change a class or let a size change, every item that moved is shown where it was and goes to where it is now on a spring. A size that changed changes for real, so text is never squeezed, and what comes after it in the page moves along.
+
+<Only js>
+
+<Steps>
+<Step>
+
+**Install.**
+
+<Install pkg="@fluidkit/layout" />
+
+</Step>
+<Step>
+
+**Call `createLayout` on the element whose items move.**
+
+```ts
+import { createLayout } from "@fluidkit/layout";
+
+createLayout({ root: document.querySelector<HTMLElement>(".list")! });
+```
+
+</Step>
+<Step>
+
+**Change the page as you always would.** Layout sees it before it's painted and moves everything from where it was.
+
+```ts
+list.prepend(row); // put in: the rows after it slide down, it fades in
+row.remove(); // taken out: it fades where it was, the rest close up
+list.append(...[...list.children].reverse()); // reordered: each slides to its place
+section.classList.add("open"); // a size that changed: it grows, what's under it moves down
+```
+
+</Step>
+</Steps>
+
+</Only>
+<Only react>
+
+<Steps>
+<Step>
+
+**Install.** The React components are included in the package (React 18+).
+
+<Install pkg="@fluidkit/layout" />
+
+</Step>
+<Step>
+
+**Wrap the list in `Layout.Root`.** Its children are the items. Render it as your own element with `render`.
+
+```tsx
+import { Layout } from "@fluidkit/layout/react";
+
+export function Reminders({ todos }: { todos: Todo[] }) {
+  return (
+    <Layout.Root render={<ul className="list" />}>
+      {todos.map((todo) => (
+        <li key={todo.id}>{todo.text}</li>
+      ))}
+    </Layout.Root>
+  );
+}
+```
+
+</Step>
+<Step>
+
+**Change your state as you always would.** Rows React puts in, takes out or moves by their keys, classes it changes and sizes that change are followed.
+
+</Step>
+</Steps>
+
+Components are marked `"use client"`. On the server they render plain markup.
+
+</Only>
+<Only vue>
+
+<Steps>
+<Step>
+
+**Install.** The Vue components are included in the package (Vue 3.5+).
+
+<Install pkg="@fluidkit/layout" />
+
+</Step>
+<Step>
+
+**Wrap the list in `Layout.Root`.** Its children are the items. With `as-child` it renders your element instead of a `div`.
+
+```vue
+<script setup lang="ts">
+import { Layout } from "@fluidkit/layout/vue";
+
+defineProps<{ todos: { id: string; text: string }[] }>();
+</script>
+
+<template>
+  <Layout.Root as-child>
+    <ul class="list">
+      <li v-for="todo in todos" :key="todo.id">{{ todo.text }}</li>
+    </ul>
+  </Layout.Root>
+</template>
+```
+
+</Step>
+<Step>
+
+**Change your state as you always would.** Rows Vue puts in, takes out or moves by their keys, classes it changes and sizes that change are followed.
+
+</Step>
+</Steps>
+
+On the server it renders plain markup.
+
+</Only>
+<Only svelte>
+
+<Steps>
+<Step>
+
+**Install.** The Svelte components are included in the package (Svelte 5.29+).
+
+<Install pkg="@fluidkit/layout" />
+
+</Step>
+<Step>
+
+**Wrap the list in `Layout.Root`.** Its children are the items. A `child` snippet renders your element instead of a `div`: spread the `props` it gives onto it.
+
+```svelte
+<script lang="ts">
+  import { Layout } from "@fluidkit/layout/svelte";
+
+  let { todos }: { todos: { id: string; text: string }[] } = $props();
+</script>
+
+<Layout.Root>
+  {#snippet child({ props })}
+    <ul {...props} class="list">
+      {#each todos as todo (todo.id)}<li>{todo.text}</li>{/each}
+    </ul>
+  {/snippet}
+</Layout.Root>
+```
+
+</Step>
+<Step>
+
+**Change your state as you always would.** Rows Svelte puts in, takes out or moves by their keys, classes it changes and sizes that change are followed.
+
+</Step>
+</Steps>
+
+On the server it renders plain markup.
+
+</Only>
+
+</Section>
+
+<Section id="examples" title="Examples">
+
+### Reminders
+
+Put one in at the top and the rest slide down while it fades in. Tick one off and it fades where it was while the rows under it close up. Shuffle, and each row slides to its new place. Do it again before they've stopped: they turn around from where they are, keeping their speed.
+
+<Example>
+<LayoutExample kind="list" />
+
+<Fragment slot="html">
+
+```html
+<ul class="list">
+  <li class="row"><button class="tick" aria-label="Done"></button>Book the train to Lyon</li>
+  <li class="row"><button class="tick" aria-label="Done"></button>Call the dentist</li>
+  …
+</ul>
+```
+
+</Fragment>
+<Fragment slot="js">
+
+```ts
+import { createLayout } from "@fluidkit/layout";
+
+const list = document.querySelector<HTMLElement>(".list")!;
+createLayout({ root: list });
+
+// Ticked off: the row goes
+list.addEventListener("click", (e) => (e.target as Element).closest(".tick")?.closest("li")?.remove());
+
+function add(text: string) {
+  const row = document.createElement("li");
+  row.className = "row";
+  row.textContent = text;
+  list.prepend(row);
+}
+
+function shuffle() {
+  const rows = [...list.children].sort(() => Math.random() - 0.5);
+  list.append(...rows);
+}
+```
+
+</Fragment>
+<Fragment slot="react">
+
+```tsx
+import { useState } from "react";
+import { Layout } from "@fluidkit/layout/react";
+
+export function Reminders() {
+  const [todos, setTodos] = useState(initial);
+  const add = (text: string) => setTodos((t) => [{ id: crypto.randomUUID(), text }, ...t]);
+  const done = (id: string) => setTodos((t) => t.filter((todo) => todo.id !== id));
+  const shuffle = () => setTodos((t) => [...t].sort(() => Math.random() - 0.5));
+  return (
+    <Layout.Root render={<ul className="list" />}>
+      {todos.map((todo) => (
+        <li key={todo.id} className="row">
+          <button className="tick" aria-label="Done" onClick={() => done(todo.id)} />
+          {todo.text}
+        </li>
+      ))}
+    </Layout.Root>
+  );
+}
+```
+
+</Fragment>
+<Fragment slot="vue">
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { Layout } from "@fluidkit/layout/vue";
+
+const todos = ref(initial);
+const add = (text: string) => todos.value.unshift({ id: crypto.randomUUID(), text });
+const done = (id: string) => (todos.value = todos.value.filter((todo) => todo.id !== id));
+const shuffle = () => (todos.value = [...todos.value].sort(() => Math.random() - 0.5));
+</script>
+
+<template>
+  <Layout.Root as-child>
+    <ul class="list">
+      <li v-for="todo in todos" :key="todo.id" class="row">
+        <button class="tick" aria-label="Done" @click="done(todo.id)" />
+        {{ todo.text }}
+      </li>
+    </ul>
+  </Layout.Root>
+</template>
+```
+
+</Fragment>
+<Fragment slot="svelte">
+
+```svelte
+<script lang="ts">
+  import { Layout } from "@fluidkit/layout/svelte";
+
+  let todos = $state(initial);
+  const add = (text: string) => todos.unshift({ id: crypto.randomUUID(), text });
+  const done = (id: string) => (todos = todos.filter((todo) => todo.id !== id));
+  const shuffle = () => (todos = [...todos].sort(() => Math.random() - 0.5));
+</script>
+
+<Layout.Root>
+  {#snippet child({ props })}
+    <ul {...props} class="list">
+      {#each todos as todo (todo.id)}
+        <li class="row">
+          <button class="tick" aria-label="Done" onclick={() => done(todo.id)}></button>
+          {todo.text}
+        </li>
+      {/each}
+    </ul>
+  {/snippet}
+</Layout.Root>
+```
+
+</Fragment>
+<Fragment slot="css">
+
+```css
+.list { margin: 0; padding: 0; list-style: none; }
+.row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; }
+.tick { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #8888; }
+```
+
+</Fragment>
+</Example>
+
+### Photos
+
+Filter the grid and the photos that don't match fade where they were, while the rest slide to their new cells. Back to All, the others fade in where they belong. Nothing here knows it's a grid: Layout follows whatever the browser lays out.
+
+<Example>
+<LayoutExample kind="grid" />
+
+<Fragment slot="js">
+
+```ts
+import { createLayout } from "@fluidkit/layout";
+
+const grid = document.querySelector<HTMLElement>(".grid")!;
+const photos = [...grid.children];
+createLayout({ root: grid });
+
+function show(match: (photo: Element) => boolean) {
+  const keep = photos.filter(match);
+  for (const photo of photos) if (!keep.includes(photo)) photo.remove();
+  grid.append(...keep);
+}
+```
+
+</Fragment>
+<Fragment slot="react">
+
+```tsx
+import { Layout } from "@fluidkit/layout/react";
+
+export function Photos({ photos, filter }: { photos: Photo[]; filter: (p: Photo) => boolean }) {
+  return (
+    <Layout.Root render={<div className="grid" />}>
+      {photos.filter(filter).map((photo) => (
+        <img key={photo.id} src={photo.src} alt={photo.alt} />
+      ))}
+    </Layout.Root>
+  );
+}
+```
+
+</Fragment>
+<Fragment slot="vue">
+
+```vue
+<template>
+  <Layout.Root as-child>
+    <div class="grid">
+      <img v-for="photo in photos.filter(filter)" :key="photo.id" :src="photo.src" :alt="photo.alt" />
+    </div>
+  </Layout.Root>
+</template>
+```
+
+</Fragment>
+<Fragment slot="svelte">
+
+```svelte
+<Layout.Root>
+  {#snippet child({ props })}
+    <div {...props} class="grid">
+      {#each photos.filter(filter) as photo (photo.id)}<img src={photo.src} alt={photo.alt} />{/each}
+    </div>
+  {/snippet}
+</Layout.Root>
+```
+
+</Fragment>
+<Fragment slot="css">
+
+```css
+.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 12px; }
+```
+
+</Fragment>
+</Example>
+
+### Settings
+
+A section opens by its real height on a spring: its text is revealed, never squeezed, and the sections under it and the card after them move down with it. Open another while the first is still opening and both carry on together.
+
+<Example>
+<LayoutExample kind="settings" />
+
+<Fragment slot="js">
+
+```ts
+import { createLayout } from "@fluidkit/layout";
+
+const sections = document.querySelector<HTMLElement>(".sections")!;
+createLayout({ root: sections });
+
+for (const section of sections.children) {
+  section.querySelector("button")!.addEventListener("click", () => section.classList.toggle("open"));
+}
+```
+
+</Fragment>
+<Fragment slot="react">
+
+```tsx
+import { useState } from "react";
+import { Layout } from "@fluidkit/layout/react";
+
+export function Settings({ sections }: { sections: { title: string; text: string }[] }) {
+  const [open, setOpen] = useState<string | null>(null);
+  return (
+    <Layout.Root className="sections">
+      {sections.map(({ title, text }) => (
+        <section key={title}>
+          <button aria-expanded={open === title} onClick={() => setOpen(open === title ? null : title)}>
+            {title}
+          </button>
+          {open === title && <p>{text}</p>}
+        </section>
+      ))}
+    </Layout.Root>
+  );
+}
+```
+
+</Fragment>
+<Fragment slot="vue">
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { Layout } from "@fluidkit/layout/vue";
+
+defineProps<{ sections: { title: string; text: string }[] }>();
+const open = ref<string | null>(null);
+</script>
+
+<template>
+  <Layout.Root class="sections">
+    <section v-for="{ title, text } in sections" :key="title">
+      <button :aria-expanded="open === title" @click="open = open === title ? null : title">{{ title }}</button>
+      <p v-if="open === title">{{ text }}</p>
+    </section>
+  </Layout.Root>
+</template>
+```
+
+</Fragment>
+<Fragment slot="svelte">
+
+```svelte
+<script lang="ts">
+  import { Layout } from "@fluidkit/layout/svelte";
+
+  let { sections }: { sections: { title: string; text: string }[] } = $props();
+  let open = $state<string | null>(null);
+</script>
+
+<Layout.Root class="sections">
+  {#each sections as { title, text } (title)}
+    <section>
+      <button aria-expanded={open === title} onclick={() => (open = open === title ? null : title)}>{title}</button>
+      {#if open === title}<p>{text}</p>{/if}
+    </section>
+  {/each}
+</Layout.Root>
+```
+
+</Fragment>
+</Example>
+
+### A label that grows
+
+Follow becomes Following: the glass button widens on the spring, its label shown whole as it does, and the name beside it gives way. Any item whose size changes does the same, whatever changed it: a label, an image loading, a font.
+
+<Example>
+<LayoutExample kind="follow" />
+
+<Fragment slot="js">
+
+```ts
+import "@fluidkit/blur/style.css";
+import { createLayout } from "@fluidkit/layout";
+
+const profile = document.querySelector<HTMLElement>(".profile")!;
+createLayout({ root: profile });
+
+const follow = profile.querySelector<HTMLButtonElement>(".follow")!;
+follow.addEventListener("click", () => {
+  follow.textContent = follow.textContent === "Follow" ? "Following" : "Follow";
+});
+```
+
+</Fragment>
+<Fragment slot="react">
+
+```tsx
+import "@fluidkit/blur/style.css";
+import { useState } from "react";
+import { Glass } from "@fluidkit/blur/react";
+import { Layout } from "@fluidkit/layout/react";
+
+export function Profile() {
+  const [following, setFollowing] = useState(false);
+  return (
+    <Layout.Root render={<Glass className="profile" />}>
+      <img className="avatar" src="/nadia.jpg" alt="" />
+      <b className="name">Nadia Ortega</b>
+      <Glass interactive tint={following} render={<button onClick={() => setFollowing(!following)} />}>
+        {following ? "Following" : "Follow"}
+      </Glass>
+    </Layout.Root>
+  );
+}
+```
+
+</Fragment>
+<Fragment slot="vue">
+
+```vue
+<script setup lang="ts">
+import "@fluidkit/blur/style.css";
+import { ref } from "vue";
+import { Glass } from "@fluidkit/blur/vue";
+import { Layout } from "@fluidkit/layout/vue";
+
+const following = ref(false);
+</script>
+
+<template>
+  <Layout.Root as-child>
+    <Glass class="profile">
+      <img class="avatar" src="/nadia.jpg" alt="" />
+      <b class="name">Nadia Ortega</b>
+      <Glass interactive :tint="following" as-child>
+        <button @click="following = !following">{{ following ? "Following" : "Follow" }}</button>
+      </Glass>
+    </Glass>
+  </Layout.Root>
+</template>
+```
+
+</Fragment>
+<Fragment slot="svelte">
+
+```svelte
+<script lang="ts">
+  import "@fluidkit/blur/style.css";
+  import { Glass } from "@fluidkit/blur/svelte";
+  import { Layout } from "@fluidkit/layout/svelte";
+
+  let following = $state(false);
+</script>
+
+<Layout.Root class="profile lb">
+  <img class="avatar" src="/nadia.jpg" alt="" />
+  <b class="name">Nadia Ortega</b>
+  <Glass interactive tint={following}>
+    {#snippet child({ props })}
+      <button {...props} onclick={() => (following = !following)}>{following ? "Following" : "Follow"}</button>
+    {/snippet}
+  </Glass>
+</Layout.Root>
+```
+
+</Fragment>
+<Fragment slot="css">
+
+```css
+.profile { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 999px; }
+.name { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.profile button { padding: 9px 18px; border-radius: 999px; white-space: nowrap; }
+```
+
+</Fragment>
+</Example>
+
+</Section>
+
+<Section id="moving" title="How it moves">
+
+**From where it was drawn.** A change is seen before the browser paints it, and each item that moved is shown exactly where it was, then moves to where it is now. Another change on the way sets off from where everything is drawn at that moment, keeping its speed: nothing jumps, however fast the changes come.
+
+**Positions, then sizes.** A moved item goes on `translate`. An item whose size changed, and the root itself, change size for real: `width` and `height` on the spring, what's past the size clipped along that axis while it grows. Text isn't squeezed, corners and shadows aren't stretched, and what comes after them in the page moves with them instead of jumping. With `size: false`, sizes change at once and only positions move.
+
+**In and out.** A new item comes in where it is, from transparent and a little smaller (`enter`). One taken out of the page goes out where it was (`exit`): the element itself, put back in its place for the while, out of the flow, inert and hidden from assistive technology, then removed. Put back in the page meanwhile, it stays and moves from where it was. An item hidden with `display: none` just goes.
+
+**What it touches.** While an item moves, its inline `translate` is the layout's, added to its own: a [drag](/drag)'s offset, or its stylesheet's. `transform` is never touched, so a [press](/blur#press) stretching glass or a [morph](/morph) flying it goes on as it does, and an item being dragged (`data-dragging`) isn't moved. While it comes in or goes out, its `scale` (times its own) and `opacity` are the layout's; while its size changes, its `width`, `height` and what would hold them back, including its flex along the container's main axis. Everything is put back as it was once it's at rest.
+
+**What it sees.** Items put in, taken out or moved, the `class` and `hidden` of the root and its items, and their sizes. A change none of these show, say an item's inline `style` or a class on an ancestor that moves items without resizing them, is followed on `update()`. Scrolling isn't a change: positions are read inside the root, its scroll included. With reduced motion everything changes at once, and so it does while the root is hidden (in a tab not shown, say) and as it's shown again.
+
+</Section>
+
+<Section id="morph" title="Layout or Morph?">
+
+Both move things on springs, for different changes. [Morph](/morph) turns one element into another: a button into a panel, a row into a page. Layout moves an element to where the page has put it now: the same row, further down; the same section, taller. A list with rows that open into panels can use both, Layout on the list and Morph on each row.
+
+</Section>
+
+<Section id="performance" title="Performance">
+
+Moves are translations and cost almost nothing. Sizes change for real, so the browser lays out what depends on them each frame, only while they move: in a component, a list or a card, under a couple of milliseconds a frame on a phone. A section high up in a long page lays out everything under it each frame; measured over five hundred rows on a mid-range phone's CPU, under 8ms a frame. If a page is much heavier, use `size: false` there, or give what's under it less to lay out.
+
+</Section>
+
+<Section id="options" title="Options" only="js">
+
+`createLayout(options: LayoutOptions): Layout`
+
+| Option | Description |
+| --- | --- |
+| `root: HTMLElement` | The element whose items move |
+| `items?: string` | Its items, as a selector inside it. Default: its children |
+| `spring?: SpringParams` | The spring everything moves on. Default: `{ duration: 0.26, bounce: 0.15 }`. See [core](/core#spring) |
+| `size?: boolean` | Sizes change on the spring too. Default: `true`. `false` changes them at once and moves only positions |
+| `enter?: { opacity?, scale? } \| false` | Where a new item comes in from. Default: `{ opacity: 0, scale: 0.96 }`. `false`: it's there at once |
+| `exit?: { opacity?, scale? } \| false` | Where an item taken out goes. Default: the same. `false`: it's gone at once |
+| `onStart?: () => void` | Called when something sets off moving, from rest |
+| `onRest?: () => void` | Called when everything has come to rest |
+
+</Section>
+
+<Section id="api" title="API" only="js">
+
+| Member | Description |
+| --- | --- |
+| `moving` | `true` while something is on its way |
+| `update()` | Reads the layout again and follows it, for a change no watcher sees |
+| `set(settings)` | Updates any option except `root` and `items`, without recreating it |
+| `destroy()` | Stops watching. Everything still moving is put where it is at once, and every style it wrote put back |
+
+</Section>
+
+<Section id="parts" title="Parts" only="react vue svelte">
+
+<Only react>
+
+| Part | Renders | Description |
+| --- | --- | --- |
+| `Layout.Root` | `div` | The element whose items move: its children. Has `data-moving` while something is on its way |
+
+`Layout.Root` props:
+
+| Prop | Description |
+| --- | --- |
+| `items?: string` | Its items, as a selector inside it. Default: its children |
+| `spring?: SpringParams` | The spring everything moves on. Default: `{ duration: 0.26, bounce: 0.15 }` |
+| `size?: boolean` | Sizes change on the spring too. Default: `true` |
+| `enter?: { opacity?, scale? } \| false` | Where a new item comes in from. Default: `{ opacity: 0, scale: 0.96 }` |
+| `exit?: { opacity?, scale? } \| false` | Where an item taken out goes. Default: the same |
+| `onStart?: () => void` | Called when something sets off moving, from rest |
+| `onRest?: () => void` | Called when everything has come to rest |
+
+Changing props never recreates it. Changing `items` does.
+
+</Only>
+<Only vue>
+
+| Part | Renders | Description |
+| --- | --- | --- |
+| `Layout.Root` | `div` | The element whose items move: its children. Has `data-moving` while something is on its way. Takes `as-child`, see [Composition](#composition) |
+
+`Layout.Root` props and events:
+
+| Prop or event | Description |
+| --- | --- |
+| `items?: string` | Its items, as a selector inside it. Default: its children |
+| `spring?: SpringParams` | The spring everything moves on. Default: `{ duration: 0.26, bounce: 0.15 }` |
+| `size?: boolean` | Sizes change on the spring too. Default: `true` |
+| `enter?: { opacity?, scale? } \| false` | Where a new item comes in from. Default: `{ opacity: 0, scale: 0.96 }` |
+| `exit?: { opacity?, scale? } \| false` | Where an item taken out goes. Default: the same |
+| `@start` | Something set off moving, from rest |
+| `@rest` | Everything has come to rest |
+
+Changing props never recreates it. Changing `items` does.
+
+</Only>
+<Only svelte>
+
+| Part | Renders | Description |
+| --- | --- | --- |
+| `Layout.Root` | `div` | The element whose items move: its children. Has `data-moving` while something is on its way. Takes a `child` snippet, see [Composition](#composition) |
+
+`Layout.Root` props:
+
+| Prop | Description |
+| --- | --- |
+| `items?: string` | Its items, as a selector inside it. Default: its children |
+| `spring?: SpringParams` | The spring everything moves on. Default: `{ duration: 0.26, bounce: 0.15 }` |
+| `size?: boolean` | Sizes change on the spring too. Default: `true` |
+| `enter?: { opacity?, scale? } \| false` | Where a new item comes in from. Default: `{ opacity: 0, scale: 0.96 }` |
+| `exit?: { opacity?, scale? } \| false` | Where an item taken out goes. Default: the same |
+| `onStart={() => …}` | Something set off moving, from rest |
+| `onRest={() => …}` | Everything has come to rest |
+
+Changing props never recreates it. Changing `items` does.
+
+</Only>
+
+</Section>
+
+<Section id="composition" title="Composition" only="react vue svelte">
+
+<Only react>
+
+**Render as your own element.** `Layout.Root` accepts `render`, as in Base UI: pass an element and our props are merged into it, or a function that receives the props and state (`{ moving }`).
+
+```tsx
+<Layout.Root render={<ul className="list" />}>{rows}</Layout.Root>
+```
+
+**Glass.** Render it as [`Glass`](/blur#components), and its items as glass too: a [glass group](/blur#groups) melts with them as they move.
+
+```tsx
+<Layout.Root render={<Glass.Group className="toolbar" />}>{tools}</Layout.Root>
+```
+
+</Only>
+<Only vue>
+
+**Render as your own element.** `Layout.Root` accepts `as-child`, as in Reka UI: it renders the first element in its slot, with our attributes and ref merged in. The slot also receives its state (`{ moving }`).
+
+```vue
+<Layout.Root as-child>
+  <ul class="list">…</ul>
+</Layout.Root>
+```
+
+**Glass.** Render it as [`Glass`](/blur#components), and its items as glass too: a [glass group](/blur#groups) melts with them as they move.
+
+```vue
+<Layout.Root as-child>
+  <Glass.Group class="toolbar">…</Glass.Group>
+</Layout.Root>
+```
+
+</Only>
+<Only svelte>
+
+**Render as your own element.** `Layout.Root` accepts a `child` snippet, as in bits-ui: spread the `props` it gives onto your element. They carry the attachment that connects it. The snippet also receives its state (`{ moving }`).
+
+```svelte
+<Layout.Root>
+  {#snippet child({ props })}<ul {...props} class="list">…</ul>{/snippet}
+</Layout.Root>
+```
+
+**Glass.** Put the props on a [glass group](/blur#groups), and its items glass too: the group melts with them as they move.
+
+```svelte
+<Layout.Root>
+  {#snippet child({ props })}
+    <Glass.Group {...props} class="toolbar">…</Glass.Group>
+  {/snippet}
+</Layout.Root>
+```
+
+</Only>
+
+</Section>
+
+<Section id="hook" title="The hook" only="react vue svelte">
+
+<Only react>
+
+Use `useLayout(options)` when the component doesn't fit your markup. It takes the same options as `Layout.Root` and returns a ref.
+
+```tsx
+import { useLayout } from "@fluidkit/layout/react";
+
+const layout = useLayout({ size: false });
+
+<ul ref={layout.root}>{rows}</ul>
+```
+
+| Member | Description |
+| --- | --- |
+| `root` | The ref for the element whose items move |
+| `moving` | `true` while something is on its way |
+| `update()` | Reads the layout again, for a change no watcher sees |
+| `layout` | The underlying engine, once mounted |
+
+</Only>
+<Only vue>
+
+Use `useLayout(options)` when the component doesn't fit your markup. Options can be an object, a ref or a getter; a getter is read again when what it uses changes. It returns a function ref for `:ref`.
+
+```vue
+<script setup lang="ts">
+import { useLayout } from "@fluidkit/layout/vue";
+
+const layout = useLayout({ size: false });
+</script>
+
+<template>
+  <ul :ref="layout.root">…</ul>
+</template>
+```
+
+| Member | Description |
+| --- | --- |
+| `root` | Function ref for the element whose items move |
+| `moving` | Ref: `true` while something is on its way |
+| `update()` | Reads the layout again, for a change no watcher sees |
+| `layout` | Shallow ref to the underlying engine, once mounted |
+
+</Only>
+<Only svelte>
+
+Use `useLayout(() => options)` when the component doesn't fit your markup. Call it in a component's script; the options getter is read again when what it uses changes. It returns an attachment for `{@attach}`, and state you read like any other.
+
+```svelte
+<script lang="ts">
+  import { useLayout } from "@fluidkit/layout/svelte";
+
+  const layout = useLayout(() => ({ size: false }));
+</script>
+
+<ul {@attach layout.root}>…</ul>
+```
+
+| Member | Description |
+| --- | --- |
+| `root` | Attachment for the element whose items move |
+| `moving` | `true` while something is on its way |
+| `update()` | Reads the layout again, for a change no watcher sees |
+| `layout` | The underlying engine, once mounted |
+
+</Only>
+
+</Section>

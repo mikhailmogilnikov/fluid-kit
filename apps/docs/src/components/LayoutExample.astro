@@ -1,0 +1,323 @@
+---
+import Icon from "./Icon.astro";
+
+/**
+ * One of Layout's examples, live:
+ *   - list: reminders, one put in at the top, ticked off, shuffled; the rest make room or close up
+ *   - grid: photos filtered by chips, the ones that go fading where they were
+ *   - settings: sections that open by their real height, what's under them moving down
+ *   - follow: a glass button whose label grows, the name beside it giving way
+ */
+interface Props {
+  kind: "list" | "grid" | "settings" | "follow";
+  /** As a library's card on the landing: the card's size and corners, and room for a hint (the slot) */
+  card?: boolean;
+}
+
+const { kind, card = false } = Astro.props;
+const reminders = ["Book the train to Lyon", "Call the dentist", "Water the plants", "Buy oat milk"];
+const photos = Array.from({ length: 12 }, (_, i) => {
+  const hue = (i * 37 + 12) % 360;
+  return { hue, warm: hue < 80 || hue >= 290 };
+});
+const settings = [
+  ["Wi-Fi", "Connected to Home. Networks you've joined before connect on their own when they're near."],
+  ["Bluetooth", "AirPods Pro and Magic Keyboard are connected. Two more devices are remembered."],
+  ["Focus", "Do Not Disturb until 7:00. Calls from your favorites come through, and repeated calls too."],
+];
+---
+
+<div class:list={["ly", `ly--${kind}`, { "ly--card": card }]} data-ly={kind} data-hints={card ? "" : undefined}>
+  <div class="bd bd-aurora" data-silk="layout"></div>
+
+  {
+    kind === "list" && (
+      <div class="ly__reminders lb">
+        <div class="ly__bar">
+          <b>Today</b>
+          <button type="button" class="ly__icon lb lb-interactive" aria-label="Shuffle" data-ly-shuffle>
+            <Icon name="sort" size={16} />
+          </button>
+          <button type="button" class="ly__icon lb lb-interactive" aria-label="New reminder" data-ly-add>
+            <Icon name="plus" size={16} />
+          </button>
+        </div>
+        <ul class="ly__list" data-ly-root>
+          {reminders.map((text) => (
+            <li class="ly__row">
+              <button type="button" class="ly__tick" aria-label={`Done: ${text}`} />
+              <span>{text}</span>
+            </li>
+          ))}
+        </ul>
+        {/* A row to put in, styled as the others: one made by the script would miss their styles */}
+        <template data-ly-row>
+          <li class="ly__row">
+            <button type="button" class="ly__tick" />
+            <span />
+          </li>
+        </template>
+      </div>
+    )
+  }
+
+  {
+    kind === "grid" && (
+      <div class="ly__photos">
+        <div class="ly__chips" role="group" aria-label="Show">
+          {["All", "Warm", "Cool"].map((label, i) => (
+            <button type="button" class="ly__chip lb lb-interactive" aria-pressed={i === 0 ? "true" : "false"} data-ly-filter={label.toLowerCase()}>
+              {label}
+            </button>
+          ))}
+        </div>
+        <div class="ly__grid" data-ly-root>
+          {photos.map(({ hue, warm }) => (
+            <span
+              class="ly__photo"
+              data-warm={warm ? "" : undefined}
+              style={`background: linear-gradient(135deg, oklch(0.8 0.13 ${hue}), oklch(0.6 0.16 ${(hue + 40) % 360}))`}
+            />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  {
+    kind === "settings" && (
+      <div class="ly__settings">
+        <div class="ly__sections lb" data-ly-root>
+          {settings.map(([title, text]) => (
+            <section class="ly__section">
+              <button type="button" class="ly__head" aria-expanded="false">
+                {title}
+                <Icon name="chevron" size={14} />
+              </button>
+              <p class="ly__body">{text}</p>
+            </section>
+          ))}
+        </div>
+        <p class="ly__after lb">Battery 82%</p>
+      </div>
+    )
+  }
+
+  {
+    kind === "follow" && (
+      <div class="ly__profile lb" data-ly-root>
+        <span class="ly__avatar" aria-hidden="true" />
+        <span class="ly__who">
+          <b>Nadia Ortega</b>
+          <span>Photographer · Lisbon</span>
+        </span>
+        <button type="button" class="ly__follow lb lb-interactive" aria-pressed="false" data-ly-follow>
+          Follow
+        </button>
+      </div>
+    )
+  }
+  <slot />
+</div>
+
+<style>
+  .ly {
+    position: relative;
+    height: 420px;
+    display: grid;
+    place-items: center;
+    border-radius: 20px;
+    background: var(--wash);
+    isolation: isolate;
+    /* No wider than the page */
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ly--follow { height: 220px; }
+  .ly--card {
+    height: var(--mdemo-height);
+    border-radius: var(--radius);
+    place-items: start center;
+    padding-top: 28px;
+  }
+
+  /* Reminders: a card with its rows, a bar to put one in or shuffle them */
+  .ly__reminders {
+    width: min(340px, calc(100% - 32px));
+    padding: 14px 10px 10px;
+    border-radius: 28px;
+    color: var(--ink);
+  }
+  .ly__bar { display: flex; align-items: center; gap: 8px; padding: 0 6px 10px 10px; }
+  .ly__bar b { flex: 1; font-size: 17px; }
+  .ly__icon { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; color: inherit; }
+  .ly__list { margin: 0; padding: 0; list-style: none; }
+  .ly__row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    font-size: 15px;
+  }
+  /* A hairline between rows from the text on, as iOS draws them */
+  .ly__row + .ly__row::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 46px;
+    right: 12px;
+    border-top: 1px solid rgb(127 127 127 / 0.18);
+  }
+  .ly__row span { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .ly__tick {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid color-mix(in srgb, var(--ink) 35%, transparent);
+    background: none;
+  }
+  .ly__tick:hover { border-color: #ff9f0a; }
+
+  /* Photos: chips above a grid of four */
+  /* Positioned, as the glass in the other scenes is: over the backdrop, which is positioned too */
+  .ly__photos { position: relative; width: min(360px, calc(100% - 32px)); display: grid; gap: 12px; }
+  .ly__chips { display: flex; gap: 8px; }
+  .ly__chip { padding: 7px 14px; border-radius: 999px; color: var(--ink); font-size: 14px; font-weight: 500; }
+  .ly__chip[aria-pressed="true"] { --lb-tint: var(--ink); background: var(--ink); color: var(--on-ink); }
+  .ly__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .ly__photo { aspect-ratio: 1; border-radius: 12px; }
+
+  /* Settings: sections that open, and something under them */
+  .ly__settings { position: relative; width: min(340px, calc(100% - 32px)); display: grid; gap: 12px; align-self: start; margin-top: 40px; }
+  .ly__sections { border-radius: 24px; color: var(--ink); overflow: hidden; }
+  .ly__section + .ly__section { box-shadow: inset 0 1px 0 rgb(127 127 127 / 0.16); }
+  .ly__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 14px 18px;
+    background: none;
+    color: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: left;
+  }
+  .ly__head :global(svg) { transition: rotate 0.3s; }
+  .ly__head[aria-expanded="true"] :global(svg) { rotate: 180deg; }
+  .ly__body { display: none; margin: 0; padding: 0 18px 16px; color: var(--ink-2); font-size: 14px; line-height: 1.45; }
+  .ly__section.is-open .ly__body { display: block; }
+  .ly__after { margin: 0; padding: 14px 18px; border-radius: 20px; color: var(--ink-2); font-size: 14px; }
+
+  /* A profile with a button whose label grows */
+  .ly__profile {
+    width: min(360px, calc(100% - 32px));
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 10px 10px 12px;
+    border-radius: 999px;
+    color: var(--ink);
+  }
+  .ly__avatar { flex: none; width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #ff9f0a, #ff375f); }
+  .ly__who { flex: 1; min-width: 0; display: grid; }
+  .ly__who b, .ly__who span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .ly__who b { font-size: 15px; }
+  .ly__who span { color: var(--ink-2); font-size: 13px; }
+  .ly__follow {
+    flex: none;
+    padding: 9px 18px;
+    border-radius: 999px;
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .ly__follow[aria-pressed="true"] { --lb-tint: #0a84ff; color: #fff; }
+</style>
+
+<script>
+  import { createLayout } from "@fluidkit/layout";
+
+  /** Its items as the page has them: not one going out */
+  const live = (root: Element) => [...root.children].filter((el) => !el.hasAttribute("data-fk-part"));
+
+  const fresh = ["Pick up the dry cleaning", "Reply to Sam", "Renew the passport", "Order a birthday cake", "Back up the laptop"];
+
+  for (const scene of document.querySelectorAll<HTMLElement>("[data-ly]:not([data-ly-ready])")) {
+    scene.dataset.lyReady = "";
+    const root = scene.querySelector<HTMLElement>("[data-ly-root]")!;
+    const kind = scene.dataset.ly;
+
+    if (kind === "list") {
+      createLayout({ root });
+      const card = scene.classList.contains("ly--card");
+      let n = 0;
+      // Ticked off: the row goes, the rest close up
+      root.addEventListener("click", (e) => {
+        const tick = (e.target as Element).closest(".ly__tick");
+        if (tick) tick.closest("li")?.remove();
+      });
+      scene.querySelector("[data-ly-add]")!.addEventListener("click", () => {
+        const text = fresh[n++ % fresh.length];
+        const row = scene.querySelector<HTMLTemplateElement>("[data-ly-row]")!.content.firstElementChild!.cloneNode(true) as HTMLElement;
+        row.querySelector("button")!.setAttribute("aria-label", `Done: ${text}`);
+        row.querySelector("span")!.textContent = text;
+        root.prepend(row);
+        // On a card there's room for five: the oldest goes as a new one comes
+        if (card && live(root).length > 5) live(root).at(-1)?.remove();
+      });
+      scene.querySelector("[data-ly-shuffle]")!.addEventListener("click", () => {
+        const rows = live(root);
+        for (let i = rows.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [rows[i], rows[j]] = [rows[j], rows[i]];
+        }
+        // Never the same order twice in a row
+        if (rows.every((row, i) => row === live(root)[i])) rows.reverse();
+        root.append(...rows);
+      });
+      continue;
+    }
+
+    if (kind === "grid") {
+      createLayout({ root });
+      const photos = [...root.children];
+      const chips = [...scene.querySelectorAll<HTMLElement>("[data-ly-filter]")];
+      for (const chip of chips) {
+        chip.addEventListener("click", () => {
+          for (const c of chips) c.setAttribute("aria-pressed", String(c === chip));
+          const kind = chip.dataset.lyFilter;
+          const keep = photos.filter((p) => kind === "all" || (kind === "warm") === p.hasAttribute("data-warm"));
+          // As a framework would: the others taken out of the page, these put in order
+          for (const p of photos) if (!keep.includes(p) && p.isConnected && !p.hasAttribute("data-fk-part")) p.remove();
+          root.append(...keep);
+        });
+      }
+      continue;
+    }
+
+    if (kind === "settings") {
+      createLayout({ root });
+      for (const section of root.children) {
+        const head = section.querySelector("button")!;
+        head.addEventListener("click", () => {
+          const open = section.classList.toggle("is-open");
+          head.setAttribute("aria-expanded", String(open));
+        });
+      }
+      continue;
+    }
+
+    // Follow: the label changes, the button's width follows on the spring
+    createLayout({ root });
+    const button = scene.querySelector<HTMLElement>("[data-ly-follow]")!;
+    button.addEventListener("click", () => {
+      const on = button.getAttribute("aria-pressed") !== "true";
+      button.setAttribute("aria-pressed", String(on));
+      button.classList.toggle("lb-tinted", on);
+      button.textContent = on ? "Following" : "Follow";
+    });
+  }
+</script>

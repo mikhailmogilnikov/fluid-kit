@@ -1,10 +1,11 @@
 import "@fluidkit/blur/style.css";
 import "../scene.css";
-import { StrictMode, useState } from "react";
+import { StrictMode, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Glass, glass } from "@fluidkit/blur/react";
 import { Drag, useDrag } from "@fluidkit/drag/react";
 import { Indicator, useIndicator } from "@fluidkit/indicator/react";
+import { Layout } from "@fluidkit/layout/react";
 import { Lift, useLift } from "@fluidkit/lift/react";
 import { Morph, useMorph } from "@fluidkit/morph/react";
 
@@ -15,6 +16,8 @@ function Scene({ log }: { log: Log }) {
   const [tab, setTab] = useState("overview");
   const [view, setView] = useState("button");
   const [snap, setSnap] = useState(1);
+  const [rows, setRows] = useState(["One", "Two", "Three"]);
+  const added = useRef(0);
 
   const lift = useLift({ onSelect: (item) => log(`own select ${item.dataset.v}`) });
   const tabs = useIndicator<"a" | "b">({ trigger: "press", defaultValue: "a" });
@@ -121,6 +124,20 @@ function Scene({ log }: { log: Log }) {
         <div ref={card.element} className="card" data-testid="card">
           Card
         </div>
+      </section>
+
+      <section>
+        <button data-testid="layout-add" onClick={() => setRows((r) => [`New ${++added.current}`, ...r])}>
+          Add
+        </button>
+        <button data-testid="layout-drop" onClick={() => setRows((r) => r.slice(1))}>
+          Drop
+        </button>
+        <Layout.Root render={<ul data-testid="layout" />}>
+          {rows.map((row) => (
+            <li key={row}>{row}</li>
+          ))}
+        </Layout.Root>
       </section>
 
       <section className="glassy">

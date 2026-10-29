@@ -9,6 +9,7 @@ import { blur } from "./blur";
 import { morph } from "./morph";
 import { indicator } from "./indicator";
 import { drag } from "./drag";
+import { layout } from "./layout";
 import { lift } from "./lift";
 
 /**
@@ -17,7 +18,7 @@ import { lift } from "./lift";
  */
 installGlassGroups();
 
-const setups: Record<string, Setup> = { ...blur, ...morph, ...indicator, ...drag, ...lift };
+const setups: Record<string, Setup> = { ...blur, ...morph, ...indicator, ...drag, ...lift, ...layout };
 const page = document.querySelector<HTMLElement>("[data-pg]")!;
 const $ = <T extends Element = HTMLElement>(name: string) => page.querySelector<T>(`[data-pg-${name}]`)!;
 

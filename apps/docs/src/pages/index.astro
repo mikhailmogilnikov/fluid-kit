@@ -8,6 +8,7 @@ import IndicatorExample from "../components/IndicatorExample.astro";
 import DragExample from "../components/DragExample.astro";
 import EdgeExample from "../components/EdgeExample.astro";
 import LiftExample from "../components/LiftExample.astro";
+import LayoutExample from "../components/LayoutExample.astro";
 import Footer from "../components/Footer.astro";
 import Icon from "../components/Icon.astro";
 import Hint from "../components/Hint.astro";
@@ -102,6 +103,18 @@ const REPO = "https://github.com/mikhailmogilnikov/fluid-kit";
         </article>
 
         <article class="lib reveal" style="--d: 400ms">
+          <LayoutExample kind="list" card>
+            <Hint text="tap them" light style="top: 274px; left: max(calc(50% - 137px), 49px)" />
+          </LayoutExample>
+          <div class="lib__body">
+            <a class="lib__head" href="/layout">
+              <b>Layout</b><code>@fluidkit/layout</code><Icon name="arrow" size={16} />
+            </a>
+            <p>Change the page and its elements move to their new places on springs: lists, grids, sections.</p>
+          </div>
+        </article>
+
+        <article class="lib reveal lib--wide" style="--d: 480ms">
           <EdgeExample card>
             <Hint text="scroll it" light style="bottom: 30px; left: 50%" />
           </EdgeExample>

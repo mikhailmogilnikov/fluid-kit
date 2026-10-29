@@ -15,6 +15,7 @@
     "@fluidkit/core": "workspace:*",
     "@fluidkit/drag": "workspace:*",
     "@fluidkit/indicator": "workspace:*",
+    "@fluidkit/layout": "workspace:*",
     "@fluidkit/lift": "workspace:*",
     "@fluidkit/morph": "workspace:*",
     "astro": "^7.4.1",

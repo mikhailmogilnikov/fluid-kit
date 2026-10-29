@@ -1,0 +1,156 @@
+---
+import Case from "./Case.astro";
+
+const todos = ["Buy oat milk", "Call the dentist", "Book the train to Lyon", "Water the plants"];
+const tiles = Array.from({ length: 12 }, (_, i) => ({ hue: (i * 30) % 360, warm: (i * 30) % 360 < 90 || (i * 30) % 360 >= 300 }));
+const settings = [
+  ["Wi-Fi", "Connected to Home. Networks nearby join automatically when they're known."],
+  ["Bluetooth", "On. AirPods Pro and Magic Keyboard are connected; two more devices are remembered."],
+  ["Focus", "Do Not Disturb until 7:00. Calls from Favorites come through, and repeated calls too."],
+];
+const rows = Array.from({ length: 20 }, (_, i) => `Message ${i + 1}`);
+const heavy = Array.from({ length: 500 }, (_, i) => i);
+---
+
+<Case id="layout-list">
+  <div class="lc-col">
+    <div class="lc-bar">
+      <button type="button" class="lc-btn lb lb-interactive" data-add>Add</button>
+      <button type="button" class="lc-btn lb lb-interactive" data-remove>Remove</button>
+      <button type="button" class="lc-btn lb lb-interactive" data-shuffle>Shuffle</button>
+    </div>
+    <ul class="lc-list lb" data-list>
+      {todos.map((t) => <li class="lc-row">{t}</li>)}
+    </ul>
+    <p class="lc-after lb">After the list</p>
+  </div>
+</Case>
+
+<Case id="layout-interrupt">
+  <div class="lc-col">
+    <ul class="lc-list lb" data-list>
+      {todos.map((t) => <li class="lc-row">{t}</li>)}
+    </ul>
+    <p class="lc-after lb">After the list</p>
+  </div>
+</Case>
+
+<Case id="layout-accordion">
+  <div class="lc-col">
+    <div class="lc-acc lb" data-acc>
+      {
+        settings.map(([title, body]) => (
+          <section class="lc-sec">
+            <button type="button" class="lc-head" aria-expanded="false">
+              {title}
+            </button>
+            <p class="lc-body">{body}</p>
+          </section>
+        ))
+      }
+    </div>
+    <p class="lc-after lb" data-after>After the settings</p>
+  </div>
+</Case>
+
+<Case id="layout-grid">
+  <div class="lc-col">
+    <div class="lc-bar" role="group" aria-label="Filter">
+      <button type="button" class="lc-btn lb lb-interactive" data-filter="all">All</button>
+      <button type="button" class="lc-btn lb lb-interactive" data-filter="warm">Warm</button>
+      <button type="button" class="lc-btn lb lb-interactive" data-filter="cool">Cool</button>
+    </div>
+    <div class="lc-grid" data-grid>
+      {
+        tiles.map((t) => (
+          <span
+            class="lc-tile"
+            data-warm={t.warm ? "" : undefined}
+            style={`background: oklch(0.72 0.14 ${t.hue})`}
+          />
+        ))
+      }
+    </div>
+  </div>
+</Case>
+
+<Case id="layout-pill">
+  <div class="lc-profile lb" data-profile>
+    <span class="lc-avatar" aria-hidden="true"></span>
+    <b class="lc-name">Nadia Ortega</b>
+    <button type="button" class="lc-pill lb lb-interactive" data-pill>Follow</button>
+  </div>
+</Case>
+
+<Case id="layout-scroll">
+  <ul class="lc-scroller lb" data-scroller>
+    {rows.map((r) => <li class="lc-row">{r}</li>)}
+  </ul>
+</Case>
+
+<Case id="layout-glass">
+  <div class="lc-col">
+    <div class="lb-group lc-tools" data-tools>
+      <button type="button" class="lc-tool lb lb-interactive" aria-label="Back">‹</button>
+      <button type="button" class="lc-tool lb lb-interactive" aria-label="Share">↑</button>
+    </div>
+  </div>
+</Case>
+
+<Case id="layout-bench">
+  <div class="lc-col lc-col--wide">
+    <output class="lc-stats lb" data-stats>Open it to measure</output>
+    <div class="lc-bench" data-bench>
+    <div class="lc-acc lb" data-acc>
+      <section class="lc-sec">
+        <button type="button" class="lc-head" aria-expanded="false">Details</button>
+        <p class="lc-body">
+          Everything under this section moves with it as it opens: five hundred rows of text, laid out again each
+          frame while its height is on the spring.
+        </p>
+      </section>
+    </div>
+    {
+      heavy.map((i) => (
+        <p class="lc-heavy">
+          <b>Row {i + 1}</b> — a line of text long enough to wrap on a phone, with <em>some</em> inline styling in it.
+        </p>
+      ))
+    }
+    </div>
+  </div>
+</Case>
+
+<style>
+  .lc-col { width: min(340px, calc(100% - 32px)); display: grid; gap: 12px; }
+  .lc-bar { display: flex; gap: 8px; }
+  .lc-btn { padding: 8px 14px; border-radius: 999px; color: var(--ink); font: inherit; font-size: 14px; font-weight: 600; }
+  .lc-list, .lc-scroller { margin: 0; padding: 6px; list-style: none; border-radius: 22px; color: var(--ink); }
+  .lc-row { padding: 12px 14px; border-radius: 14px; font-size: 15px; background: color-mix(in srgb, var(--ink) 6%, transparent); margin-bottom: 6px; }
+  .lc-row:last-child { margin-bottom: 0; }
+  .lc-after { margin: 0; padding: 14px; border-radius: 18px; color: var(--ink-2); font-size: 14px; }
+
+  .lc-acc { border-radius: 22px; color: var(--ink); overflow: hidden; }
+  .lc-sec + .lc-sec { border-top: 1px solid color-mix(in srgb, var(--ink) 12%, transparent); }
+  .lc-head { display: block; width: 100%; padding: 14px 16px; text-align: left; font: inherit; font-size: 15px; font-weight: 600; color: inherit; }
+  .lc-body { display: none; margin: 0; padding: 0 16px 14px; color: var(--ink-2); font-size: 14px; line-height: 1.45; }
+  .lc-sec.open .lc-body { display: block; }
+
+  .lc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .lc-tile { aspect-ratio: 1; border-radius: 14px; }
+
+  .lc-profile { width: min(340px, calc(100% - 32px)); display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 999px; color: var(--ink); }
+  .lc-avatar { flex: none; width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #ff9f0a, #ff375f); }
+  .lc-name { flex: 1; min-width: 0; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lc-pill { flex: none; padding: 8px 16px; border-radius: 999px; color: var(--ink); font: inherit; font-size: 14px; font-weight: 600; white-space: nowrap; }
+
+  .lc-scroller { width: min(320px, calc(100% - 32px)); height: 300px; overflow: auto; }
+
+  .lc-tools { display: flex; gap: 10px; }
+  .lc-tool { width: 48px; height: 48px; border-radius: 50%; color: var(--ink); font-size: 20px; }
+
+  .lc-col--wide { width: min(380px, calc(100% - 32px)); }
+  .lc-bench { height: 400px; overflow: auto; display: grid; align-content: start; gap: 8px; padding: 4px; }
+  .lc-stats { margin: 0; padding: 8px 12px; border-radius: 14px; font: 12px/1.4 ui-monospace, monospace; color: var(--ink); }
+  .lc-heavy { margin: 0; padding: 8px 10px; border-radius: 10px; font-size: 13px; color: var(--ink-2); background: color-mix(in srgb, var(--ink) 4%, transparent); }
+</style>

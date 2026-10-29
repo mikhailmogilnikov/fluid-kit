@@ -12,6 +12,7 @@ import DragExample from "../components/DragExample.astro";
 import LiftExample from "../components/LiftExample.astro";
 import EdgeExample from "../components/EdgeExample.astro";
 import TextExample from "../components/TextExample.astro";
+import LayoutExample from "../components/LayoutExample.astro";
 import Hint from "../components/Hint.astro";
 import FrameworkSwitch from "../components/docs/FrameworkSwitch.astro";
 
@@ -29,7 +30,7 @@ const demo = page.id !== "core";
 
 /** Its first case in the playground, where there is one */
 const play = (
-  { blur: "blur-dock", edge: "blur-edge", morph: "morph-corner", indicator: "indicator-menu", drag: "drag-snap", lift: "lift-below", text: "indicator-grow" } as Record<string, string>
+  { blur: "blur-dock", edge: "blur-edge", morph: "morph-corner", indicator: "indicator-menu", drag: "drag-snap", lift: "lift-below", layout: "layout-list", text: "indicator-grow" } as Record<string, string>
 )[page.id];
 
 /** The contents, from the page's own sections */
@@ -71,6 +72,11 @@ const toc = [...(page.body ?? "").matchAll(/<Section\s([^>]*)>/g)].map(([, attrs
             <LiftExample kind="photos" card>
               <Hint text="hold it" light style="bottom: 30px; left: 50%" />
             </LiftExample>
+          )}
+          {page.id === "layout" && (
+            <LayoutExample kind="list" card>
+              <Hint text="tap them" light style="top: 274px; left: max(calc(50% - 137px), 49px)" />
+            </LayoutExample>
           )}
           {page.id === "edge" && (
             <EdgeExample card>

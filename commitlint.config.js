@@ -10,7 +10,7 @@ export default {
     "scope-enum": [
       2,
       "always",
-      ["core", "blur", "morph", "indicator", "drag", "lift", "docs", "repo", "ci", "deps", "release"],
+      ["core", "blur", "morph", "indicator", "drag", "lift", "layout", "docs", "repo", "ci", "deps", "release"],
     ],
   },
 };

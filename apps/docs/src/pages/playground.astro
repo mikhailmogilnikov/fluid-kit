@@ -6,6 +6,7 @@ import BlurCases from "../components/playground/BlurCases.astro";
 import MorphCases from "../components/playground/MorphCases.astro";
 import IndicatorCases from "../components/playground/IndicatorCases.astro";
 import DragCases from "../components/playground/DragCases.astro";
+import LayoutCases from "../components/playground/LayoutCases.astro";
 import LiftCases from "../components/playground/LiftCases.astro";
 import { CASES, PACKAGES } from "../playground/cases";
 import core from "../../../../packages/core/package.json";
@@ -13,10 +14,11 @@ import blur from "../../../../packages/blur/package.json";
 import morph from "../../../../packages/morph/package.json";
 import indicator from "../../../../packages/indicator/package.json";
 import drag from "../../../../packages/drag/package.json";
+import layout from "../../../../packages/layout/package.json";
 import lift from "../../../../packages/lift/package.json";
 
 /** The packages as built here, for an issue's report */
-const versions = [core, blur, morph, indicator, drag, lift].map((p) => `${p.name}@${p.version}`).join(", ");
+const versions = [core, blur, morph, indicator, drag, lift, layout].map((p) => `${p.name}@${p.version}`).join(", ");
 const first = CASES[0];
 ---
 
@@ -120,6 +122,7 @@ const first = CASES[0];
     <IndicatorCases />
     <DragCases />
     <LiftCases />
+    <LayoutCases />
   </main>
 </Base>
 

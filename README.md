@@ -16,6 +16,7 @@ of importing each other.
 | [`@fluidkit/indicator`](packages/indicator/README.md) | One element that moves to whatever is hovered, pressed or selected: menus, tabs, segmented controls |
 | [`@fluidkit/drag`](packages/drag/README.md) | Drag with rubber-band edges and flick-aware snap points: sheets, swipe actions, switches |
 | [`@fluidkit/lift`](packages/lift/README.md) | Long-press to lift anything above the page and open your menu, like iOS context menus |
+| [`@fluidkit/layout`](packages/layout/README.md) | Elements move to their new places when the layout changes: lists, grids, sections that open |
 | [`@fluidkit/core`](packages/core/README.md) | Shared pieces: the spring, element measurement, and the DOM contract |
 
 `apps/docs` is the docs site: one page per package, written in MDX in
@@ -33,7 +34,7 @@ pnpm install
 
 Installing also sets up the git hooks (`.vite-hooks/`): before a commit, staged files are formatted
 and linted; a commit message has to be a [conventional commit](https://www.conventionalcommits.org),
-`type(scope): subject`, with an optional scope from `core`, `blur`, `morph`, `indicator`, `drag`, `lift`, `docs`,
+`type(scope): subject`, with an optional scope from `core`, `blur`, `morph`, `indicator`, `drag`, `lift`, `layout`, `docs`,
 `repo`, `ci`, `deps` and `release`.
 
 | Script | What |

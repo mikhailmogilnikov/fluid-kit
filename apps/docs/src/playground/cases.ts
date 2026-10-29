@@ -5,7 +5,7 @@
  */
 export type CaseMeta = {
   id: string;
-  pkg: "blur" | "morph" | "indicator" | "drag" | "lift";
+  pkg: "blur" | "morph" | "indicator" | "drag" | "lift" | "layout";
   title: string;
   tags: string[];
   /** What should happen: what to look for, and what would be a bug */
@@ -20,6 +20,7 @@ export const PACKAGES = [
   ["indicator", "Indicator"],
   ["drag", "Drag"],
   ["lift", "Lift"],
+  ["layout", "Layout"],
 ] as const;
 
 export const CASES: CaseMeta[] = [
@@ -370,5 +371,79 @@ export const CASES: CaseMeta[] = [
     expect:
       "An element inside a scrolled list lifts from exactly where it's drawn, and the list doesn't scroll under the open menu.",
     steps: ["Scroll", "Lift", "Close"],
+  },
+
+  // ── Layout ──
+  {
+    id: "layout-list",
+    pkg: "layout",
+    title: "List: add, remove, shuffle",
+    tags: ["enter", "exit", "reorder"],
+    expect:
+      "A reminder put in fades in where it goes while the rows after it slide down; one taken out fades where it was while the rest close up; reversed, every row slides to its place. The list and what's after it grow and shrink smoothly, never jumping.",
+    steps: ["Add", "Remove", "Shuffle"],
+  },
+  {
+    id: "layout-interrupt",
+    pkg: "layout",
+    title: "Sent on mid-way",
+    tags: ["interrupt", "velocity"],
+    expect:
+      "A second change arrives while the first is still moving: each row goes on from where it is, keeping its speed. No row jumps or flashes at the moment the second change comes.",
+    steps: ["Add twice", "Shuffle twice"],
+  },
+  {
+    id: "layout-accordion",
+    pkg: "layout",
+    title: "Sections that open",
+    tags: ["size", "height"],
+    expect:
+      "A section opens by its real height on a spring, its text revealed rather than squeezed; the sections under it and the card after the settings move down with it. Closing, the same back.",
+    steps: ["Open Wi-Fi", "Open Bluetooth", "Close all"],
+  },
+  {
+    id: "layout-grid",
+    pkg: "layout",
+    title: "Grid filtered",
+    tags: ["grid", "exit", "enter"],
+    expect:
+      "Filtered, the tiles that go fade where they were and the ones that stay slide to their new cells; back to All, the others fade in where they belong.",
+    steps: ["Warm", "Cool", "All"],
+  },
+  {
+    id: "layout-pill",
+    pkg: "layout",
+    title: "A label that grows",
+    tags: ["size", "width", "glass"],
+    expect:
+      "Follow becomes Following: the glass button widens on a spring, its label shown whole as it does, nothing squeezed; the name beside it gives way smoothly.",
+    steps: ["Follow", "Unfollow"],
+  },
+  {
+    id: "layout-scroll",
+    pkg: "layout",
+    title: "In a list that scrolls",
+    tags: ["scroll"],
+    expect:
+      "Scrolled half way, a message put in at the top and one taken out move what's on screen smoothly; scrolling itself never sets anything moving.",
+    steps: ["Scroll", "Add at top", "Remove first"],
+  },
+  {
+    id: "layout-glass",
+    pkg: "layout",
+    title: "Glass group",
+    tags: ["glass", "group", "melt"],
+    expect:
+      "Buttons put in a glass group fade in and the others make room; taken out, it fades as the rest close up. The group's glass melts with them all the way, no seams.",
+    steps: ["Add", "Add", "Remove"],
+  },
+  {
+    id: "layout-bench",
+    pkg: "layout",
+    title: "Over five hundred rows",
+    tags: ["performance", "size"],
+    expect:
+      "A section at the top opens and closes over five hundred rows that move with it. The bar above shows the frames it took: their median, the slowest one in twenty, the slowest.",
+    steps: ["Open", "Close"],
   },
 ];

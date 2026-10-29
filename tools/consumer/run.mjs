@@ -19,7 +19,7 @@ import { fileURLToPath } from "node:url";
 import { chromium, firefox, webkit } from "playwright";
 
 const PORT = 4331;
-const PACKAGES = ["core", "blur", "morph", "indicator", "drag", "lift"];
+const PACKAGES = ["core", "blur", "morph", "indicator", "drag", "lift", "layout"];
 const FRAMEWORKS = ["react", "vue", "svelte"];
 const BROWSERS = { chromium, webkit, firefox };
 const args = process.argv.slice(2);
@@ -210,6 +210,33 @@ async function checkScene(page, url) {
       { timeout },
     );
     await page.$eval(id("edge"), (el) => el.remove());
+  });
+
+  // Rows the framework put in and took out by their keys: the others move, the one taken out goes
+  // out where it was, and at rest nothing of the layout's is left
+  await check("layout", async () => {
+    const list = id("layout");
+    const rest = (count) =>
+      page.waitForFunction(
+        ([list, count]) => {
+          const ul = document.querySelector(list);
+          return (
+            ul.children.length === count &&
+            !ul.querySelector("[data-fk-part]") &&
+            [ul, ...ul.children].every((el) => !el.getAttribute("style"))
+          );
+        },
+        [list, count],
+        { timeout },
+      );
+    await page.click(id("layout-add"));
+    await page.waitForFunction((list) => document.querySelector(list).children[1]?.style.translate, list, {
+      timeout,
+    });
+    await rest(4);
+    await page.click(id("layout-drop"));
+    await page.waitForSelector(`${list} > [data-fk-part]`, { timeout });
+    await rest(3);
   });
 
   await check("glass", async () => {

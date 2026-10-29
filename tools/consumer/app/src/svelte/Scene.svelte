@@ -2,6 +2,7 @@
   import { Glass, glass } from "@fluidkit/blur/svelte";
   import { Drag, useDrag } from "@fluidkit/drag/svelte";
   import { Indicator, useIndicator } from "@fluidkit/indicator/svelte";
+  import { Layout } from "@fluidkit/layout/svelte";
   import { Lift, useLift } from "@fluidkit/lift/svelte";
   import { Morph, useMorph } from "@fluidkit/morph/svelte";
 
@@ -11,6 +12,8 @@
   let tab = $state("overview");
   let view = $state("button");
   let snap = $state(1);
+  let rows = $state(["One", "Two", "Three"]);
+  let added = 0;
 
   const lift = useLift(() => ({ onSelect: (item) => log(`own select ${item.dataset.v}`) }));
   const tabs = useIndicator<"a" | "b">(() => ({ trigger: "press", defaultValue: "a" }));
@@ -103,6 +106,18 @@
 
 <section class="track">
   <div {@attach card.element} class="card" data-testid="card">Card</div>
+</section>
+
+<section>
+  <button data-testid="layout-add" onclick={() => (rows = [`New ${++added}`, ...rows])}>Add</button>
+  <button data-testid="layout-drop" onclick={() => (rows = rows.slice(1))}>Drop</button>
+  <Layout.Root>
+    {#snippet child({ props })}
+      <ul {...props} data-testid="layout">
+        {#each rows as row (row)}<li>{row}</li>{/each}
+      </ul>
+    {/snippet}
+  </Layout.Root>
 </section>
 
 <section class="glassy">
