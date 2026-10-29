@@ -9,6 +9,7 @@ import DragExample from "../components/DragExample.astro";
 import EdgeExample from "../components/EdgeExample.astro";
 import LiftExample from "../components/LiftExample.astro";
 import LayoutExample from "../components/LayoutExample.astro";
+import MotionExample from "../components/MotionExample.astro";
 import Footer from "../components/Footer.astro";
 import Icon from "../components/Icon.astro";
 import Hint from "../components/Hint.astro";
@@ -114,7 +115,7 @@ const REPO = "https://github.com/mikhailmogilnikov/fluid-kit";
           </div>
         </article>
 
-        <article class="lib reveal lib--wide" style="--d: 480ms">
+        <article class="lib reveal" style="--d: 480ms">
           <EdgeExample card>
             <Hint text="scroll it" light style="bottom: 30px; left: 50%" />
           </EdgeExample>
@@ -123,6 +124,16 @@ const REPO = "https://github.com/mikhailmogilnikov/fluid-kit";
               <b>Scroll Edge</b><code>@fluidkit/blur</code><Icon name="arrow" size={16} />
             </a>
             <p>Scrolling content fades out at its edges, like under iOS bars, only where there's more to scroll.</p>
+          </div>
+        </article>
+
+        <article class="lib reveal" style="--d: 560ms">
+          <MotionExample card />
+          <div class="lib__body">
+            <a class="lib__head" href="/motion">
+              <b>Motion</b><code>@fluidkit/core</code><Icon name="arrow" size={16} />
+            </a>
+            <p>Apple's springs and transitions by name, for the packages and for CSS, ready to tune.</p>
           </div>
         </article>
       </div>

@@ -11,7 +11,7 @@ export type SpringParams = { duration: number; bounce: number; settle?: number }
  * stable at any stiffness, and a push (a starting velocity) carries as far as it should.
  * `zeta` is the damping ratio, 0 (swings forever) to 1 (critically damped, no swing).
  */
-function step(s: { x: number; v: number }, goal: number, omega: number, zeta: number, dt: number) {
+export function step(s: { x: number; v: number }, goal: number, omega: number, zeta: number, dt: number) {
   const e = s.x - goal;
   const v = s.v;
   const decay = Math.exp(-zeta * omega * dt);

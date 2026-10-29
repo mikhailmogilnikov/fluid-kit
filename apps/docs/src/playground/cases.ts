@@ -5,7 +5,7 @@
  */
 export type CaseMeta = {
   id: string;
-  pkg: "blur" | "morph" | "indicator" | "drag" | "lift" | "layout";
+  pkg: "blur" | "morph" | "indicator" | "drag" | "lift" | "layout" | "motion";
   title: string;
   tags: string[];
   /** What should happen: what to look for, and what would be a bug */
@@ -21,6 +21,7 @@ export const PACKAGES = [
   ["drag", "Drag"],
   ["lift", "Lift"],
   ["layout", "Layout"],
+  ["motion", "Motion"],
 ] as const;
 
 export const CASES: CaseMeta[] = [
@@ -445,5 +446,60 @@ export const CASES: CaseMeta[] = [
     expect:
       "A section at the top opens and closes over five hundred rows that move with it. The bar above shows the frames it took: their median, the slowest one in twenty, the slowest.",
     steps: ["Open", "Close"],
+  },
+
+  // ── Motion ──
+  {
+    id: "motion-curve",
+    pkg: "motion",
+    title: "The CSS spring is the spring",
+    tags: ["css", "linear()", "spring"],
+    expect:
+      "The blue dot moves on SpringAnimator, the orange one on a CSS transition with var(--fk-bouncy). They go across and back as one, past where they stop by as much, landing together: the easing is the spring's own curve.",
+    steps: ["Across", "Back"],
+  },
+  {
+    id: "motion-popover",
+    pkg: "motion",
+    title: "Popover in and out",
+    tags: ["css", "@starting-style", "popover"],
+    expect:
+      "The popover comes in out of a blur, a little smaller, with a bounce, and goes back out the same way. Closed as it opens, it turns around and goes; opened again it comes all the way in.",
+    steps: ["Open", "Close", "Open, close mid-way", "Open"],
+  },
+  {
+    id: "motion-dialog",
+    pkg: "motion",
+    title: "Dialog in and out",
+    tags: ["css", "@starting-style", "dialog"],
+    expect: "The dialog scales in from a little smaller with a bounce as it opens, and back out as it closes.",
+    steps: ["Open", "Close"],
+  },
+  {
+    id: "motion-hidden",
+    pkg: "motion",
+    title: "Hidden and shown",
+    tags: ["css", "hidden"],
+    expect:
+      "The toast drops in from above as `hidden` comes off, and rises back out as it's put back. Hidden as it shows, it turns around and goes, and is gone in the end.",
+    steps: ["Show", "Hide", "Show, hide mid-way"],
+  },
+  {
+    id: "motion-glass",
+    pkg: "motion",
+    title: "Blur under glass",
+    tags: ["layout", "blurReplace", "safari"],
+    expect:
+      "A reminder put in comes out of a blur under the list's glass, and one taken out blurs away where it was. In Safari the blur shows all the way, not just a fade.",
+    steps: ["Add", "Remove"],
+  },
+  {
+    id: "motion-turn",
+    pkg: "motion",
+    title: "Coming in, sent on",
+    tags: ["layout", "move", "interrupt"],
+    expect:
+      "A reminder rises in at the top and, on its way, is sent to the bottom: it goes from where it's drawn, still rising in, no jump.",
+    steps: ["Add, send down"],
   },
 ];

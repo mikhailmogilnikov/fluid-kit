@@ -7,12 +7,14 @@ export default defineConfig({
   resolve: process.env.VITEST ? { conditions: ["browser"] } : undefined,
   pack: {
     // `settings` on its own: the Svelte adapter, packaged apart, imports it by path
-    entry: ["src/index.ts", "src/react.ts", "src/vue.ts", "src/settings.ts"],
+    entry: ["src/index.ts", "src/react.ts", "src/vue.ts", "src/settings.ts", "src/motion-css.ts", "src/motion.css"],
     format: "esm",
     platform: "browser",
     target: "es2022",
     dts: true,
     sourcemap: true,
+    // Minified for the browsers blur's stylesheet is: newer features in it are left as they are
+    css: { fileName: "motion.css", minify: true, target: ["chrome120", "firefox118", "safari16.2"] },
   },
   test: {
     // The spring runs on requestAnimationFrame

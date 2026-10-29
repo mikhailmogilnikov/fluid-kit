@@ -1,4 +1,12 @@
-import { PART, SpringAnimator, px, type SpringParams } from "@fluidkit/core";
+import {
+  PART,
+  SpringAnimator,
+  px,
+  springs,
+  transitions,
+  type SpringParams,
+  type TransitionParams,
+} from "@fluidkit/core";
 
 /**
  * Layout: when a page's layout changes, its elements move to where they now are instead of
@@ -15,8 +23,9 @@ import { PART, SpringAnimator, px, type SpringParams } from "@fluidkit/core";
  * them in the page moves along with them rather than jumping. With `size: false` sizes change at
  * once and only positions move.
  *
- * A new item comes in where it is, from transparent and a little smaller; one taken out goes out
- * where it was, the same way: the element itself, put back in its place for the while, out of
+ * A new item comes in where it is, as `enter` has it (faded and a little smaller unless told: any
+ * of `transitions`); one taken out goes out where it was, as `exit` has it: the element itself,
+ * put back in its place for the while, out of
  * the flow (`position: absolute`), inert, hidden from assistive technology and marked
  * `data-fk-part`, then removed. Put back in the page meanwhile, it stops going and moves from
  * there. Items there when the layout is made don't come in, and an item hidden by
@@ -25,7 +34,8 @@ import { PART, SpringAnimator, px, type SpringParams } from "@fluidkit/core";
  * While it moves an item's inline `translate` is the layout's, added to its own (a drag's offset,
  * or its stylesheet's); `transform` is left alone, so a press stretching glass or a morph flying
  * it goes on as it does. An item being dragged (marked `data-dragging`) isn't moved. Coming in or
- * going out, its `scale` (times its own) and `opacity` are the layout's; while its size changes,
+ * going out, its `scale` (times its own) and `opacity` are the layout's, and blurred its `filter`
+ * (after its own) and `will-change`; while its size changes,
  * its `width`, `height` and what would hold them back (`min-*`, `max-*`, `box-sizing`,
  * `overflow-*`, and in a flex container `flex-grow`, `flex-shrink` and `flex-basis` along its main
  * axis). All are put back at rest.
@@ -38,9 +48,6 @@ import { PART, SpringAnimator, px, type SpringParams } from "@fluidkit/core";
  * shown again.
  */
 
-/** How an item comes in or goes out: its opacity and scale at the far end, 1 being as it is */
-export type LayoutPresence = { opacity?: number; scale?: number };
-
 export type LayoutOptions = {
   /** The element whose items move */
   root: HTMLElement;
@@ -50,10 +57,10 @@ export type LayoutOptions = {
   spring?: SpringParams;
   /** Sizes change on the spring too (the default); `false`, at once, and only positions move */
   size?: boolean;
-  /** Where a new item comes in from; `false`, it's there at once */
-  enter?: LayoutPresence | false;
-  /** Where an item taken out goes; `false`, it's gone at once */
-  exit?: LayoutPresence | false;
+  /** How a new item comes in: `transitions.scale()` unless given; `false`, it's there at once */
+  enter?: TransitionParams | false;
+  /** How an item taken out goes: `transitions.scale()` unless given; `false`, it's gone at once */
+  exit?: TransitionParams | false;
   /** Called when something sets off moving, from rest */
   onStart?: () => void;
   /** Called when everything has come to rest */
@@ -75,12 +82,11 @@ export type Layout = {
 };
 
 /**
- * The spring everything moves on unless given another: as iOS 26 moves its lists, snappy (three
+ * The spring everything moves on unless given another: snappy, as iOS 26 moves its lists (three
  * quarters of the way in a tenth of a second), landing crisp with a bounce too small to see swing
  */
-export const defaultLayoutSpring: SpringParams = { duration: 0.26, bounce: 0.15 };
+export const defaultLayoutSpring: SpringParams = springs.snappy();
 
-const PRESENCE: Required<LayoutPresence> = { opacity: 0, scale: 0.96 };
 /** Where it's done: a quarter of a pixel, and of the way in or out a five-hundredth */
 const PRECISION = { x: 0.25, y: 0.25, w: 0.25, h: 0.25, p: 0.002 };
 /** Closer than this, px, it hasn't moved */
@@ -109,6 +115,8 @@ const OWN = [
   "top",
   "margin",
   "pointer-events",
+  "filter",
+  "will-change",
 ] as const;
 
 type Rect = { x: number; y: number; w: number; h: number };
@@ -121,8 +129,8 @@ type Flight = {
   values: Values;
   /** Its inline styles before, put back at rest */
   own: Map<string, [string, string]>;
-  /** Its own translation and scale, what the layout's are added to and multiplied by */
-  base: { x: string; y: string; z: string; sx: number; sy: number };
+  /** Its own translation, scale and filter, what the layout's are added to, multiplied by, put after */
+  base: { x: string; y: string; z: string; sx: number; sy: number; filter: string };
   /** Its opacity before, what coming in or going out is a part of */
   opacity: number;
   /** Which of its sizes the layout holds */
@@ -148,14 +156,15 @@ type Item = {
   flight: Flight | null;
 };
 
-/** An element's own translation and scale, as computed: what the layout's go on top of */
+/** An element's own translation, scale and filter, as computed: what the layout's go on top of */
 const baseOf = (style: CSSStyleDeclaration) => {
   const t = !style.translate || style.translate === "none" ? [] : style.translate.split(" ");
   const s = !style.scale || style.scale === "none" ? [] : style.scale.split(" ");
   const factor = (v: string | undefined, fallback: number) =>
     v === undefined ? fallback : v.endsWith("%") ? parseFloat(v) / 100 : parseFloat(v) || 1;
   const sx = factor(s[0], 1);
-  return { x: t[0] ?? "0px", y: t[1] ?? "0px", z: t[2] ?? "", sx, sy: factor(s[1], sx) };
+  const filter = !style.filter || style.filter === "none" ? "" : style.filter;
+  return { x: t[0] ?? "0px", y: t[1] ?? "0px", z: t[2] ?? "", sx, sy: factor(s[1], sx), filter };
 };
 
 const differs = (a: Rect, b: Rect) =>
@@ -166,7 +175,14 @@ const differs = (a: Rect, b: Rect) =>
 
 export function createLayout(options: LayoutOptions): Layout {
   const { root, items: selector } = options;
-  let { spring = defaultLayoutSpring, size = true, enter = {}, exit = {}, onStart, onRest } = options;
+  let {
+    spring = defaultLayoutSpring,
+    size = true,
+    enter = transitions.scale(),
+    exit = transitions.scale(),
+    onStart,
+    onRest,
+  } = options;
   const doc = root.ownerDocument;
   const win = doc.defaultView ?? window;
   const reduced = win.matchMedia("(prefers-reduced-motion: reduce)");
@@ -220,31 +236,50 @@ export function createLayout(options: LayoutOptions): Layout {
     }
   };
 
-  const lookOf = (f: Flight | null) => (f?.presence === "enter" ? enter : f?.presence === "exit" ? exit : null);
+  const lookOf = (f: Flight | null) => (f?.presence === "enter" ? enter : f?.presence === "exit" ? exit : null) || null;
+  /** How far it is from in, coming in or going out: 1 all the way out, 0 in */
+  const awayOf = (f: Flight | null) => (f ? 1 - Math.min(1, Math.max(0, f.values.p)) : 0);
   /** How much smaller it's drawn coming in or going out */
-  const scaleOf = (f: Flight | null) => {
+  const scaleOf = (f: Flight | null) => 1 - (1 - (lookOf(f)?.scale ?? 1)) * awayOf(f);
+  /** How far it's drawn moved coming in or going out, px */
+  const offsetOf = (f: Flight | null) => {
     const look = lookOf(f);
-    if (!look || !f) return 1;
-    const from = look.scale ?? PRESENCE.scale;
-    return from + (1 - from) * Math.min(1, Math.max(0, f.values.p));
+    const away = awayOf(f);
+    return { x: (look?.x ?? 0) * away, y: (look?.y ?? 0) * away };
+  };
+  /** Where it would be drawn as it is, from where it's drawn coming in or going out */
+  const unpresent = (r: Rect, f: Flight | null, moved: boolean): Rect => {
+    const s = scaleOf(f);
+    const box = s === 1 ? r : { x: r.x + (r.w - r.w / s) / 2, y: r.y + (r.h - r.h / s) / 2, w: r.w / s, h: r.h / s };
+    if (!moved) return box;
+    const off = offsetOf(f);
+    return { ...box, x: box.x - off.x, y: box.y - off.y };
   };
 
   /** Writes a flight's values on its element */
   const paint = (el: HTMLElement, f: Flight) => {
     const v = f.values;
     const look = lookOf(f);
-    const p = Math.min(1, Math.max(0, v.p));
+    const away = awayOf(f);
     const scale = scaleOf(f);
     if (f.moves && !el.hasAttribute(DRAGGING)) {
       const { x, y, z } = f.base;
+      const off = offsetOf(f);
       const by = (own: string, d: number) => (own === "0px" ? px(d) : `calc(${own} + ${px(d)})`);
-      el.style.translate = `${by(x, v.x)} ${by(y, v.y)}${z ? ` ${z}` : ""}`;
+      el.style.translate = `${by(x, v.x + off.x)} ${by(y, v.y + off.y)}${z ? ` ${z}` : ""}`;
     }
     if (look) {
       const round = (n: number) => Math.round(n * scale * 10000) / 10000;
       el.style.scale = `${round(f.base.sx)} ${round(f.base.sy)}`;
-      const opacity = look.opacity ?? PRESENCE.opacity;
-      el.style.opacity = String(Math.round(f.opacity * (opacity + (1 - opacity) * p) * 1000) / 1000);
+      const opacity = look.opacity ?? 1;
+      el.style.opacity = String(Math.round(f.opacity * (1 - (1 - opacity) * away) * 1000) / 1000);
+      if (look.blur) {
+        const blur = look.blur * away;
+        const own = f.base.filter;
+        el.style.filter = blur > 0.01 ? `${own ? `${own} ` : ""}blur(${px(blur)})` : own || "none";
+        // Safari doesn't draw a blur that changes under glass unless it's on a layer of its own
+        el.style.willChange = "filter";
+      }
     }
     if (f.pin.w) el.style.width = px(v.w);
     if (f.pin.h) el.style.height = px(v.h);
@@ -261,9 +296,8 @@ export function createLayout(options: LayoutOptions): Layout {
     for (const item of tracked.values()) {
       if (!item.el.isConnected) continue;
       const r = relative(item.el.getBoundingClientRect(), origin);
-      // Coming in or going out it's drawn smaller: its box is the one it's scaled from
-      const s = scaleOf(item.flight);
-      item.drawn = s === 1 ? r : { x: r.x + (r.w - r.w / s) / 2, y: r.y + (r.h - r.h / s) / 2, w: r.w / s, h: r.h / s };
+      // Coming in or going out it's drawn smaller and moved: its box is the one it's drawn from
+      item.drawn = unpresent(r, item.flight, !item.el.hasAttribute(DRAGGING));
     }
   };
 
@@ -561,8 +595,8 @@ export function createLayout(options: LayoutOptions): Layout {
     const item = leaving.get(el)!;
     const f = item.flight!;
     leaving.delete(el);
-    const r = el.getBoundingClientRect();
-    cameBack.set(el, { rect: relative(r, root.getBoundingClientRect()), p: f.values.p });
+    const r = relative(el.getBoundingClientRect(), root.getBoundingClientRect());
+    cameBack.set(el, { rect: unpresent(r, f, true), p: f.values.p });
     f.spring.stop();
     unmark(el, f);
     item.flight = null;
@@ -709,8 +743,8 @@ export function createLayout(options: LayoutOptions): Layout {
     set(settings) {
       if ("spring" in settings) spring = settings.spring ?? defaultLayoutSpring;
       if ("size" in settings) size = settings.size ?? true;
-      if ("enter" in settings) enter = settings.enter ?? {};
-      if ("exit" in settings) exit = settings.exit ?? {};
+      if ("enter" in settings) enter = settings.enter ?? transitions.scale();
+      if ("exit" in settings) exit = settings.exit ?? transitions.scale();
       if ("onStart" in settings) onStart = settings.onStart;
       if ("onRest" in settings) onRest = settings.onRest;
     },

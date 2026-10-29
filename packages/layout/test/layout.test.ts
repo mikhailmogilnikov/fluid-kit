@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
+import { transitions } from "@fluidkit/core";
 import { createLayout, type LayoutOptions } from "../src/index";
 
 beforeEach(() => {
@@ -218,6 +219,48 @@ describe("createLayout", () => {
     expect(offset(c).y).not.toBe(0);
     settle();
     expect(a.getAttribute("style") ?? "").toBe("");
+  });
+
+  it("comes in and goes out as a transition has it: blurred on a layer of its own, moved, all put back", async () => {
+    const { root, items } = list([40, 40, 40]);
+    make(root, { enter: transitions.blurReplace(), exit: transitions.move({ y: 12 }) });
+    const n = li("n");
+    n.style.filter = "brightness(0.5)";
+    items[1].before(n);
+    await seen();
+    // Its own filter first, then the blur
+    expect(n.style.filter).toBe("brightness(0.5) blur(8px)");
+    expect(n.style.willChange).toBe("filter");
+    expect(n.style.scale).toMatch(/^0\.9/);
+    vi.advanceTimersByTime(40);
+    expect(parseFloat(/blur\(([\d.]+)px\)/.exec(n.style.filter)![1])).toBeLessThan(8);
+    settle();
+    expect(n.getAttribute("style")).toBe("filter: brightness(0.5);");
+    // Going out it fades moving down, from where it was
+    const c = items[2];
+    c.remove();
+    await seen();
+    expect(offset(c).y).toBeCloseTo(0);
+    vi.advanceTimersByTime(40);
+    expect(offset(c).y).toBeGreaterThan(0);
+    expect(offset(c).y).toBeLessThan(12);
+    expect(c.style.filter).toBe("");
+  });
+
+  it("turned around coming in, sets off from where it's laid out, not where it's drawn moved", async () => {
+    const { root } = list([40, 40]);
+    make(root, { enter: transitions.move({ y: 12 }) });
+    const n = li("n");
+    root.prepend(n);
+    await seen();
+    vi.advanceTimersByTime(30);
+    // What's left of coming in, and nothing else: it was put in where it is
+    const left = offset(n).y;
+    expect(left).toBeGreaterThan(0);
+    root.append(n);
+    await seen();
+    // From the top (0) to the bottom (80), coming in as far as it had
+    expect(offset(n).y).toBeCloseTo(-80 + left, 0);
   });
 
   it("comes in and goes out at once with `enter` and `exit` off", async () => {

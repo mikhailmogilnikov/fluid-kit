@@ -25,7 +25,9 @@
     "CHANGELOG.md"
   ],
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "*.css"
+  ],
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
@@ -45,6 +47,10 @@
       "svelte": "./dist/svelte/index.js",
       "default": "./dist/svelte/index.js"
     },
+    "./motion.css": {
+      "types": "./dist/motion-css.d.ts",
+      "default": "./dist/motion.css"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -55,6 +61,7 @@
     "dev": "vp pack --watch",
     "check-types": "tsc --noEmit && fk-svelte-check --tsconfig tsconfig.svelte.json",
     "test": "vp test run",
+    "gen:motion": "FK_WRITE_MOTION=1 vp test run test/motion.test.ts",
     "prepack": "pnpm build",
     "prepublishOnly": "pnpm check-types && pnpm test"
   },

@@ -1,0 +1,588 @@
+---
+import Icon from "./Icon.astro";
+
+/**
+ * Motion, live: a spring's curve, as WWDC draws one. Played, the curve is drawn as the spring runs
+ * from 0 to 1 (solved as the springs are, by `springCss`), a dot at its head and a ball beside it
+ * moving as the value does; past the dashed line it's gone past where it stops. Its code over it.
+ * On a solid panel: content, not glass.
+ *   - by default, the page's demo: the curve, a toast under it coming in and going out on the
+ *     spring, and the spring and the toast's transition to choose and tune, with their code
+ *   - as a library's card on the landing: the curve, the springs to choose under it
+ */
+interface Props {
+  /** As a library's card on the landing: the card's size and corners */
+  card?: boolean;
+}
+
+const { card = false } = Astro.props;
+const springs = [
+  ["smooth", "Smooth"],
+  ["snappy", "Snappy"],
+  ["bouncy", "Bouncy"],
+  ["interactive", "Interactive"],
+] as const;
+const looks = [
+  ["blur-replace", "Blur"],
+  ["scale", "Scale"],
+  ["move", "Move"],
+  ["opacity", "Fade"],
+] as const;
+const ranges = [
+  ["duration", "Duration", 0.1, 0.8, 0.01],
+  ["bounce", "Bounce", 0, 0.6, 0.01],
+  ["scale", "Scale", 0.5, 1, 0.01],
+  ["blur", "Blur", 0, 24, 1],
+  ["y", "Offset", -40, 40, 1],
+] as const;
+const start = card ? "bouncy" : "snappy";
+---
+
+<div class:list={["mo", { "mo--card": card, play: !card }]} data-mo>
+  <div class:list={["mo__stage", { play__stage: !card }]}>
+    <div class="bd bd-aurora" data-silk="motion"></div>
+    <div class="mo__scene">
+      <div class="mo__panel">
+        <div class="mo__head">
+          <code data-mo-name>springs.{start}()</code>
+          <span data-mo-params></span>
+        </div>
+        <button type="button" class="mo__chart" aria-label="Play the spring" data-mo-chart>
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <line class="mo__line mo__line--to" x1="0" x2="100" y1="24" y2="24"></line>
+            <line class="mo__line" x1="0" x2="100" y1="90" y2="90"></line>
+            <path class="mo__curve" d="" data-mo-curve></path>
+          </svg>
+          <span class="mo__time" aria-hidden="true" data-mo-time></span>
+          <span class="mo__rail" aria-hidden="true"></span>
+          <span class="mo__dot" aria-hidden="true" data-mo-dot></span>
+          <span class="mo__ball" aria-hidden="true" data-mo-ball></span>
+        </button>
+        {
+          card && (
+            <div class="seg mo__seg" role="group" aria-label="Spring" data-mo-seg="spring">
+              <span class="seg__thumb" aria-hidden="true" />
+              {springs.slice(0, 3).map(([value, label]) => (
+                <button type="button" data-value={value} aria-pressed={value === start ? "true" : "false"}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          )
+        }
+      </div>
+      {
+        !card && (
+          <div class="mo__toast-room">
+            <p class="mo__toast fk-transition fk-blur-replace fk-snappy" role="status" hidden data-mo-toast>
+              <Icon name="check" size={16} />
+              Saved to Photos
+            </p>
+          </div>
+        )
+      }
+    </div>
+  </div>
+
+  {
+    !card && (
+      <div>
+        <div class="controls">
+          <div class="control">
+            <span class="control__label">Spring</span>
+            <div class="control__body">
+              <div class="seg" role="group" aria-label="Spring" data-mo-seg="spring">
+                <span class="seg__thumb" aria-hidden="true" />
+                {springs.map(([value, label]) => (
+                  <button type="button" data-value={value} aria-pressed={value === start ? "true" : "false"}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div class="control">
+            <span class="control__label">Transition</span>
+            <div class="control__body">
+              <div class="seg" role="group" aria-label="Transition" data-mo-seg="look">
+                <span class="seg__thumb" aria-hidden="true" />
+                {looks.map(([value, label], i) => (
+                  <button type="button" data-value={value} aria-pressed={i === 0 ? "true" : "false"}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          {ranges.map(([name, label, min, max, step]) => (
+            <div class="control">
+              <label class="control__label" for={`mo-${name}`}>
+                {label}
+              </label>
+              <div class="control__body">
+                <input class="range" id={`mo-${name}`} type="range" min={min} max={max} step={step} data-mo-range={name} />
+                <output for={`mo-${name}`} />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div class="code__bar mo__langs">
+          <div class="seg" role="group" aria-label="Code" data-mo-seg="lang">
+            <span class="seg__thumb" aria-hidden="true" />
+            <button type="button" data-value="css" aria-pressed="true">
+              CSS
+            </button>
+            <button type="button" data-value="js" aria-pressed="false">
+              TS
+            </button>
+          </div>
+        </div>
+        <div class="code play__code mo__code">
+          <pre><code data-mo-code /></pre>
+          <button class="code__copy" type="button" data-copy aria-label="Copy code">
+            <Icon name="copy" class="is-idle" />
+            <Icon name="check" class="is-done" />
+          </button>
+        </div>
+        <p class="play__note" data-mo-note-text />
+      </div>
+    )
+  }
+</div>
+
+<style>
+  .mo {
+    --mo-surface: #fff;
+    --mo-shadow: 0 10px 30px rgb(0 0 0 / 0.1), 0 1px 3px rgb(0 0 0 / 0.06);
+    --mo-accent: #0a84ff;
+  }
+  :global(:root[data-theme="dark"]) .mo {
+    --mo-surface: #1c1c1e;
+    --mo-shadow: 0 10px 30px rgb(0 0 0 / 0.4);
+  }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme="light"])) .mo {
+      --mo-surface: #1c1c1e;
+      --mo-shadow: 0 10px 30px rgb(0 0 0 / 0.4);
+    }
+  }
+
+  .mo__stage {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    place-items: center;
+    min-height: 480px;
+    border-radius: var(--radius);
+  }
+  .mo--card .mo__stage {
+    height: var(--mdemo-height);
+    min-height: 0;
+  }
+  /* Over the backdrop */
+  .mo__scene {
+    position: relative;
+    width: min(440px, calc(100% - 32px));
+  }
+  .mo--card .mo__scene { width: min(420px, calc(100% - 32px)); }
+
+  .mo__panel {
+    display: grid;
+    /* As wide as the panel, whatever the code over the chart */
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    padding: 16px 16px 14px;
+    border-radius: 24px;
+    background: var(--mo-surface);
+    box-shadow: var(--mo-shadow);
+    color: var(--ink);
+  }
+  .mo__head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 2px 12px;
+    padding: 0 4px;
+    font: 14px var(--mono);
+  }
+  /* A tuned spring's code is long: it wraps at its spaces, the numbers beside it go under it */
+  .mo__head code { min-width: 0; font: inherit; font-weight: 600; background: none; padding: 0; white-space: normal; overflow-wrap: break-word; }
+  .mo__head span { color: var(--ink-3); font-size: 12.5px; white-space: nowrap; }
+
+  /* The curve: time across, the value up, the dashed line where it stops */
+  .mo__chart {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 200px;
+    border-radius: 14px;
+    background: var(--wash);
+    cursor: pointer;
+  }
+  .mo--card .mo__chart { height: 170px; }
+  .mo__chart svg { position: absolute; top: 0; left: 0; width: 86%; height: 100%; overflow: visible; }
+  .mo__line { stroke: var(--hair); stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .mo__line--to { stroke: var(--ink-4); stroke-dasharray: 4 4; }
+  .mo__curve {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 2.25;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .mo__rail {
+    position: absolute;
+    top: 14%;
+    bottom: 10%;
+    left: 93%;
+    width: 2px;
+    margin-left: -1px;
+    border-radius: 1px;
+    background: var(--hair);
+  }
+  /* How long the chart's time is, at the end of it */
+  .mo__time {
+    position: absolute;
+    top: calc(90% + 4px);
+    right: 14%;
+    color: var(--ink-3);
+    font: 11px var(--mono);
+  }
+  .mo__dot,
+  .mo__ball {
+    position: absolute;
+    border-radius: 50%;
+    background: var(--mo-accent);
+    translate: -50% -50%;
+    pointer-events: none;
+  }
+  .mo__dot { width: 9px; height: 9px; box-shadow: 0 0 0 3px var(--wash); }
+  .mo__ball { left: 93%; width: 22px; height: 22px; box-shadow: 0 2px 6px rgb(10 132 255 / 0.4); }
+
+  .mo__seg { justify-self: center; }
+
+  /* Under the curve: the toast it brings in, out of the flow so the panel stays put */
+  .mo__toast-room {
+    position: absolute;
+    top: calc(100% + 16px);
+    inset-inline: 0;
+    display: flex;
+    justify-content: center;
+  }
+  .mo__toast {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    height: 36px;
+    margin: 0;
+    padding: 0 16px 0 13px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--on-ink);
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: var(--mo-shadow);
+  }
+  .mo__toast :global(svg) { color: #30d158; }
+  .play .mo__scene { margin-bottom: 52px; }
+
+  .mo__langs { padding: 20px 0 0; }
+  .mo__code { margin-top: 10px; }
+</style>
+
+<script>
+  import { SpringAnimator, springCss, springs, transitions, type SpringParams, type TransitionParams } from "@fluidkit/core";
+  import { segmented } from "../scripts/segmented";
+
+  type Spring = keyof typeof springs;
+  type Look = "blur-replace" | "scale" | "move" | "opacity";
+
+  /** Each way in and out as `transitions` has it, and what its function takes */
+  const LOOKS: Record<Look, { name: string; look: TransitionParams; takes: (keyof TransitionParams)[] }> = {
+    "blur-replace": { name: "blurReplace", look: transitions.blurReplace(), takes: ["blur", "scale"] },
+    scale: { name: "scale", look: transitions.scale(), takes: ["scale"] },
+    move: { name: "move", look: transitions.move(), takes: ["y"] },
+    opacity: { name: "opacity", look: transitions.opacity(), takes: [] },
+  };
+
+  /** Where 0 and 1 are on the chart, % down it */
+  const AT_0 = 90;
+  const AT_1 = 24;
+  /** How close to 1 a spring is all but there, of the way */
+  const THERE = 0.005;
+
+  const round = (n: number, digits = 2) => Math.round(n * 10 ** digits) / 10 ** digits;
+  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const str = (s: string) => `<span class="tk-str">${esc(s)}</span>`;
+  const key = (s: string) => `<span class="tk-attr">${s}</span>`;
+  const y = (value: number) => AT_0 - value * (AT_0 - AT_1);
+
+  /** A spring's curve on the chart: drawn whole, or drawn as the spring runs */
+  function chart(scene: HTMLElement) {
+    const curve = scene.querySelector<SVGPathElement>("[data-mo-curve]")!;
+    const dot = scene.querySelector<HTMLElement>("[data-mo-dot]")!;
+    const ball = scene.querySelector<HTMLElement>("[data-mo-ball]")!;
+    const name = scene.querySelector<HTMLElement>("[data-mo-name]")!;
+    const params = scene.querySelector<HTMLElement>("[data-mo-params]")!;
+    const time = scene.querySelector<HTMLElement>("[data-mo-time]")!;
+    let frame = 0;
+
+    /**
+     * The spring from 0 to 1: seconds and values, until it rests. Solved at a second's pace and
+     * brought to its own (the pace only stretches a spring's curve), so a quick one's is as smooth
+     */
+    const curveOf = (spring: SpringParams) => {
+      const { duration, easing } = springCss({ ...spring, duration: 1 });
+      const seconds = parseFloat(duration) * spring.duration;
+      return /^linear\((.*)\)$/.exec(easing)![1].split(", ").map((stop, i) => {
+        const [value, at] = stop.split(" ");
+        return [(at ? parseFloat(at) / 100 : i ? 1 : 0) * seconds, parseFloat(value)] as [number, number];
+      });
+    };
+    const valueAt = (points: [number, number][], t: number) => {
+      const i = points.findIndex(([at]) => at >= t);
+      if (i <= 0) return points[i < 0 ? points.length - 1 : 0][1];
+      const [t0, v0] = points[i - 1];
+      const [t1, v1] = points[i];
+      return v0 + ((v1 - v0) * (t - t0)) / (t1 - t0);
+    };
+    /**
+     * The chart's seconds for a spring: until it's all but there, and a little more, so every curve,
+     * quick or slow, fills the chart
+     */
+    const spanOf = (points: [number, number][]) => {
+      const last = points.findLast(([, v]) => Math.abs(v - 1) > THERE)?.[0] ?? 0;
+      return Math.min(points.at(-1)![0], last * 1.15) || points.at(-1)![0];
+    };
+    /** The curve up to `t` seconds, its last point where it is then */
+    const upTo = (points: [number, number][], t: number) => [
+      ...points.filter(([at]) => at < t),
+      [t, valueAt(points, t)] as [number, number],
+    ];
+    const path = (points: [number, number][], span: number) =>
+      points.map(([t, v], i) => `${i ? "L" : "M"}${(t / span) * 100} ${y(v)}`).join(" ");
+    const place = (t: number, v: number, span: number) => {
+      dot.style.left = `${(t / span) * 86}%`;
+      dot.style.top = `${y(v)}%`;
+      ball.style.top = `${y(v)}%`;
+    };
+    const label = (code: string, spring: SpringParams) => {
+      name.textContent = code;
+      params.textContent = `${round(spring.duration)} s · bounce ${round(spring.bounce)}`;
+    };
+
+    return {
+      /** The whole curve at once, the dot and the ball at its end */
+      show(code: string, spring: SpringParams) {
+        cancelAnimationFrame(frame);
+        label(code, spring);
+        const points = curveOf(spring);
+        const span = spanOf(points);
+        curve.setAttribute("d", path(upTo(points, span), span));
+        place(span, valueAt(points, span), span);
+        time.textContent = `${round(span)} s`;
+      },
+      /** The spring run from 0 to 1, its curve drawn as it goes, as fast as the springs run */
+      play(code: string, spring: SpringParams) {
+        cancelAnimationFrame(frame);
+        label(code, spring);
+        const points = curveOf(spring);
+        const span = spanOf(points);
+        time.textContent = `${round(span)} s`;
+        let start = 0;
+        const tick = (now: number) => {
+          start ||= now;
+          const t = Math.min(span, ((now - start) / 1000) * SpringAnimator.timeScale);
+          curve.setAttribute("d", path(upTo(points, t), span));
+          place(t, valueAt(points, t), span);
+          if (t < span) frame = requestAnimationFrame(tick);
+        };
+        frame = requestAnimationFrame(tick);
+      },
+    };
+  }
+
+  /** The page's demo: the spring and the toast's transition, chosen and tuned, and their code */
+  function tune(scene: HTMLElement, curve: ReturnType<typeof chart>) {
+    const toast = scene.querySelector<HTMLElement>("[data-mo-toast]")!;
+    const code = scene.querySelector<HTMLElement>("[data-mo-code]")!;
+    const noteText = scene.querySelector<HTMLElement>("[data-mo-note-text]")!;
+    const inputs = new Map(
+      [...scene.querySelectorAll<HTMLInputElement>("[data-mo-range]")].map((input) => [input.dataset.moRange!, input]),
+    );
+
+    const state = {
+      spring: "snappy" as Spring,
+      look: "blur-replace" as Look,
+      lang: "css",
+      duration: 0,
+      bounce: 0,
+      scale: 1,
+      blur: 0,
+      y: 0,
+    };
+
+    const spring = (): SpringParams => ({ duration: state.duration, bounce: state.bounce });
+    const preset = () => springs[state.spring]();
+    const look = (): TransitionParams => ({ opacity: 0, scale: state.scale, blur: state.blur, x: 0, y: state.y });
+    /** What the chosen transition has, as `transitions` gives it: left out, as it is */
+    const full = (l: TransitionParams) => ({ opacity: l.opacity ?? 1, scale: l.scale ?? 1, blur: l.blur ?? 0, y: l.y ?? 0 });
+
+    /** The spring's code, plain, and marked up for the code block */
+    const springCode = (mark = (s: string) => s) => {
+      const base = preset();
+      const args = [
+        ...(state.duration !== base.duration ? [`${mark("duration")}: ${state.duration}`] : []),
+        ...(state.bounce !== base.bounce ? [`${mark("extraBounce")}: ${round(state.bounce - base.bounce)}`] : []),
+      ];
+      return `springs.${state.spring}(${args.length ? `{ ${args.join(", ")} }` : ""})`;
+    };
+    const lookCode = () => {
+      const { name, look: base, takes } = LOOKS[state.look];
+      const was = full(base);
+      const now = full(look());
+      const changed = (["scale", "blur", "y"] as const).filter((k) => now[k] !== was[k]);
+      const args = changed.filter((k) => takes.includes(k));
+      const over = changed.filter((k) => !takes.includes(k));
+      const call =
+        name === "scale" && args.length
+          ? `transitions.scale(${now.scale})`
+          : `transitions.${name}(${args.length ? `{ ${args.map((k) => `${key(k)}: ${now[k]}`).join(", ")} }` : ""})`;
+      return over.length ? `{ ...${call}, ${over.map((k) => `${key(k)}: ${now[k]}`).join(", ")} }` : call;
+    };
+
+    const render = () => {
+      // The classes for the preset, and what's tuned on the toast itself
+      toast.className = `mo__toast fk-transition fk-${state.look} fk-${state.spring}`;
+      const base = preset();
+      const tunedSpring = state.duration !== base.duration || state.bounce !== base.bounce;
+      const vars: [string, string][] = [];
+      if (tunedSpring) {
+        const css = springCss(spring());
+        vars.push(["--fk-transition-duration", css.duration], ["--fk-transition-easing", css.easing]);
+      }
+      const was = full(LOOKS[state.look].look);
+      if (state.scale !== was.scale) vars.push(["--fk-scale", String(state.scale)]);
+      if (state.blur !== was.blur) vars.push(["--fk-blur", `${state.blur}px`]);
+      if (state.y !== was.y) vars.push(["--fk-y", `${state.y}px`]);
+      for (const name of ["--fk-transition-duration", "--fk-transition-easing", "--fk-scale", "--fk-blur", "--fk-y"])
+        toast.style.removeProperty(name);
+      for (const [name, value] of vars) toast.style.setProperty(name, value);
+      curve.show(springCode(), spring());
+
+      if (state.lang === "css") {
+        // One attribute a line: the easing of a spring of your own is long
+        code.innerHTML = [
+          `<span class="tk-mute">&lt;</span><span class="tk-tag">p</span>`,
+          `  ${key("class")}=${str(`"toast fk-transition fk-${state.look} fk-${state.spring}"`)}`,
+          ...(vars.length ? [`  ${key("style")}=${str(`"${vars.map(([n, v]) => `${n}: ${v}`).join("; ")}"`)}`] : []),
+          `  ${key("hidden")}`,
+          `<span class="tk-mute">&gt;</span>`,
+          `  Saved to Photos`,
+          `<span class="tk-mute">&lt;/</span><span class="tk-tag">p</span><span class="tk-mute">&gt;</span>`,
+        ].join("\n");
+        noteText.innerHTML = tunedSpring
+          ? "Tap the curve. A spring of your own is written by <code>springCss()</code>; the presets come with <code>motion.css</code>."
+          : "Tap the curve: the spring draws it, and the toast comes in on it as <code>hidden</code> comes off, or goes out. Plain CSS with <code>@fluidkit/core/motion.css</code>.";
+      } else {
+        code.innerHTML = [
+          `<span class="tk-mute">import</span> { springs, transitions } <span class="tk-mute">from</span> ${str('"@fluidkit/core"')};`,
+          "",
+          `createLayout({`,
+          `  ${key("root")},`,
+          `  ${key("spring")}: ${springCode(key)},`,
+          `  ${key("enter")}: ${lookCode()},`,
+          `  ${key("exit")}: ${lookCode()},`,
+          `});`,
+        ].join("\n");
+        noteText.innerHTML = "The same values go to any package's <code>spring</code>, and Layout's <code>enter</code> and <code>exit</code>.";
+      }
+    };
+
+    const sync = (name: string, value: number) => {
+      const input = inputs.get(name);
+      if (!input) return;
+      input.value = String(value);
+      const min = Number(input.min);
+      input.style.setProperty("--p", `${((value - min) / (Number(input.max) - min)) * 100}%`);
+      (input.nextElementSibling as HTMLOutputElement).value =
+        name === "blur" || name === "y" ? `${value}px` : name === "duration" ? `${value}s` : value.toFixed(2);
+    };
+    const resetSpring = () => {
+      const { duration, bounce } = preset();
+      state.duration = duration;
+      state.bounce = bounce;
+      sync("duration", duration);
+      sync("bounce", bounce);
+    };
+    const resetLook = () => {
+      const { scale, blur, y } = full(LOOKS[state.look].look);
+      Object.assign(state, { scale, blur, y });
+      sync("scale", scale);
+      sync("blur", blur);
+      sync("y", y);
+    };
+
+    for (const [name, input] of inputs) {
+      input.addEventListener("input", () => {
+        (state as Record<string, unknown>)[name] = Number(input.value);
+        sync(name, Number(input.value));
+        render();
+      });
+    }
+    for (const seg of scene.querySelectorAll<HTMLElement>("[data-mo-seg]")) {
+      const which = seg.dataset.moSeg!;
+      segmented(seg, (value) => {
+        if (which === "spring") {
+          state.spring = value as Spring;
+          resetSpring();
+        } else if (which === "look") {
+          state.look = value as Look;
+          resetLook();
+        } else state.lang = value;
+        render();
+      });
+    }
+    // Played: the spring draws its curve, and the toast comes in on it, or goes out
+    scene.querySelector("[data-mo-chart]")!.addEventListener("click", () => {
+      curve.play(springCode(), spring());
+      toast.hidden = !toast.hidden;
+    });
+
+    resetSpring();
+    resetLook();
+    render();
+  }
+
+  /** The card: the springs to choose, each played as it's chosen, and played again on a tap */
+  function card(scene: HTMLElement, curve: ReturnType<typeof chart>) {
+    let chosen: Spring = "bouncy";
+    const play = () => curve.play(`springs.${chosen}()`, springs[chosen]());
+    segmented(scene.querySelector<HTMLElement>("[data-mo-seg]")!, (value) => {
+      chosen = value as Spring;
+      play();
+    });
+    scene.querySelector("[data-mo-chart]")!.addEventListener("click", play);
+    curve.show(`springs.${chosen}()`, springs[chosen]());
+    // Played once as it comes into view
+    const seen = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        seen.disconnect();
+        play();
+      },
+      { threshold: 0.6 },
+    );
+    seen.observe(scene);
+  }
+
+  for (const scene of document.querySelectorAll<HTMLElement>("[data-mo]:not([data-mo-ready])")) {
+    scene.dataset.moReady = "";
+    const curve = chart(scene);
+    if (scene.querySelector("[data-mo-code]")) tune(scene, curve);
+    else card(scene, curve);
+  }
+</script>

@@ -11,9 +11,8 @@
 -->
 <script lang="ts">
   import { createAttachmentKey } from "svelte/attachments";
-  import type { SpringParams } from "@fluidkit/core";
+  import type { SpringParams, TransitionParams } from "@fluidkit/core";
   import { flag, mergeProps, type PartProps } from "@fluidkit/core/svelte";
-  import type { LayoutPresence } from "../index.js";
   import { setLayoutContext, type LayoutState } from "./context.js";
   import { useLayout } from "./use-layout.svelte.js";
 
@@ -24,10 +23,10 @@
     spring?: SpringParams;
     /** Sizes change on the spring too (the default); `false`, at once, and only positions move */
     size?: boolean;
-    /** Where a new item comes in from; `false`, it's there at once */
-    enter?: LayoutPresence | false;
-    /** Where an item taken out goes; `false`, it's gone at once */
-    exit?: LayoutPresence | false;
+    /** How a new item comes in: `transitions.scale()` unless given; `false`, it's there at once */
+    enter?: TransitionParams | false;
+    /** How an item taken out goes: `transitions.scale()` unless given; `false`, it's gone at once */
+    exit?: TransitionParams | false;
     /** Something set off moving, from rest */
     onStart?: () => void;
     /** Everything has come to rest */

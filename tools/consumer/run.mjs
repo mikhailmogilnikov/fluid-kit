@@ -111,7 +111,7 @@ async function checkPages(dist) {
       const browser = await BROWSERS[name].launch({ env });
       for (const framework of FRAMEWORKS) {
         const page = await browser.newPage({ viewport: { width: 1000, height: 800 } });
-        const failures = await checkScene(page, `http://localhost:${PORT}/${framework}.html`);
+        const failures = await checkScene(page, `http://localhost:${PORT}/${framework}.html`, name);
         await page.close();
         if (failures.length) ok = false;
         console.log(`${failures.length ? "✗" : "✓"} ${name} ${framework}`);
@@ -126,7 +126,7 @@ async function checkPages(dist) {
 }
 
 /** What the scene should do, the same in each framework: the failures */
-async function checkScene(page, url) {
+async function checkScene(page, url, browser) {
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
@@ -233,10 +233,43 @@ async function checkScene(page, url) {
     await page.waitForFunction((list) => document.querySelector(list).children[1]?.style.translate, list, {
       timeout,
     });
+    // The new one comes in out of a blur, as `transitions.blurReplace()` has it
+    await page.waitForFunction((list) => /blur\(/.test(document.querySelector(list).children[0].style.filter), list, {
+      timeout,
+    });
     await rest(4);
     await page.click(id("layout-drop"));
     await page.waitForSelector(`${list} > [data-fk-part]`, { timeout });
     await rest(3);
+  });
+
+  // motion.css as the app's bundler minified it: shown, the toast comes in on its spring (seen
+  // half way); hidden, it goes out the same way, and is gone. Firefox doesn't transition `display`
+  // yet: there it's gone at once
+  await check("motion", async () => {
+    const toast = id("toast");
+    const halfWay = () =>
+      page.waitForFunction(
+        (toast) => {
+          const style = getComputedStyle(document.querySelector(toast));
+          const opacity = parseFloat(style.opacity);
+          return style.display !== "none" && opacity > 0 && opacity < 1;
+        },
+        toast,
+        { timeout, polling: "raf" },
+      );
+    const style = (prop, value) =>
+      page.waitForFunction(
+        ([toast, prop, value]) => getComputedStyle(document.querySelector(toast))[prop] === value,
+        [toast, prop, value],
+        { timeout },
+      );
+    await page.$eval(toast, (el) => (el.hidden = false));
+    await halfWay();
+    await style("opacity", "1");
+    await page.$eval(toast, (el) => (el.hidden = true));
+    if (browser !== "firefox") await halfWay();
+    await style("display", "none");
   });
 
   await check("glass", async () => {

@@ -2,6 +2,7 @@
   import { Glass, glass } from "@fluidkit/blur/svelte";
   import { Drag, useDrag } from "@fluidkit/drag/svelte";
   import { Indicator, useIndicator } from "@fluidkit/indicator/svelte";
+  import { transitions } from "@fluidkit/core";
   import { Layout } from "@fluidkit/layout/svelte";
   import { Lift, useLift } from "@fluidkit/lift/svelte";
   import { Morph, useMorph } from "@fluidkit/morph/svelte";
@@ -111,13 +112,14 @@
 <section>
   <button data-testid="layout-add" onclick={() => (rows = [`New ${++added}`, ...rows])}>Add</button>
   <button data-testid="layout-drop" onclick={() => (rows = rows.slice(1))}>Drop</button>
-  <Layout.Root>
+  <Layout.Root enter={transitions.blurReplace()}>
     {#snippet child({ props })}
       <ul {...props} data-testid="layout">
         {#each rows as row (row)}<li>{row}</li>{/each}
       </ul>
     {/snippet}
   </Layout.Root>
+  <p data-testid="toast" class="fk-transition fk-move" hidden>Saved</p>
 </section>
 
 <section class="glassy">

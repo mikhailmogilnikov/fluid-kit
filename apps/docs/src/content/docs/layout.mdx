@@ -594,7 +594,7 @@ const following = ref(false);
 
 **Positions, then sizes.** A moved item goes on `translate`. An item whose size changed, and the root itself, change size for real: `width` and `height` on the spring, what's past the size clipped along that axis while it grows. Text isn't squeezed, corners and shadows aren't stretched, and what comes after them in the page moves with them instead of jumping. With `size: false`, sizes change at once and only positions move.
 
-**In and out.** A new item comes in where it is, from transparent and a little smaller (`enter`). One taken out of the page goes out where it was (`exit`): the element itself, put back in its place for the while, out of the flow, inert and hidden from assistive technology, then removed. Put back in the page meanwhile, it stays and moves from where it was. An item hidden with `display: none` just goes.
+**In and out.** A new item comes in where it is, faded and a little smaller unless told (`enter`, any of [Motion's transitions](/motion#transitions)). One taken out of the page goes out where it was (`exit`): the element itself, put back in its place for the while, out of the flow, inert and hidden from assistive technology, then removed. Put back in the page meanwhile, it stays and moves from where it was. An item hidden with `display: none` just goes.
 
 **What it touches.** While an item moves, its inline `translate` is the layout's, added to its own: a [drag](/drag)'s offset, or its stylesheet's. `transform` is never touched, so a [press](/blur#press) stretching glass or a [morph](/morph) flying it goes on as it does, and an item being dragged (`data-dragging`) isn't moved. While it comes in or goes out, its `scale` (times its own) and `opacity` are the layout's; while its size changes, its `width`, `height` and what would hold them back, including its flex along the container's main axis. Everything is put back as it was once it's at rest.
 
@@ -622,10 +622,10 @@ Moves are translations and cost almost nothing. Sizes change for real, so the br
 | --- | --- |
 | `root: HTMLElement` | The element whose items move |
 | `items?: string` | Its items, as a selector inside it. Default: its children |
-| `spring?: SpringParams` | The spring everything moves on. Default: `{ duration: 0.26, bounce: 0.15 }`. See [core](/core#spring) |
+| `spring?: SpringParams` | The spring everything moves on. Default: `springs.snappy()`, `{ duration: 0.26, bounce: 0.15 }`. See [Motion](/motion#springs) |
 | `size?: boolean` | Sizes change on the spring too. Default: `true`. `false` changes them at once and moves only positions |
-| `enter?: { opacity?, scale? } \| false` | Where a new item comes in from. Default: `{ opacity: 0, scale: 0.96 }`. `false`: it's there at once |
-| `exit?: { opacity?, scale? } \| false` | Where an item taken out goes. Default: the same. `false`: it's gone at once |
+| `enter?: TransitionParams \| false` | How a new item comes in: a [transition](/motion#transitions). Default: `transitions.scale()`. `false`: it's there at once |
+| `exit?: TransitionParams \| false` | How an item taken out goes. Default: the same. `false`: it's gone at once |
 | `onStart?: () => void` | Called when something sets off moving, from rest |
 | `onRest?: () => void` | Called when everything has come to rest |
 
@@ -655,10 +655,10 @@ Moves are translations and cost almost nothing. Sizes change for real, so the br
 | Prop | Description |
 | --- | --- |
 | `items?: string` | Its items, as a selector inside it. Default: its children |
-| `spring?: SpringParams` | The spring everything moves on. Default: `{ duration: 0.26, bounce: 0.15 }` |
+| `spring?: SpringParams` | The spring everything moves on. Default: `springs.snappy()` |
 | `size?: boolean` | Sizes change on the spring too. Default: `true` |
-| `enter?: { opacity?, scale? } \| false` | Where a new item comes in from. Default: `{ opacity: 0, scale: 0.96 }` |
-| `exit?: { opacity?, scale? } \| false` | Where an item taken out goes. Default: the same |
+| `enter?: TransitionParams \| false` | How a new item comes in: a [transition](/motion#transitions). Default: `transitions.scale()` |
+| `exit?: TransitionParams \| false` | How an item taken out goes. Default: the same |
 | `onStart?: () => void` | Called when something sets off moving, from rest |
 | `onRest?: () => void` | Called when everything has come to rest |
 
@@ -676,10 +676,10 @@ Changing props never recreates it. Changing `items` does.
 | Prop or event | Description |
 | --- | --- |
 | `items?: string` | Its items, as a selector inside it. Default: its children |
-| `spring?: SpringParams` | The spring everything moves on. Default: `{ duration: 0.26, bounce: 0.15 }` |
+| `spring?: SpringParams` | The spring everything moves on. Default: `springs.snappy()` |
 | `size?: boolean` | Sizes change on the spring too. Default: `true` |
-| `enter?: { opacity?, scale? } \| false` | Where a new item comes in from. Default: `{ opacity: 0, scale: 0.96 }` |
-| `exit?: { opacity?, scale? } \| false` | Where an item taken out goes. Default: the same |
+| `enter?: TransitionParams \| false` | How a new item comes in: a [transition](/motion#transitions). Default: `transitions.scale()` |
+| `exit?: TransitionParams \| false` | How an item taken out goes. Default: the same |
 | `@start` | Something set off moving, from rest |
 | `@rest` | Everything has come to rest |
 
@@ -697,10 +697,10 @@ Changing props never recreates it. Changing `items` does.
 | Prop | Description |
 | --- | --- |
 | `items?: string` | Its items, as a selector inside it. Default: its children |
-| `spring?: SpringParams` | The spring everything moves on. Default: `{ duration: 0.26, bounce: 0.15 }` |
+| `spring?: SpringParams` | The spring everything moves on. Default: `springs.snappy()` |
 | `size?: boolean` | Sizes change on the spring too. Default: `true` |
-| `enter?: { opacity?, scale? } \| false` | Where a new item comes in from. Default: `{ opacity: 0, scale: 0.96 }` |
-| `exit?: { opacity?, scale? } \| false` | Where an item taken out goes. Default: the same |
+| `enter?: TransitionParams \| false` | How a new item comes in: a [transition](/motion#transitions). Default: `transitions.scale()` |
+| `exit?: TransitionParams \| false` | How an item taken out goes. Default: the same |
 | `onStart={() => …}` | Something set off moving, from rest |
 | `onRest={() => …}` | Everything has come to rest |
 

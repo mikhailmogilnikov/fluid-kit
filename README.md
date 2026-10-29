@@ -17,7 +17,7 @@ of importing each other.
 | [`@fluidkit/drag`](packages/drag/README.md) | Drag with rubber-band edges and flick-aware snap points: sheets, swipe actions, switches |
 | [`@fluidkit/lift`](packages/lift/README.md) | Long-press to lift anything above the page and open your menu, like iOS context menus |
 | [`@fluidkit/layout`](packages/layout/README.md) | Elements move to their new places when the layout changes: lists, grids, sections that open |
-| [`@fluidkit/core`](packages/core/README.md) | Shared pieces: the spring, element measurement, and the DOM contract |
+| [`@fluidkit/core`](packages/core/README.md) | Shared pieces: the spring, springs and transitions by name (for CSS too, `motion.css`), element measurement, and the DOM contract |
 
 `apps/docs` is the docs site: one page per package, written in MDX in
 `apps/docs/src/content/docs/`, with live demos.

@@ -3,6 +3,7 @@ import { ref } from "vue";
 import { Glass, glass } from "@fluidkit/blur/vue";
 import { Drag, useDrag } from "@fluidkit/drag/vue";
 import { Indicator, useIndicator } from "@fluidkit/indicator/vue";
+import { transitions } from "@fluidkit/core";
 import { Layout } from "@fluidkit/layout/vue";
 import { Lift, useLift } from "@fluidkit/lift/vue";
 import { Morph, useMorph } from "@fluidkit/morph/vue";
@@ -109,11 +110,12 @@ const card = useDrag({ axis: "x", snaps: [0, 120], onSnapChange: (s) => log(`own
   <section>
     <button data-testid="layout-add" @click="rows = [`New ${++added}`, ...rows]">Add</button>
     <button data-testid="layout-drop" @click="rows = rows.slice(1)">Drop</button>
-    <Layout.Root as-child>
+    <Layout.Root :enter="transitions.blurReplace()" as-child>
       <ul data-testid="layout">
         <li v-for="row in rows" :key="row">{{ row }}</li>
       </ul>
     </Layout.Root>
+    <p data-testid="toast" class="fk-transition fk-move" hidden>Saved</p>
   </section>
 
   <section class="glassy">

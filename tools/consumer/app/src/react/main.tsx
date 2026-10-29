@@ -1,10 +1,12 @@
 import "@fluidkit/blur/style.css";
+import "@fluidkit/core/motion.css";
 import "../scene.css";
 import { StrictMode, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Glass, glass } from "@fluidkit/blur/react";
 import { Drag, useDrag } from "@fluidkit/drag/react";
 import { Indicator, useIndicator } from "@fluidkit/indicator/react";
+import { transitions } from "@fluidkit/core";
 import { Layout } from "@fluidkit/layout/react";
 import { Lift, useLift } from "@fluidkit/lift/react";
 import { Morph, useMorph } from "@fluidkit/morph/react";
@@ -133,11 +135,14 @@ function Scene({ log }: { log: Log }) {
         <button data-testid="layout-drop" onClick={() => setRows((r) => r.slice(1))}>
           Drop
         </button>
-        <Layout.Root render={<ul data-testid="layout" />}>
+        <Layout.Root enter={transitions.blurReplace()} render={<ul data-testid="layout" />}>
           {rows.map((row) => (
             <li key={row}>{row}</li>
           ))}
         </Layout.Root>
+        <p data-testid="toast" className="fk-transition fk-move" hidden>
+          Saved
+        </p>
       </section>
 
       <section className="glassy">

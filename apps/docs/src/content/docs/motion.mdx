@@ -1,0 +1,179 @@
+---
+package: "@fluidkit/core"
+name: Motion
+order: 8
+frameworks: []
+description: "Apple's springs and transitions by name: for any Fluid Kit package, and for CSS as easings and classes that bring elements in and out. Each one ready to tune."
+intro: "Springs and transitions by name, as SwiftUI has them: <code>springs.snappy()</code>, <code>transitions.blurReplace()</code>. The same in CSS, as easings and classes that bring an element in and out. Part of <a href=\"/core\">Core</a>."
+---
+
+import Section from "../../components/docs/Section.astro";
+import Steps from "../../components/docs/Steps.astro";
+import Step from "../../components/docs/Step.astro";
+import Install from "../../components/docs/Install.astro";
+
+<Section id="start" title="Get started">
+
+Motion is part of `@fluidkit/core`, which every package already depends on. Use it from TypeScript, from CSS, or both: the values are the same.
+
+<Steps>
+<Step>
+
+**Install Core.**
+
+<Install pkg="@fluidkit/core" />
+
+</Step>
+<Step>
+
+**In TypeScript, pass a spring and a transition** to any package. Every package's `spring` takes a spring, and Layout's `enter` and `exit` take a transition.
+
+```ts
+import { springs, transitions } from "@fluidkit/core";
+import { createLayout } from "@fluidkit/layout";
+
+createLayout({
+  root: list,
+  spring: springs.bouncy(),
+  enter: transitions.blurReplace(),
+  exit: transitions.scale(0.9),
+});
+```
+
+</Step>
+<Step>
+
+**In CSS, import the stylesheet** once, and use a spring as an easing or bring an element in and out with classes.
+
+```ts
+import "@fluidkit/core/motion.css";
+```
+
+```html
+<div popover id="note" class="fk-transition fk-blur-replace fk-bouncy">…</div>
+
+<style>
+  .card { transition: scale var(--fk-snappy); }
+  .card:active { scale: 0.97; }
+</style>
+```
+
+</Step>
+</Steps>
+
+</Section>
+
+<Section id="springs" title="Springs">
+
+Each spring is a function: called as it is, it gives the preset; given options, it tunes it, as SwiftUI's `.snappy(duration:extraBounce:)` does. It returns `SpringParams`, `{ duration, bounce }`, so it fits the `spring` of every package, and `SpringAnimator`.
+
+| Spring | Duration, bounce | For |
+| --- | --- | --- |
+| `springs.smooth()` | 0.3 s, 0 | Fades, colors, whatever shouldn't overshoot |
+| `springs.snappy()` | 0.26 s, 0.15 | Lists, reorders, sizes: lands crisp, the bounce too small to see swing. Layout's default |
+| `springs.bouncy()` | 0.36 s, 0.3 | Things popping in, toggles: a bounce you see |
+| `springs.interactive()` | 0.15 s, 0.14 | Following a finger, as SwiftUI's `interactiveSpring` |
+
+```ts
+springs.snappy({ duration: 0.3 }); // slower, the same bounce
+springs.bouncy({ extraBounce: 0.1 }); // bouncier: 0.4
+springs.smooth({ extraBounce: -1 }); // the bounce stays between 0 and 0.99
+```
+
+They're quicker than SwiftUI's own, half a second there: on the web, where springs move rows and buttons more than whole screens, that pace reads as sluggish. The packages that came before Motion keep the springs they were tuned with, and take these as well.
+
+</Section>
+
+<Section id="transitions" title="Transitions">
+
+A transition is what an element looks like at the far end of coming in or going out: `{ opacity, scale, blur, x, y }`. `opacity` is of its own opacity and `scale` of its own scale (1 is as it is), `blur` is in px, `x` and `y` are px added to its own translation. What's left out is as it is.
+
+| Transition | Looks like | As |
+| --- | --- | --- |
+| `transitions.opacity()` | `{ opacity: 0 }` | A fade |
+| `transitions.scale(s = 0.96)` | `{ opacity: 0, scale: s }` | A row put in a list on iOS. Layout's default |
+| `transitions.blurReplace({ blur = 8, scale = 0.9 })` | `{ opacity: 0, scale: 0.9, blur: 8 }` | SwiftUI's `.blurReplace`: content swapped out of focus |
+| `transitions.move({ x = 0, y = 12 })` | `{ opacity: 0, x: 0, y: 12 }` | Rising into place |
+
+Combine them by spreading, and make a push of two: in from one side, out to the other.
+
+```ts
+const look = { ...transitions.scale(0.9), blur: 4 };
+
+createLayout({ root, enter: transitions.move({ y: 12 }), exit: transitions.move({ y: -12 }) });
+```
+
+Layout puts an item it blurs on a layer of its own while the blur changes (`will-change: filter`): Safari doesn't draw a changing blur under glass otherwise.
+
+</Section>
+
+<Section id="css" title="CSS">
+
+### Springs
+
+`motion.css` has each spring as an easing: the spring's own curve written with `linear()`, and how long it takes to come to rest, a little longer than its duration above.
+
+| Variable | Is |
+| --- | --- |
+| `--fk-snappy` | Its duration and easing, for `transition` or `animation`: `transition: scale var(--fk-snappy)` |
+| `--fk-snappy-easing` | The easing alone. With another duration it's the same spring at another pace |
+| `--fk-snappy-duration` | How long it takes to come to rest |
+
+The same for `smooth`, `bouncy` and `interactive`. For a spring of your own, `springCss()` writes it:
+
+```ts
+import { springCss, springs } from "@fluidkit/core";
+
+const { duration, easing } = springCss(springs.bouncy({ extraBounce: 0.1 }));
+card.style.transition = `scale ${duration} ${easing}`;
+```
+
+A CSS transition interrupted starts over from where it is, with no speed; the packages' springs keep theirs. For something a hand moves and lets go, use a package.
+
+### In and out
+
+`fk-transition` brings an element in as it's put in the page or shown, and takes it out as it's hidden: with `hidden`, a `<dialog>` closed, a popover closed. Nothing else to call.
+
+| Class | Does |
+| --- | --- |
+| `fk-transition` | Comes in and goes out. Faded and a little smaller unless told, on `snappy` |
+| `fk-opacity`, `fk-scale`, `fk-blur-replace`, `fk-move` | How: as the transitions above |
+| `fk-smooth`, `fk-snappy`, `fk-bouncy`, `fk-interactive` | On which spring |
+
+Tune it with variables, on the element or an ancestor:
+
+| Variable | Default |
+| --- | --- |
+| `--fk-opacity`, `--fk-scale`, `--fk-blur`, `--fk-x`, `--fk-y` | As the class has them; `0`, `0.96`, `0px`, `0px`, `0px` without one |
+| `--fk-transition-duration`, `--fk-transition-easing` | The spring's |
+
+```html
+<p class="toast fk-transition fk-move" style="--fk-y: -16px" hidden>Saved</p>
+
+<script>
+  toast.hidden = false; // rises in
+  setTimeout(() => (toast.hidden = true), 2000); // and goes back up
+</script>
+```
+
+An element there as the page loads comes in too. While it's out, its `opacity`, `scale`, `translate` and `filter` are the class's; once in, they're its own again. With reduced motion it only fades, as Apple has it.
+
+</Section>
+
+<Section id="support" title="Browser support">
+
+- **Springs in TypeScript:** everywhere.
+- **CSS springs:** `linear()`, in Chrome 113, Safari 17.2 and Firefox 112. Before that, a near curve with `cubic-bezier()`.
+- **Coming in:** `@starting-style`, in Chrome 117, Safari 17.5 and Firefox 129. Elsewhere it's there at once.
+- **Going out:** `display` transitioning, in Chrome 117 and Safari 17.4. Firefox doesn't yet: there it's gone at once.
+
+</Section>
+
+<Section id="limitations" title="Limitations">
+
+- A CSS transition doesn't keep its speed when it's interrupted.
+- In Firefox an element goes out at once: it can't keep its `display` while it goes yet.
+- A popover or a `<dialog>` going out stays in the top layer only where `overlay` can transition: in Chrome. In Safari it leaves the top layer as it starts going, so something drawn over it covers it meanwhile.
+- `fk-transition` sets `transition-property` on the element, so a transition of its own on another property needs adding to the list.
+
+</Section>

@@ -549,6 +549,7 @@ code {
 :root[data-theme="dark"] .bd-aurora[data-silk="edge"] { background-image: url("../assets/silk-edge-dark.png"); }
 :root[data-theme="dark"] .bd-aurora[data-silk="text"] { background-image: url("../assets/silk-text-dark.png"); }
 :root[data-theme="dark"] .bd-aurora[data-silk="layout"] { background-image: url("../assets/silk-layout-dark.png"); }
+:root[data-theme="dark"] .bd-aurora[data-silk="motion"] { background-image: url("../assets/silk-motion-dark.png"); }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .bd-aurora[data-silk="indicator"] { background-image: url("../assets/silk-indicator-dark.png"); }
   :root:not([data-theme="light"]) .bd-aurora[data-silk="drag"] { background-image: url("../assets/silk-drag-dark.png"); }
@@ -556,6 +557,7 @@ code {
   :root:not([data-theme="light"]) .bd-aurora[data-silk="edge"] { background-image: url("../assets/silk-edge-dark.png"); }
   :root:not([data-theme="light"]) .bd-aurora[data-silk="text"] { background-image: url("../assets/silk-text-dark.png"); }
   :root:not([data-theme="light"]) .bd-aurora[data-silk="layout"] { background-image: url("../assets/silk-layout-dark.png"); }
+  :root:not([data-theme="light"]) .bd-aurora[data-silk="motion"] { background-image: url("../assets/silk-motion-dark.png"); }
 }
 
 .bd-stripes::before {
@@ -1563,7 +1565,6 @@ code {
   margin-top: 40px;
 }
 /* An odd one out spans the row */
-.lib--wide { grid-column: 1 / -1; }
 .lib {
   display: grid;
   align-content: start;

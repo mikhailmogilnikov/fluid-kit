@@ -1,0 +1,63 @@
+---
+import Case from "./Case.astro";
+
+const todos = ["Buy oat milk", "Call the dentist", "Book the train to Lyon"];
+---
+
+<Case id="motion-curve">
+  <div class="mc-col">
+    <div class="mc-track lb"><span class="mc-dot" data-js></span><span class="mc-label">SpringAnimator</span></div>
+    <div class="mc-track lb"><span class="mc-dot mc-dot--css" data-css></span><span class="mc-label">var(--fk-bouncy)</span></div>
+  </div>
+</Case>
+
+<Case id="motion-popover">
+  <div class="mc-pop lb fk-transition fk-blur-replace fk-bouncy" popover="manual" data-pop>
+    <b>AirPods Pro</b>
+    <span>Connected</span>
+  </div>
+</Case>
+
+<Case id="motion-dialog">
+  <dialog class="mc-dialog lb fk-transition fk-scale fk-bouncy" data-dialog>
+    <b>Delete this photo?</b>
+    <span>It's removed from all your devices.</span>
+  </dialog>
+</Case>
+
+<Case id="motion-hidden">
+  <p class="mc-toast lb fk-transition fk-move" style="--fk-y: -16px" hidden data-toast>Saved to Photos</p>
+</Case>
+
+<Case id="motion-glass">
+  <ul class="mc-list lb" data-list>
+    {todos.map((t) => <li class="mc-row">{t}</li>)}
+  </ul>
+</Case>
+
+<Case id="motion-turn">
+  <ul class="mc-list lb" data-list>
+    {todos.map((t) => <li class="mc-row">{t}</li>)}
+  </ul>
+</Case>
+
+<style>
+  .mc-col { width: min(360px, calc(100% - 32px)); display: grid; gap: 12px; }
+  .mc-track { position: relative; height: 56px; border-radius: 999px; padding: 8px; }
+  .mc-dot { position: absolute; top: 8px; left: 8px; width: 40px; height: 40px; border-radius: 50%; background: #0a84ff; }
+  .mc-dot--css { background: #ff9f0a; transition-property: translate; transition-timing-function: var(--fk-bouncy-easing); }
+  .mc-label { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-2); font: 13px ui-monospace, monospace; pointer-events: none; }
+
+  .mc-pop,
+  .mc-dialog,
+  .mc-toast { border: 0; color: var(--ink); }
+  .mc-pop,
+  .mc-dialog { display: grid; gap: 2px; padding: 16px 22px; border-radius: 24px; text-align: center; }
+  .mc-pop span,
+  .mc-dialog span { color: var(--ink-2); font-size: 14px; }
+  .mc-toast { margin: 0; padding: 12px 20px; border-radius: 999px; font-weight: 600; }
+
+  .mc-list { width: min(320px, calc(100% - 32px)); margin: 0; padding: 6px; list-style: none; border-radius: 22px; color: var(--ink); }
+  .mc-row { padding: 12px 14px; border-radius: 14px; font-size: 15px; background: color-mix(in srgb, var(--ink) 6%, transparent); margin-bottom: 6px; }
+  .mc-row:last-child { margin-bottom: 0; }
+</style>

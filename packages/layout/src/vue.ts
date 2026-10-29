@@ -25,9 +25,9 @@ import {
   type ShallowRef,
   type SlotsType,
 } from "vue";
-import type { SpringParams } from "@fluidkit/core";
+import type { SpringParams, TransitionParams } from "@fluidkit/core";
 import { attachRef, batched, flag, renderPart, watchSettings, type FunctionRef } from "@fluidkit/core/vue";
-import { createLayout, type Layout as LayoutEngine, type LayoutPresence, type LayoutSettings } from "./index";
+import { createLayout, type Layout as LayoutEngine, type LayoutSettings } from "./index";
 
 export type UseLayoutOptions = LayoutSettings & {
   /** Its items, as a selector inside the root: its children unless given */
@@ -145,10 +145,10 @@ const Root = defineComponent({
     spring: Object as PropType<SpringParams>,
     /** Sizes change on the spring too; `false`, at once, and only positions move */
     size: { type: Boolean, default: undefined },
-    /** Where a new item comes in from; `false`, it's there at once */
-    enter: { type: [Object, Boolean] as PropType<LayoutPresence | false>, default: undefined },
-    /** Where an item taken out goes; `false`, it's gone at once */
-    exit: { type: [Object, Boolean] as PropType<LayoutPresence | false>, default: undefined },
+    /** How a new item comes in: `transitions.scale()` unless given; `false`, it's there at once */
+    enter: { type: [Object, Boolean] as PropType<TransitionParams | false>, default: undefined },
+    /** How an item taken out goes: `transitions.scale()` unless given; `false`, it's gone at once */
+    exit: { type: [Object, Boolean] as PropType<TransitionParams | false>, default: undefined },
     asChild: { type: Boolean, default: false },
   },
   emits: {

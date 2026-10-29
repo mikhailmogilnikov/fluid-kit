@@ -11,6 +11,7 @@ import { indicator } from "./indicator";
 import { drag } from "./drag";
 import { layout } from "./layout";
 import { lift } from "./lift";
+import { motion } from "./motion";
 
 /**
  * The playground: one case on the stage at a time, cloned fresh from its template, set up by its
@@ -18,7 +19,7 @@ import { lift } from "./lift";
  */
 installGlassGroups();
 
-const setups: Record<string, Setup> = { ...blur, ...morph, ...indicator, ...drag, ...lift, ...layout };
+const setups: Record<string, Setup> = { ...blur, ...morph, ...indicator, ...drag, ...lift, ...layout, ...motion };
 const page = document.querySelector<HTMLElement>("[data-pg]")!;
 const $ = <T extends Element = HTMLElement>(name: string) => page.querySelector<T>(`[data-pg-${name}]`)!;
 
