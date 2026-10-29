@@ -529,10 +529,14 @@
   .lb-edge-x { --_lb-edge-to: to right; }
 
   @supports (animation-timeline: scroll()) {
+    /*
+     * Longhands only: given `animation` and `animation-timeline`, a minifier (Lightning CSS, Vite's)
+     * folds the timeline into the shorthand, which browsers reject, and the edges never show
+     */
     :is(.lb-edge, .lb-edge-x) {
-      animation:
-        lb-edge-start linear both,
-        lb-edge-end linear both;
+      animation-name: lb-edge-start, lb-edge-end;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
       animation-timeline: scroll(self block), scroll(self block);
       animation-range:
         0 var(--_lb-edge-s1),
