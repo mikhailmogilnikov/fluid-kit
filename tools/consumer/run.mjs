@@ -190,6 +190,28 @@ async function checkScene(page, url) {
   await page.goto(url);
   await check("mounts", () => page.waitForSelector(`${id("group")}[data-fk-surface]`, { timeout }));
 
+  // Its stylesheet as the app's bundler minified it: a scroll edge's fade follows the scroll
+  await check("scroll edge", async () => {
+    // Without scroll-driven animations (Firefox) there are no edges, by design
+    if (!(await page.evaluate(() => CSS.supports("animation-timeline: scroll()")))) return;
+    await page.evaluate(() => {
+      const list = document.createElement("ol");
+      list.className = "lb-edge";
+      list.dataset.testid = "edge";
+      list.style.cssText = "height: 100px; overflow: auto";
+      list.innerHTML = "<li>Row</li>".repeat(30);
+      document.body.append(list);
+      list.scrollTop = 60;
+    });
+    await page.waitForFunction(
+      () =>
+        getComputedStyle(document.querySelector('[data-testid="edge"]')).getPropertyValue("--_lb-edge-start") === "1",
+      null,
+      { timeout },
+    );
+    await page.$eval(id("edge"), (el) => el.remove());
+  });
+
   await check("glass", async () => {
     const button = await page.$eval(id("glass-button"), (el) => [el.tagName, ...el.classList]);
     for (const want of ["BUTTON", "lb", "lb-interactive", "lb-tinted", "mine"]) {
