@@ -1,6 +1,6 @@
 {
   "name": "@fluidkit/layout",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Elements move to where the layout puts them on springs that keep their speed: lists, grids, sections that open, sizes that change.",
   "keywords": [
     "animation",
