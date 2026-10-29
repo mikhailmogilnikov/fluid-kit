@@ -1,6 +1,6 @@
 {
   "name": "@fluidkit/core",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Shared ground of the Fluid Kit packages: an interruptible, velocity-keeping spring, and the DOM contract they meet by.",
   "keywords": [
     "animation",
