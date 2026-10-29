@@ -1,5 +1,11 @@
 # @fluidkit/lift
 
+## 1.4.1
+
+### Patch Changes
+
+- 10d799d: An open lift keeps the page still on iOS: a touch on a menu that doesn't scroll, or one at its end, no longer scrolls the page under it.
+
 ## 1.4.0
 
 ### Minor Changes
