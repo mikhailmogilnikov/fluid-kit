@@ -1,3 +1,9 @@
+<p align="center">
+  <a href="https://fluidkit.mogilnikov.dev">
+    <img alt="Fluid Kit: fluid interfaces for the web" width="100%" src="https://raw.githubusercontent.com/mikhailmogilnikov/fluid-kit/main/.github/assets/banner.jpg" />
+  </a>
+</p>
+
 # @fluidkit/react
 
 [Fluid Kit](https://fluidkit.mogilnikov.dev) for React: Liquid Blur's glass, morph, indicator, drag,

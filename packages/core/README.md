@@ -1,3 +1,9 @@
+<p align="center">
+  <a href="https://fluidkit.mogilnikov.dev">
+    <img alt="Fluid Kit: fluid interfaces for the web" width="100%" src="https://raw.githubusercontent.com/mikhailmogilnikov/fluid-kit/main/.github/assets/banner.jpg" />
+  </a>
+</p>
+
 # @fluidkit/core
 
 [Fluid Kit](https://fluidkit.mogilnikov.dev) without a framework: Liquid Blur's glass, morph,

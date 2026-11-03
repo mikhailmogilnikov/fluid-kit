@@ -1,84 +1,109 @@
-# Fluid Kit
+<p align="center">
+  <a href="https://fluidkit.mogilnikov.dev">
+    <img alt="Fluid Kit: fluid interfaces for the web" width="100%" src=".github/assets/banner.jpg" />
+  </a>
+</p>
+<p align="center">
+  <a href="https://github.com/mikhailmogilnikov/fluid-kit/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat" alt="License"></a>
+  <a href="https://www.npmjs.com/package/@fluidkit/core"><img src="https://img.shields.io/npm/v/@fluidkit/core.svg?style=flat" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/@fluidkit/core"><img src="https://img.shields.io/npm/dm/@fluidkit/core.svg?style=flat" alt="npm downloads"></a>
+  <a href="https://github.com/mikhailmogilnikov/fluid-kit/actions/workflows/ci.yml"><img src="https://github.com/mikhailmogilnikov/fluid-kit/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+</p>
 
-Fluid interfaces for the web, after iOS 26: glass, morphs, indicators, drags, long-press menus and
-layouts that move, on interruptible springs that keep their speed. For plain JavaScript, React, Vue
-or Svelte. The features don't import each other: they coordinate through DOM attributes (`data-fk-*`,
-see [the contract](https://fluidkit.mogilnikov.dev/core#contract)), and what an app doesn't use isn't
-in its bundle.
+## Why Fluid Kit?
 
-**[Documentation](https://fluidkit.mogilnikov.dev)**
+Fluid Kit brings the interactions of iOS 26 to the web. Liquid Glass is plain CSS, and the rest is what makes iOS feel fluid: a button that grows into a panel, a long press that lifts a photo and opens its menu, sheets you flick, a highlight that follows the finger, lists that make room. Every motion runs on a spring that keeps its speed when you change your mind. It's headless and works on any element, with no framework or with compound components for React, Vue and Svelte (`Lift.Root`, `Lift.Menu`, …).
+
+- **Liquid Glass in plain CSS**: blur, fill, rims and press effects as classes, glass that melts between shapes, in Safari, Chrome and Firefox
+- **Springs that keep their speed**: interrupt any motion and it turns from where it is, as fast as it was going, which CSS transitions can't do
+- **Interactions, not primitives**: morphs, context menus, sheets, indicators and layout animations, tuned against iOS 26
+- **Any element, any framework**: headless engines underneath, components and hooks on top; your markup, your styles, state in data attributes
+- **Accessible**: keyboard and focus handled, reduced motion and reduced transparency respected
+- **Only what you use**: one package for your framework, tree-shaken, nothing else to install
 
 ## Packages
 
-One package for each framework, all four at the same version. An app installs one.
-
-| Package | What |
+| Package | Description |
 | --- | --- |
-| [`@fluidkit/core`](packages/core/README.md) | Every feature without a framework, the spring they share, and the stylesheet |
-| [`@fluidkit/react`](packages/react/README.md) | Every feature's components and hooks, and all of core (React 18+) |
-| [`@fluidkit/vue`](packages/vue/README.md) | Every feature's components and composables, and all of core (Vue 3.5+) |
-| [`@fluidkit/svelte`](packages/svelte/README.md) | Every feature's components and runes, and all of core (Svelte 5.29+) |
+| [`@fluidkit/react`](https://www.npmjs.com/package/@fluidkit/react) | Components and hooks for React 18+, and everything in core |
+| [`@fluidkit/vue`](https://www.npmjs.com/package/@fluidkit/vue) | Components and composables for Vue 3.5+, and everything in core |
+| [`@fluidkit/svelte`](https://www.npmjs.com/package/@fluidkit/svelte) | Components and runes for Svelte 5.29+, and everything in core |
+| [`@fluidkit/core`](https://www.npmjs.com/package/@fluidkit/core) | Every feature without a framework, the spring they share, and the stylesheet |
 
-| Feature | What |
-| --- | --- |
-| [Liquid Blur](https://fluidkit.mogilnikov.dev/blur) | A glass material: backdrop blur, fill, rims, press effects, glass that merges between shapes |
-| [Morph](https://fluidkit.mogilnikov.dev/morph) | Animates one element into another and back, on interruptible springs |
-| [Indicator](https://fluidkit.mogilnikov.dev/indicator) | One element that moves to whatever is hovered, pressed or selected: menus, tabs, segmented controls |
-| [Drag](https://fluidkit.mogilnikov.dev/drag) | Drag with rubber-band edges and flick-aware snap points: sheets, swipe actions, switches |
-| [Lift](https://fluidkit.mogilnikov.dev/lift) | Long-press to lift anything above the page and open your menu, like iOS context menus |
-| [Layout](https://fluidkit.mogilnikov.dev/layout) | Elements move to their new places when the layout changes: lists, grids, sections that open |
-| [Motion](https://fluidkit.mogilnikov.dev/motion) | Apple's springs and transitions by name, for every feature and for CSS |
+All four come out together, at the same version.
 
-In the repository, `packages/core/src` has a folder for each feature's engine, and
-`packages/{react,vue,svelte}/src` a file or folder for each feature's components. `apps/docs` is the
-docs site: one page per feature, written in MDX in `apps/docs/src/content/docs/`, with live demos.
+## Getting Started
 
-## Development
-
-Requires Node 22.22+ (`.node-version` has 24) and pnpm. Tasks run on [Vite+](https://viteplus.dev)
-(`vp`): packages build with `vp pack` and test with `vp test`, and the scripts below run each
-package's task with `vp run -r`, in dependency order and cached.
+Visit [fluidkit.mogilnikov.dev](https://fluidkit.mogilnikov.dev) to get started.
 
 ```bash
-pnpm install
+npm install @fluidkit/react
 ```
 
-Installing also sets up the git hooks (`.vite-hooks/`): before a commit, staged files are formatted
-and linted; a commit message has to be a [conventional commit](https://www.conventionalcommits.org),
-`type(scope): subject`, with an optional scope: a package (`core`, `react`, `vue`, `svelte`), a
-feature (`blur`, `morph`, `indicator`, `drag`, `lift`, `layout`, `motion`), or `docs`, `repo`, `ci`,
-`deps` and `release`.
+```tsx
+import "@fluidkit/react/style.css";
+import { Lift } from "@fluidkit/react";
 
-| Script | What |
+// Long-press the photo: it lifts above the page and its menu opens beside it
+export function Photo({ src }: { src: string }) {
+  return (
+    <Lift.Root onSelect={(value) => console.log(value)}>
+      <Lift.Target render={<img src={src} alt="" />} />
+      <Lift.Menu className="menu lb">
+        <Lift.Item value="copy">Copy</Lift.Item>
+        <Lift.Item value="share">Share</Lift.Item>
+      </Lift.Menu>
+    </Lift.Root>
+  );
+}
+```
+
+## What's Inside
+
+| Feature | What it does |
 | --- | --- |
-| `pnpm dev` | Builds the packages, then watches them and starts the docs site at http://localhost:4321 |
-| `pnpm build` | Builds every package and the docs site |
-| `pnpm check-types` | Type checks every package and the docs site |
-| `pnpm test` | Runs every package's tests |
-| `pnpm fmt` / `pnpm lint` | Formats (TS and JSON; CSS and Markdown are laid out by hand) / lints |
-| `pnpm check` | Everything CI checks: format, lint, types, tests |
-| `pnpm changeset` | Describes a change for the changelogs and versions |
+| [Liquid Blur](https://fluidkit.mogilnikov.dev/blur) | A glass material in plain CSS: press effects, and glass that melts between nearby shapes |
+| [Morph](https://fluidkit.mogilnikov.dev/morph) | One element grows into another and back, its matching parts flying between them |
+| [Indicator](https://fluidkit.mogilnikov.dev/indicator) | One element that moves to whatever is hovered, pressed or selected: menus, tabs, segmented controls |
+| [Drag](https://fluidkit.mogilnikov.dev/drag) | Rubber-band edges and snap points chosen by the flick: sheets, swipe actions, switches |
+| [Lift](https://fluidkit.mogilnikov.dev/lift) | The iOS context menu: a long press lifts anything above the page and opens your menu |
+| [Layout](https://fluidkit.mogilnikov.dev/layout) | Elements move to their new places when the page changes: lists, grids, sections that open |
+| [Scroll Edge](https://fluidkit.mogilnikov.dev/edge) | Scrolling content fades out under the bars, only where there's more to scroll |
+| [Motion](https://fluidkit.mogilnikov.dev/motion) | Apple's springs and transitions by name, for every feature and for CSS |
 
-## Release
+## Who Is This For?
 
-Releases run on [changesets](https://github.com/changesets/changesets). A change a user would notice
-comes with a changeset: run `pnpm changeset`, pick the packages and the bump, write one line for the
-changelog, and commit it with the change. The four packages are a fixed group: they always come out
-together, at the same version, whichever of them changed. CI asks for one when a package's `src` or
-`package.json` changed; `pnpm changeset --empty` says none is needed. See
-[.changeset/README.md](.changeset/README.md).
+Fluid Kit is a good fit if you are building:
 
-On `main`, the release workflow keeps a "Version packages" pull request up to date with the pending
-changesets. Merging it bumps the versions, writes the changelogs, publishes to npm with provenance
-and tags each package (`@fluidkit/core@2.0.0`). Publishing goes through pnpm, which turns the
-framework packages' `workspace:*` dependency on `@fluidkit/core` into that same exact version.
+- **Web apps that should feel native**: PWAs and app-like sites, on iPhone first
+- **Interfaces with character**: iOS-grade motion without writing springs and gesture math yourself
+- **Design systems**: headless engines to build your own components on, in any framework
+- **Landing pages**: glass and motion that hold up in every browser
+- **Any stack**: React, Vue, Svelte, or plain TypeScript and CSS
 
-It publishes with [Trusted Publishing](https://docs.npmjs.com/trusted-publishers): no npm token is
-stored anywhere. Each package on npm trusts this repository's `release.yml`, and the workflow proves
-who it is with its own OIDC token. A new package has to be published once by hand first
-(`pnpm release`, with your npm two-factor code), then trust the workflow in its settings on npm.
-`pnpm exec changeset publish-plan` shows what would go out.
+## Compared To
+
+| Library | How Fluid Kit differs |
+| --- | --- |
+| **Motion** (Framer Motion) | Motion animates whatever you describe; Fluid Kit ships the interactions themselves, and works the same in React, Vue, Svelte and without a framework |
+| **Liquid glass libraries** | Most draw refraction with SVG filters that only Chromium renders; Fluid Kit's glass is CSS that holds up in Safari and Firefox, with press effects and melting groups |
+| **Vaul** | A React drawer; Fluid Kit's Drag moves any element in any framework, with rubber-band edges and snap points chosen by the flick |
+| **View Transitions** | Cross-fade snapshots of two states; Fluid Kit morphs the live elements, and a morph can turn back mid-way |
+
+## Documentation
+
+- **Docs**: [fluidkit.mogilnikov.dev](https://fluidkit.mogilnikov.dev)
+- **Playground**: [fluidkit.mogilnikov.dev/playground](https://fluidkit.mogilnikov.dev/playground), every hard case live, slowed down, with its boxes drawn
+- **Changelog**: [fluidkit.mogilnikov.dev/changelog](https://fluidkit.mogilnikov.dev/changelog)
+
+## Community
+
+Found a bug, or missing something iOS does? [Open an issue](https://github.com/mikhailmogilnikov/fluid-kit/issues/new/choose). Built something with Fluid Kit? Show it there too.
+
+## Contributing
+
+Contributions are always welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for how the repository is laid out, how to run it, and how releases work.
 
 ## License
 
-MIT © Mikhail Mogilnikov. See [LICENSE](LICENSE).
+[MIT](LICENSE) © Mikhail Mogilnikov
