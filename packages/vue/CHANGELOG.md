@@ -1,5 +1,12 @@
 # @fluidkit/vue
 
+## 2.0.1
+
+### Patch Changes
+
+- fb77c28: An app that imports one component no longer bundles every feature. Components made at the top level are marked pure, so a bundler drops the ones not imported: `Drag` alone from `@fluidkit/react` or `@fluidkit/vue` went from about 28 KB (40 KB in Vue) gzipped to about 7 KB. Svelte's components were dropped already.
+- @fluidkit/core@2.0.1
+
 ## 2.0.0
 
 ### Major Changes
