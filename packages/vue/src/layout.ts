@@ -140,7 +140,7 @@ export type LayoutState = { moving: boolean };
  * The root whose items move: a `div`, or with `as-child` the element in its slot, its children the
  * items. Marked `data-moving` while something is on its way
  */
-const Root = defineComponent({
+const Root = /* @__PURE__ */ defineComponent({
   name: "LayoutRoot",
   inheritAttrs: false,
   props: {

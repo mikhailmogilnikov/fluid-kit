@@ -209,7 +209,7 @@ export function useMorph<V extends string = string>(options: UseMorphOptions<V> 
 
 // ── Components ──
 
-const Context = createContext<UseMorph | null>(null);
+const Context = /* @__PURE__ */ createContext<UseMorph | null>(null);
 
 function useMorphContext(part: string) {
   const context = useContext(Context);
@@ -244,7 +244,10 @@ export type MorphStateProps = PartProps<MorphStateState> & {
  * `data-current` while it's the one asked for. Keep its hiding (`visibility: hidden`) in CSS, not
  * in `style`: away, a state's inline opacity and visibility are the morph's
  */
-const State = forwardRef<HTMLElement, MorphStateProps>(function MorphState({ render, value, ...props }, ref) {
+const State = /* @__PURE__ */ forwardRef<HTMLElement, MorphStateProps>(function MorphState(
+  { render, value, ...props },
+  ref,
+) {
   const morph = useMorphContext("State");
   const current = morph.value === value;
   const merged = useMergedRefs(morph.state(value), ref);
@@ -265,7 +268,7 @@ export type MorphTriggerProps = PartProps<{ current: boolean }> & {
  * Sends the morph to a state when it's clicked: a `button` unless rendered as something else. A
  * state can be one, rendered as a trigger to another (`render={<Morph.Trigger value="panel" />}`)
  */
-const Trigger = forwardRef<HTMLElement, MorphTriggerProps>(function MorphTrigger(
+const Trigger = /* @__PURE__ */ forwardRef<HTMLElement, MorphTriggerProps>(function MorphTrigger(
   { render, value, instant, onClick, ...props },
   ref,
 ) {
@@ -293,7 +296,10 @@ export type MorphMatchProps = PartProps<Record<string, never>> & {
 };
 
 /** A piece that flies from one state into the other, to its match of the same `name`: a `span` unless rendered as something else */
-const Match = forwardRef<HTMLElement, MorphMatchProps>(function MorphMatch({ render, name, ...props }, ref) {
+const Match = /* @__PURE__ */ forwardRef<HTMLElement, MorphMatchProps>(function MorphMatch(
+  { render, name, ...props },
+  ref,
+) {
   return renderPart("span", { ...props, ref, "data-fk-match": name }, render, {});
 });
 

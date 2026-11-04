@@ -1,6 +1,8 @@
 /**
  * Fluid Kit for Vue (3.5+): every feature's components and composables, the helpers they're made
- * of, and all of @fluidkit/core besides, so an app installs this one package.
+ * of, and all of @fluidkit/core besides, so an app installs this one package. Each component made
+ * at the top level (`defineComponent`) is marked `@__PURE__`: a bundler can't tell otherwise that
+ * making it does nothing else, and would keep every feature for an app that imports one.
  */
 export * from "@fluidkit/core";
 export * from "./helpers";

@@ -51,7 +51,7 @@ type PartProps = Omit<HTMLAttributes<HTMLElement>, "children"> & {
 export type GlassProps = PartProps & GlassVariants;
 
 /** Glass: a `div` unless rendered as something else, its variants as props, your classes and styles kept */
-const Root = forwardRef<HTMLElement, GlassProps>(function Glass(props, ref) {
+const Root = /* @__PURE__ */ forwardRef<HTMLElement, GlassProps>(function Glass(props, ref) {
   const { clear, tint, lens, transparency, depth, interactive, highlight, swell, stretch, render, ...rest } = props;
   const variants = { clear, tint, lens, transparency, depth, interactive, highlight, swell, stretch };
   const own = useRef<HTMLElement | null>(null);
@@ -106,7 +106,7 @@ export type GlassGroupProps = PartProps &
  * Glass that melts between its children where they come close: a `div` unless rendered as
  * something else, written `lb lb-group`. Its children are glass, `<Glass>` or `lb`
  */
-const Group = forwardRef<HTMLElement, GlassGroupProps>(function GlassGroupRoot(
+const Group = /* @__PURE__ */ forwardRef<HTMLElement, GlassGroupProps>(function GlassGroupRoot(
   { transparency, depth, merge, render, ...rest },
   ref,
 ) {
@@ -127,4 +127,4 @@ const Group = forwardRef<HTMLElement, GlassGroupProps>(function GlassGroupRoot(
 });
 
 /** Glass, and `Glass.Group` for glass that melts */
-export const Glass = Object.assign(Root, { Group });
+export const Glass = /* @__PURE__ */ Object.assign(Root, { Group });

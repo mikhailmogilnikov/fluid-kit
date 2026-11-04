@@ -206,7 +206,7 @@ const asChild = {
 } as const;
 
 /** The lift: its props and state, for the parts inside it. Renders nothing of its own */
-const Root = defineComponent({
+const Root = /* @__PURE__ */ defineComponent({
   name: "LiftRoot",
   props: {
     /** Lifted while `true`: controlled, with `v-model:open`. Without it, it's its own */
@@ -274,7 +274,7 @@ const Root = defineComponent({
 });
 
 /** What's held and lifted: a `div`, or with `as-child` the element in its slot */
-const Target = defineComponent({
+const Target = /* @__PURE__ */ defineComponent({
   name: "LiftTarget",
   inheritAttrs: false,
   props: { asChild },
@@ -296,7 +296,7 @@ const Target = defineComponent({
 const stay = (child: VNode, hide = false) => h("div", { style: { display: hide ? "none" : "contents" } }, [child]);
 
 /** The menu, opened beside it; hidden until then. Its items are `Lift.Item`s */
-const Menu = defineComponent({
+const Menu = /* @__PURE__ */ defineComponent({
   name: "LiftMenu",
   inheritAttrs: false,
   props: { asChild },
@@ -323,7 +323,7 @@ const Menu = defineComponent({
 });
 
 /** Lifted instead of a copy: something live, or a bigger preview, at its own size */
-const Preview = defineComponent({
+const Preview = /* @__PURE__ */ defineComponent({
   name: "LiftPreview",
   inheritAttrs: false,
   props: { asChild },
@@ -341,7 +341,7 @@ const Preview = defineComponent({
 export type LiftItemState = { disabled: boolean };
 
 /** An item of the menu: a `button`, or with `as-child` the element in its slot */
-const Item = defineComponent({
+const Item = /* @__PURE__ */ defineComponent({
   name: "LiftItem",
   inheritAttrs: false,
   props: {
@@ -382,7 +382,7 @@ const Item = defineComponent({
 });
 
 /** A line between items, passed over by the finger and the keys */
-const Separator = defineComponent({
+const Separator = /* @__PURE__ */ defineComponent({
   name: "LiftSeparator",
   inheritAttrs: false,
   props: { asChild },

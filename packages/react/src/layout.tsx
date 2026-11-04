@@ -124,7 +124,7 @@ export function useLayout(options: UseLayoutOptions = {}): UseLayout {
 
 // ── Components ──
 
-const Context = createContext<UseLayout | null>(null);
+const Context = /* @__PURE__ */ createContext<UseLayout | null>(null);
 
 type PartProps<State> = Omit<HTMLAttributes<HTMLElement>, "children"> & {
   /** Render as an element of yours, or a function of the props and state; a `div` unless given */
@@ -141,7 +141,7 @@ export type LayoutRootProps = UseLayoutOptions & PartProps<LayoutState>;
  * The root whose items move: a `div` unless rendered as something else, its children the items.
  * Marked `data-moving` while something is on its way
  */
-const Root = forwardRef<HTMLElement, LayoutRootProps>(function LayoutRoot(props, ref) {
+const Root = /* @__PURE__ */ forwardRef<HTMLElement, LayoutRootProps>(function LayoutRoot(props, ref) {
   const { items, spring, size, enter, exit, onStart, onRest, render, ...rest } = props;
   const layout = useLayout({ items, spring, size, enter, exit, onStart, onRest });
   const merged = useMergedRefs(layout.root, ref);

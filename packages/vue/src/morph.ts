@@ -212,7 +212,7 @@ function useMorphContext(part: string) {
 const asChild = { type: Boolean, default: false } as const;
 
 /** The morph: its props and state, for the states and triggers inside it. Renders nothing of its own */
-const Root = defineComponent({
+const Root = /* @__PURE__ */ defineComponent({
   name: "MorphRoot",
   props: {
     /** The state asked for: controlled, with `v-model`. Without it, it's its own */
@@ -258,7 +258,7 @@ export type MorphStateState = { current: boolean; moving: boolean };
  * Marked `data-current` while it's the one asked for. Keep its hiding (`visibility: hidden`) in CSS,
  * not in `style`: away, a state's inline opacity and visibility are the morph's
  */
-const State = defineComponent({
+const State = /* @__PURE__ */ defineComponent({
   name: "MorphState",
   inheritAttrs: false,
   props: {
@@ -283,7 +283,7 @@ const State = defineComponent({
 });
 
 /** Sends the morph to a state when it's clicked: a `button`, or with `as-child` the element in its slot */
-const Trigger = defineComponent({
+const Trigger = /* @__PURE__ */ defineComponent({
   name: "MorphTrigger",
   inheritAttrs: false,
   props: {
@@ -312,7 +312,7 @@ const Trigger = defineComponent({
 });
 
 /** A piece that flies from one state into the other, to its match of the same `name`: a `span` */
-const Match = defineComponent({
+const Match = /* @__PURE__ */ defineComponent({
   name: "MorphMatch",
   inheritAttrs: false,
   props: {

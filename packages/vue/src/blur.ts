@@ -37,7 +37,7 @@ export function glass(given: GlassVariants = {}): { class: string; style: Record
 }
 
 /** Glass: a `div`, or with `as-child` the element in its slot, its variants as props, your classes and styles kept */
-const Root = defineComponent({
+const Root = /* @__PURE__ */ defineComponent({
   name: "Glass",
   inheritAttrs: false,
   props: {
@@ -111,7 +111,7 @@ export function useGlassGroup(): UseGlassGroup {
  * Glass that melts between its children where they come close: a `div`, or with `as-child` the
  * element in its slot, written `lb lb-group`. Its children are glass, `<Glass>` or `lb`
  */
-const Group = defineComponent({
+const Group = /* @__PURE__ */ defineComponent({
   name: "GlassGroup",
   inheritAttrs: false,
   props: {
@@ -145,4 +145,4 @@ const Group = defineComponent({
  * Glass, and `Glass.Group` for glass that melts. Typed by its parts: inferred, its declaration spells
  * out Vue's instance type, which `vue-tsc` rejects in an app that checks libraries
  */
-export const Glass: typeof Root & { Group: typeof Group } = Object.assign(Root, { Group });
+export const Glass: typeof Root & { Group: typeof Group } = /* @__PURE__ */ Object.assign(Root, { Group });

@@ -193,7 +193,7 @@ export function useIndicator<V extends string = string>(options: UseIndicatorOpt
 
 // ── Components ──
 
-const Context = createContext<UseIndicator | null>(null);
+const Context = /* @__PURE__ */ createContext<UseIndicator | null>(null);
 
 function useIndicatorContext(part: string) {
   const context = useContext(Context);
@@ -211,7 +211,7 @@ export type IndicatorRootProps<V extends string = string> = UseIndicatorOptions<
   PartProps<{ value: V | null; active: V | null }>;
 
 /** The container of its items and its indicator: a `div` unless rendered as something else */
-const Root = forwardRef<HTMLElement, IndicatorRootProps>(function IndicatorRoot(props, ref) {
+const Root = /* @__PURE__ */ forwardRef<HTMLElement, IndicatorRootProps>(function IndicatorRoot(props, ref) {
   const {
     value,
     defaultValue,
@@ -250,19 +250,18 @@ const Root = forwardRef<HTMLElement, IndicatorRootProps>(function IndicatorRoot(
 });
 
 /** The one element that flies onto the items: a `span`, under them, unless rendered as something else */
-const Thumb = forwardRef<HTMLElement, Omit<PartProps<Record<string, never>>, "children">>(function IndicatorThumb(
-  { render, ...props },
-  ref,
-) {
-  const indicator = useIndicatorContext("Thumb");
-  const merged = useMergedRefs(indicator.indicator, ref);
-  return renderPart(
-    "span",
-    { "aria-hidden": true, ...props, ref: merged, style: { position: "absolute", zIndex: -1, ...props.style } },
-    render,
-    {},
-  );
-});
+const Thumb = /* @__PURE__ */ forwardRef<HTMLElement, Omit<PartProps<Record<string, never>>, "children">>(
+  function IndicatorThumb({ render, ...props }, ref) {
+    const indicator = useIndicatorContext("Thumb");
+    const merged = useMergedRefs(indicator.indicator, ref);
+    return renderPart(
+      "span",
+      { "aria-hidden": true, ...props, ref: merged, style: { position: "absolute", zIndex: -1, ...props.style } },
+      render,
+      {},
+    );
+  },
+);
 
 export type IndicatorItemState = { selected: boolean; active: boolean };
 
@@ -272,7 +271,10 @@ export type IndicatorItemProps = PartProps<IndicatorItemState> & {
 };
 
 /** An item: a `button` unless rendered as something else; chosen by a click */
-const Item = forwardRef<HTMLElement, IndicatorItemProps>(function IndicatorItem({ render, value, ...props }, ref) {
+const Item = /* @__PURE__ */ forwardRef<HTMLElement, IndicatorItemProps>(function IndicatorItem(
+  { render, value, ...props },
+  ref,
+) {
   const indicator = useIndicatorContext("Item");
   const selected = indicator.value === value;
   const active = indicator.active === value;

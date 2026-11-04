@@ -232,7 +232,7 @@ const asChild = { type: Boolean, default: false } as const;
 export type IndicatorRootState = { value: string | null; active: string | null };
 
 /** The container of its items and its indicator: a `div`, or with `as-child` the element in its slot */
-const Root = defineComponent({
+const Root = /* @__PURE__ */ defineComponent({
   name: "IndicatorRoot",
   inheritAttrs: false,
   props: {
@@ -284,7 +284,7 @@ const Root = defineComponent({
 });
 
 /** The one element that flies onto the items: a `span`, under them */
-const Thumb = defineComponent({
+const Thumb = /* @__PURE__ */ defineComponent({
   name: "IndicatorThumb",
   inheritAttrs: false,
   props: { asChild },
@@ -309,7 +309,7 @@ const Thumb = defineComponent({
 export type IndicatorItemState = { selected: boolean; active: boolean };
 
 /** An item: a `button`, or with `as-child` the element in its slot; chosen by a click */
-const Item = defineComponent({
+const Item = /* @__PURE__ */ defineComponent({
   name: "IndicatorItem",
   inheritAttrs: false,
   props: {

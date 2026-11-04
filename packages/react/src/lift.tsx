@@ -163,7 +163,7 @@ type LiftContext = UseLift & {
   handlers: Map<HTMLElement, ItemHandler>;
 };
 
-const Context = createContext<LiftContext | null>(null);
+const Context = /* @__PURE__ */ createContext<LiftContext | null>(null);
 
 function useLiftContext(part: string) {
   const context = useContext(Context);
@@ -225,7 +225,10 @@ type PartProps<State> = Omit<HTMLAttributes<HTMLElement>, "children"> & {
 };
 
 /** What's held and lifted */
-const Target = forwardRef<HTMLElement, PartProps<LiftState>>(function LiftTarget({ render, ...props }, ref) {
+const Target = /* @__PURE__ */ forwardRef<HTMLElement, PartProps<LiftState>>(function LiftTarget(
+  { render, ...props },
+  ref,
+) {
   const lift = useLiftContext("Target");
   const merged = useMergedRefs(lift.element, ref);
   return renderPart("div", { ...props, ref: merged, "data-state": lift.opened ? "open" : "closed" }, render, {
@@ -239,7 +242,10 @@ const Stay = ({ children, hide = false }: { children: ReactNode; hide?: boolean 
 );
 
 /** The menu, opened beside it; hidden until then. Its items are `Lift.Item`s */
-const Menu = forwardRef<HTMLElement, PartProps<LiftState>>(function LiftMenu({ render, ...props }, ref) {
+const Menu = /* @__PURE__ */ forwardRef<HTMLElement, PartProps<LiftState>>(function LiftMenu(
+  { render, ...props },
+  ref,
+) {
   const lift = useLiftContext("Menu");
   const merged = useMergedRefs(lift.menu, ref);
   return (
@@ -261,7 +267,10 @@ const Menu = forwardRef<HTMLElement, PartProps<LiftState>>(function LiftMenu({ r
 });
 
 /** Lifted instead of a copy: something live, or a bigger preview, at its own size */
-const Preview = forwardRef<HTMLElement, PartProps<LiftState>>(function LiftPreview({ render, ...props }, ref) {
+const Preview = /* @__PURE__ */ forwardRef<HTMLElement, PartProps<LiftState>>(function LiftPreview(
+  { render, ...props },
+  ref,
+) {
   const lift = useLiftContext("Preview");
   const merged = useMergedRefs(lift.preview, ref);
   return <Stay hide>{renderPart("div", { ...props, ref: merged }, render, { opened: lift.opened })}</Stay>;
@@ -279,7 +288,7 @@ export type LiftItemProps = Omit<PartProps<LiftItemState>, "onSelect"> & {
 };
 
 /** An item of the menu: a `button` unless rendered as something else */
-const Item = forwardRef<HTMLElement, LiftItemProps>(function LiftItem(
+const Item = /* @__PURE__ */ forwardRef<HTMLElement, LiftItemProps>(function LiftItem(
   { render, value, disabled = false, onSelect, ...props },
   ref,
 ) {
@@ -307,12 +316,11 @@ const Item = forwardRef<HTMLElement, LiftItemProps>(function LiftItem(
 });
 
 /** A line between items, passed over by the finger and the keys */
-const Separator = forwardRef<HTMLElement, Omit<PartProps<Record<string, never>>, "children">>(function LiftSeparator(
-  { render, ...props },
-  ref,
-) {
-  return renderPart("div", { role: "separator", ...props, ref }, render, {});
-});
+const Separator = /* @__PURE__ */ forwardRef<HTMLElement, Omit<PartProps<Record<string, never>>, "children">>(
+  function LiftSeparator({ render, ...props }, ref) {
+    return renderPart("div", { role: "separator", ...props, ref }, render, {});
+  },
+);
 
 /** The lift's state and refs inside `<Lift.Root>`: for a part of your own */
 export function useLiftParts() {

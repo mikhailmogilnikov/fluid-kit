@@ -256,7 +256,7 @@ export function useDrag(options: UseDragOptions = {}): UseDrag {
 
 // ── Components ──
 
-const Context = createContext<UseDrag | null>(null);
+const Context = /* @__PURE__ */ createContext<UseDrag | null>(null);
 
 function useDragContext(part: string) {
   const context = useContext(Context);
@@ -279,7 +279,7 @@ export type DragRootProps = UseDragOptions & PartProps<DragState>;
  * What moves, laid out where it rests at offset 0: a `div` unless rendered as something else. Marked
  * `data-snap` with the snap point it's at or heads for, and `data-dragging` while a pointer drags it
  */
-const Root = forwardRef<HTMLElement, DragRootProps>(function DragRoot(props, ref) {
+const Root = /* @__PURE__ */ forwardRef<HTMLElement, DragRootProps>(function DragRoot(props, ref) {
   const {
     axis,
     snaps,
@@ -328,7 +328,10 @@ const Root = forwardRef<HTMLElement, DragRootProps>(function DragRoot(props, ref
 });
 
 /** What's grabbed, such as a sheet's grabber: a `div` unless rendered as something else. Without one, the root is */
-const Handle = forwardRef<HTMLElement, PartProps<DragState>>(function DragHandle({ render, ...props }, ref) {
+const Handle = /* @__PURE__ */ forwardRef<HTMLElement, PartProps<DragState>>(function DragHandle(
+  { render, ...props },
+  ref,
+) {
   const drag = useDragContext("Handle");
   const merged = useMergedRefs(drag.handle, ref);
   return renderPart("div", { ...props, ref: merged }, render, { snap: drag.snap, dragging: drag.dragging });
@@ -338,7 +341,10 @@ const Handle = forwardRef<HTMLElement, PartProps<DragState>>(function DragHandle
  * An area inside that scrolls along its axis, such as a sheet's list: a finger hands one gesture
  * between the two, as iOS sheets do. A `div` unless rendered as something else
  */
-const Scroll = forwardRef<HTMLElement, PartProps<DragState>>(function DragScroll({ render, ...props }, ref) {
+const Scroll = /* @__PURE__ */ forwardRef<HTMLElement, PartProps<DragState>>(function DragScroll(
+  { render, ...props },
+  ref,
+) {
   const drag = useDragContext("Scroll");
   const merged = useMergedRefs(drag.scroll, ref);
   return renderPart("div", { ...props, ref: merged }, render, { snap: drag.snap, dragging: drag.dragging });

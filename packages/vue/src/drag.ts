@@ -280,7 +280,7 @@ export type DragState = { snap: number; dragging: boolean };
  * slot. Marked `data-snap` with the snap point it's at or heads for, and `data-dragging` while a
  * pointer drags it
  */
-const Root = defineComponent({
+const Root = /* @__PURE__ */ defineComponent({
   name: "DragRoot",
   inheritAttrs: false,
   props: {
@@ -347,7 +347,7 @@ const Root = defineComponent({
 });
 
 /** What's grabbed, such as a sheet's grabber: a `div`. Without one, the root is */
-const Handle = defineComponent({
+const Handle = /* @__PURE__ */ defineComponent({
   name: "DragHandle",
   inheritAttrs: false,
   props: { asChild },
@@ -366,7 +366,7 @@ const Handle = defineComponent({
  * An area inside that scrolls along its axis, such as a sheet's list: a finger hands one gesture
  * between the two, as iOS sheets do. A `div`, or with `as-child` the element in its slot
  */
-const Scroll = defineComponent({
+const Scroll = /* @__PURE__ */ defineComponent({
   name: "DragScroll",
   inheritAttrs: false,
   props: { asChild },
